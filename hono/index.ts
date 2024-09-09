@@ -1,8 +1,4 @@
-import { Hono } from "hono";
-
-const app = new Hono();
-
-app.get("/", (c) => c.text("Hello, World!"));
+import app from "./app";
 
 export default defineEventHandler((event) => {
   event.node.req.originalUrl = "";
