@@ -11,7 +11,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#225590'
+        primary: '#225590',
+        link: '#007bff',
+        linkHover: '#0056b3'
       }
     }
   },
