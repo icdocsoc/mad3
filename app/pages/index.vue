@@ -1,6 +1,12 @@
 <template>
   <div>
-    <h1 class="text-3xl font-bold underline">Hello world!</h1>
+    <Card>
+      <CardTitle>
+        Welcome to DoCSoc's
+        <br />
+        Mums and Dads Portal!
+      </CardTitle>
+    </Card>
   </div>
 </template>
 
