@@ -4,5 +4,5 @@ const isLoggedIn = ref(false);
 </script>
 
 <template>
-<div></div>
+  <nav></nav>
 </template>
