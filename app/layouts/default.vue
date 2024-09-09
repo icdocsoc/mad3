@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mx-5">
     <NavigationBar />
     <slot />
   </div>
