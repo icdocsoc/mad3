@@ -4,16 +4,22 @@ const isLoggedIn = ref(false);
 </script>
 
 <template>
-  <nav class="bg-primary flex justify-between rounded-b-2xl px-4 py-2">
+  <nav
+    class="bg-primary flex justify-between rounded-b-2xl px-4 py-2 lg:mx-auto lg:max-w-screen-lg">
     <NavigationLink to="/" icon="/images/docsoc-square-white.png">
-      MaD
+      <span class="md:hidden">MaD</span>
+      <span class="max-md:hidden md:text-xl">Mums & Dads</span>
     </NavigationLink>
     <ul class="flex items-center gap-3">
       <li>
-        <NavigationLink to="/parent">Parent</NavigationLink>
+        <NavigationLink to="/parent">
+          <span class="md:text-xl">Parent</span>
+        </NavigationLink>
       </li>
       <li>
-        <NavigationLink to="/fresher">Fresher</NavigationLink>
+        <NavigationLink to="/fresher">
+          <span class="md:text-xl">Fresher</span>
+        </NavigationLink>
       </li>
     </ul>
   </nav>
