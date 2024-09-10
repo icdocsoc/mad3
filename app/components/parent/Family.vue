@@ -9,20 +9,28 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-  <h1 class="text-center">Your Family</h1>
+  <Card>
+    <CardTitle>Your Family</CardTitle>
 
-  <h2>Parents:</h2>
+    <CardDetails>
+      <strong>Parents:</strong>
+      <Student :student="props.parent1" />
+      <Student :student="props.parent2" />
+    </CardDetails>
 
-  <Student :student="props.parent1" />
-  <Student :student="props.parent2" />
+    <CardDetails>
+      <strong>Children:</strong>
 
-  <h2>Children:</h2>
-
-  <div v-if="!props.kids.length">
-    You currently have 0 kids assigned. Return to this page soon to see more
-    information about your kids
-  </div>
-  <div v-else>
-    <Student v-for="kid in props.kids" :key="kid.shortcode" :student="kid" />
-  </div>
+      <div v-if="!props.kids.length">
+        You currently have 0 kids assigned. Return to this page soon to see more
+        information about your kids
+      </div>
+      <div v-else>
+        <Student
+          v-for="kid in props.kids"
+          :key="kid.shortcode"
+          :student="kid" />
+      </div>
+    </CardDetails>
+  </Card>
 </template>

@@ -20,6 +20,7 @@
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.9",
     "@types/bun": "latest",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.6"
