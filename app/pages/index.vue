@@ -86,7 +86,7 @@ const data = ref({
       </CardText>
       <CardText>
         For any privacy concerns you can find our privacy and GDPR policy
-        <a href="/MaD-privacy-policy.pdf">here</a>
+        <a href="/files/MaD-privacy-policy.pdf">here</a>
       </CardText>
     </Card>
   </div>
