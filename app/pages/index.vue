@@ -82,11 +82,11 @@ const data = ref({
     <Card class="text-center">
       <CardText>
         For any other information or queries please contact DoCSoc at
-        <a href="mailto: docsoc@ic.ac.uk">docsoc@ic.ac.uk</a>
+        <a href="mailto:docsoc@ic.ac.uk">docsoc@ic.ac.uk</a>
       </CardText>
       <CardText>
         For any privacy concerns you can find our privacy and GDPR policy
-        <a href="/files/MaD-privacy-policy.pdf">here</a>
+        <a href="/files/MaD-privacy-policy.pdf" target="_blank">here</a>
       </CardText>
     </Card>
   </div>
