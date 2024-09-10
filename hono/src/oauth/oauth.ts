@@ -1,20 +1,18 @@
 // import buildUrl from 'build-url-ts';
-import { AuthorizationCodeCredential } from "@azure/identity";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
-import { Client } from "@microsoft/microsoft-graph-client";
-import MsApiClient from "./MsApiClient";
+import { MsAuthClient, TypedGraphClient } from "./MsApiClient";
 
-const tenantId = process.env.TENANT_ID!;
-const clientId = process.env.CLIENT_ID!;
-const clientSecret = process.env.CLIENT_SECRET!;
-const redirectUri = `http://${process.env.BASE_URL}/api/oauth/callback`;
-const scopes = ["User.Read", "profile", "Presence.Read"];
-
-const msAuthEndpoint =
-  "https://login.microsoftonline.com/2b897507-ee8c-4575-830b-4f8267c3d307/oauth2/v2.0";
+const msAuth = new MsAuthClient(
+  ["User.Read", "profile", "Presence.Read"],
+  {
+    tenantId: process.env.TENANT_ID!,
+    clientId: process.env.CLIENT_ID!,
+    clientSecret: process.env.CLIENT_SECRET!,
+  },
+  `http://${process.env.BASE_URL}/api/oauth/callback`
+);
 
 const callbackSchema = z
   .object({
@@ -30,8 +28,7 @@ const callbackSchema = z
 
 const oauth = new Hono()
   .get("/signIn", async (ctx) => {
-    const client = new MsApiClient(scopes);
-    return ctx.redirect(client.getRedirectUrl());
+    return ctx.redirect(msAuth.getRedirectUrl());
   })
   .get(
     "/callback",
@@ -49,15 +46,13 @@ const oauth = new Hono()
       // Code and state (once we implement that) are guaranteed to be defined.
       const { code, state } = ctx.req.valid("query");
 
-      const client = new MsApiClient(scopes)
-      client.verifyAndConsumeCode(code!);
-      
-      const res = await client.msGet("/me", ['displayName', 'department']);
+      const client = msAuth.verifyAndConsumeCode(code!);
+      const res = await client.msGet("/me", ["displayName", "department"]);
 
       return ctx.json({
         name: res.displayName,
-        department: res.department
-      })
+        department: res.department,
+      });
     }
   );
 
