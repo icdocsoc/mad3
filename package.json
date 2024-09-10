@@ -10,10 +10,15 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@azure/identity": "^4.4.1",
+    "@hono/zod-validator": "^0.2.2",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "hono": "^4.5.11",
     "nuxt": "^3.13.0",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "zod": "^3.23.8",
+    "zod-validator": "^1.0.1"
   },
   "devDependencies": {
     "@types/bun": "latest"
