@@ -46,14 +46,12 @@ export class MsAuthClient {
 
     const res = await req.json();
 
-    console.log(res);
-
     if (res.error)
       throw new Error(`Failed to verify code:\n ${res.error_description}`);
 
     return new MicrosoftGraphClient(
       res.access_token,
-      res.refresh_token,
+      res.refresh_token || null,
       res.expires_in,
       res.scope
     );
@@ -66,7 +64,7 @@ export class MicrosoftGraphClient {
 
   public constructor(
     public access_token: string,
-    public refresh_token: string,
+    public refresh_token: string | null,
     expires_in: number,
     public scope: string
   ) {
