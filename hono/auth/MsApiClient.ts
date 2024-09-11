@@ -49,7 +49,7 @@ export class MsAuthClient {
     if (res.error)
       throw new Error(`Failed to verify code:\n ${res.error_description}`);
 
-    return new TypedGraphClient(
+    return new MicrosoftGraphClient(
       res.access_token,
       res.refresh_token,
       res.expires_in,
@@ -58,7 +58,7 @@ export class MsAuthClient {
   }
 }
 
-export class TypedGraphClient {
+export class MicrosoftGraphClient {
   public expiresAt: Date;
   private baseUrl = "https://graph.microsoft.com/v1.0";
 

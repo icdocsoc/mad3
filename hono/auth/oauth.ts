@@ -2,7 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { MsAuthClient, TypedGraphClient } from "./MsApiClient";
+import { MsAuthClient, MicrosoftGraphClient } from "./MsApiClient";
 import { newToken } from "./jwt";
 
 const msAuth = new MsAuthClient(

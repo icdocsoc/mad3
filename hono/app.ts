@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import oauth from "./src/auth/oauth";
+import oauth from "./auth/oauth";
 
 const app = new Hono()
     .route('/oauth', oauth)

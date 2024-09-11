@@ -13,6 +13,7 @@
     "@azure/identity": "^4.4.1",
     "@hono/zod-validator": "^0.2.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
+    "drizzle-orm": "^0.33.0",
     "hono": "^4.5.11",
     "nuxt": "^3.13.0",
     "vue": "latest",
@@ -21,7 +22,8 @@
     "zod-validator": "^1.0.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.9"
+    "@types/bun": "^1.1.9",
+    "drizzle-kit": "^0.24.2"
   },
   "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }
