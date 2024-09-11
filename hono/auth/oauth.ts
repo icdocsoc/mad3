@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { MsAuthClient } from "./MsApiClient";
 import { grantAccessTo, newToken } from "./jwt";
+import factory from "../factory";
 
 const msAuth = new MsAuthClient(
   ["User.Read", "profile", "Presence.Read"],
@@ -27,7 +28,8 @@ const callbackSchema = z
 // Note to self:
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 
-const oauth = new Hono()
+const oauth = factory
+  .createApp()
   .get("/signIn", async (ctx) => {
     return ctx.redirect(msAuth.getRedirectUrl());
   })
@@ -94,17 +96,20 @@ const oauth = new Hono()
       `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
     );
 
-    return ctx.text("ok", 200)
+    return ctx.text("ok", 200);
   })
   .get("/details", grantAccessTo("authenticated"), async (ctx) => {
     // Just so I can test signed ins for now.
-    const email = ctx.get('email');
-    const user_is = ctx.get('user_is');
+    const email = ctx.get("email");
+    const user_is = ctx.get("user_is");
 
-    return ctx.json({
-      email: email,
-      user_is: user_is
-    }, 200)
+    return ctx.json(
+      {
+        email: email,
+        user_is: user_is,
+      },
+      200
+    );
   });
 
 export default oauth;

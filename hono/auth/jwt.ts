@@ -1,8 +1,9 @@
 import { createMiddleware } from "hono/factory";
 import { sign, verify } from "hono/jwt";
-import type { AuthRoles } from "../types";
+import type { AuthRoles, UserRole } from "../types";
 import { getCookie } from "hono/cookie";
 import { JwtTokenExpired, JwtTokenSignatureMismatched } from "hono/utils/jwt/types";
+import factory from "../factory";
 
 const secret = process.env.JWT_SECRET!;
 
@@ -32,7 +33,7 @@ export async function newToken(email: string): Promise<string> {
   return token;
 }
 
-export const decodeToken = createMiddleware(async (ctx, next) => {
+export const decodeToken = factory.createMiddleware(async (ctx, next) => {
   ctx.set("user_is", null);
   ctx.set("email", null);
 
@@ -44,8 +45,12 @@ export const decodeToken = createMiddleware(async (ctx, next) => {
 
   try {
     const payload = await verify(jwt_token, secret);
-    ctx.set("user_is", payload.user_is);
-    ctx.set("email", payload.email);
+
+    const userIs = payload.user_is as UserRole
+    const email = payload.email as string;
+
+    ctx.set("user_is", userIs);
+    ctx.set("email", email);
   } catch (e) {
     if (e instanceof JwtTokenSignatureMismatched) {
       // TODO: Log this malicious actor
@@ -53,28 +58,27 @@ export const decodeToken = createMiddleware(async (ctx, next) => {
     }
     else if (e instanceof JwtTokenExpired) {
       // Delete their JWT token.
-      console.log("deleted")
       ctx.header("Set-Cookie", `Authorization= ; Max-Age=0; HttpOnly`);
     }
   }
 
-  await next();
+  return await next();
 });
 
 export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
-  createMiddleware(async (ctx, next) => {
+  factory.createMiddleware(async (ctx, next) => {
     const no_auth = "Missing authorization.";
     const role = ctx.get('user_is');
 
-    if (roles.includes("all")) await next();
+    if (roles.includes("all")) return await next();
 
     if (role == null) {
-      if ("unauthenticated" in roles) await next();
+      if ("unauthenticated" in roles) return await next();
       else return ctx.redirect("/api/oauth/signIn");
     }
 
     if (roles.includes(role) || roles.includes("authenticated")) {
-      await next();
+      return await next();
     } else {
       return ctx.text(no_auth, 403);
     }
