@@ -46,6 +46,8 @@ export class MsAuthClient {
 
     const res = await req.json();
 
+    console.log(res);
+
     if (res.error)
       throw new Error(`Failed to verify code:\n ${res.error_description}`);
 
