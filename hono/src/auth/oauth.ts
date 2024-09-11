@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { MsAuthClient, TypedGraphClient } from "./MsApiClient";
+import { newToken } from "./jwt";
 
 const msAuth = new MsAuthClient(
   ["User.Read", "profile", "Presence.Read"],
@@ -46,13 +47,23 @@ const oauth = new Hono()
       // Code and state (once we implement that) are guaranteed to be defined.
       const { code, state } = ctx.req.valid("query");
 
-      const client = msAuth.verifyAndConsumeCode(code!);
-      const res = await client.msGet("/me", ["displayName", "department"]);
+      const client = await msAuth.verifyAndConsumeCode(code!);
+      const res = await client.msGet("/me", ["displayName", "department", "userPrincipalName"]);
+
+
+      if (res.department != "Computing") {
+        return ctx.text("You are not a Computing student :(", 403);
+      }
+
+      const token = await newToken(res.displayName, res.userPrincipalName, client.access_token, client.refresh_token, client.expiresAt)
+
+      ctx.header("Authorization", token);
 
       return ctx.json({
         name: res.displayName,
         department: res.department,
-      });
+        email: res.userPrincipalName
+      }, 200);
     }
   );
 
