@@ -1,10 +1,20 @@
-import { buildUrl } from 'build-url-ts'
+import { buildUrl } from "build-url-ts";
 
 type Secrets = {
   tenantId: string;
   clientId: string;
   clientSecret: string;
 };
+
+// https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
+
+// We only want to ensure the request originated from our website,
+// hence no identifiable information. In memory as your request
+// should be done pretty fast, c'mon.
+
+// Todo: custom errors
+
+const states: string[] = [];
 
 export class MsAuthClient {
   msAuthEndpoint: string;
@@ -22,24 +32,32 @@ export class MsAuthClient {
   }
 
   public getRedirectUrl(state?: string): string {
-    // Todo: Add a state & build url
+    const _state = state || crypto.randomUUID();
+    states.push(_state);
 
     const url = buildUrl(this.msAuthEndpoint, {
-      path: '/authorize',
+      path: "/authorize",
       queryParams: {
         client_id: this.secrets.clientId,
         redirect_uri: this.redirectUri,
         scope: this.scopeUrls.join(" "),
-        response_type: 'code',
-        response_mode: 'query',
-        prompt: 'consent',
-      }
-    })
+        state: _state,
+        response_type: "code",
+        response_mode: "query",
+        prompt: "consent",
+      },
+    });
 
     return url;
   }
 
-  public async verifyAndConsumeCode(code: string) {
+  public async verifyAndConsumeCode(code: string, state: string) {
+    const index = states.indexOf(state);
+    if (index == -1) {
+      throw new Error(`Failed to verify code: Mismatched state.`);
+    }
+    states.splice(index, 1);
+
     const req = await fetch(`${this.msAuthEndpoint}/token`, {
       method: "POST",
       headers: {
@@ -83,21 +101,21 @@ export class MicrosoftGraphClient {
     this.expiresAt.setSeconds(this.expiresAt.getSeconds() + expires_in);
   }
 
-  public async msGet<K extends string>(
+  public async get<K extends string>(
     path: string,
     select?: K[]
   ): Promise<Record<K, string>> {
-    const selectQueryString =
-      select == null ? "" : `?$select=${select.join(",")}`;
-
-    const selectQuery = select == null ? undefined : {
-      $select: select.join(",")
-    }
+    const selectQuery =
+      select == null
+        ? undefined
+        : {
+            $select: select.join(","),
+          };
 
     const url = buildUrl(this.baseUrl, {
       path: path,
-      queryParams: selectQuery
-    })
+      queryParams: selectQuery,
+    });
 
     const req = await fetch(url, {
       headers: {

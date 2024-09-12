@@ -1,11 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { MsAuthClient } from "./MsApiClient";
+import { MicrosoftGraphClient, MsAuthClient } from "./MsApiClient";
 import { grantAccessTo, newToken } from "./jwt";
 import factory from "../factory";
+import { apiLogger } from "../logger";
 
 const msAuth = new MsAuthClient(
-  ["User.Read", "profile", "Presence.Read"],
+  ["profile"],
   {
     tenantId: process.env.TENANT_ID!,
     clientId: process.env.CLIENT_ID!,
@@ -14,22 +15,16 @@ const msAuth = new MsAuthClient(
   `http://${process.env.BASE_URL}/api/auth/callback`
 );
 
-const errorSchema = z.object({
-  error: z.string(),
-  error_description: z.string(),
-});
-
 const callbackSchema = z.object({
   code: z.string(),
   state: z.string(),
+  error: z.string().optional(),
+  error_description: z.string().optional(),
 });
-
-// Note to self:
-// https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 
 const auth = factory
   .createApp()
-  .get("/signIn", async (ctx) => {
+  .get("/signIn", grantAccessTo("unauthenticated"), async (ctx) => {
     return ctx.redirect(msAuth.getRedirectUrl());
   })
   .get("/signOut", grantAccessTo("authenticated"), async (ctx) => {
@@ -38,16 +33,14 @@ const auth = factory
   })
   .get(
     "/callback",
-    zValidator("query", errorSchema, async (zRes, ctx) => {
-      if (zRes.success) {
-        return ctx.text(
-          `Error while authenticating: ${zRes.data.error_description}`,
-          400
-        );
-      }
-    }),
+    grantAccessTo("unauthenticated"),
     zValidator("query", callbackSchema, async (zRes, ctx) => {
-      if (!zRes.success) {
+      if (!zRes.success || zRes.data.error_description) {
+        apiLogger.warn(
+          ctx,
+          "Microsoft Entra Error:",
+          zRes.data.error_description
+        );
         return ctx.text("Invalid request.", 400);
       }
     }),
@@ -55,8 +48,16 @@ const auth = factory
       // Code and state (once we implement that) are guaranteed to be defined.
       const { code, state } = ctx.req.valid("query");
 
-      const client = await msAuth.verifyAndConsumeCode(code);
-      const res = await client.msGet("/me", [
+      let client: MicrosoftGraphClient;
+      try {
+        client = await msAuth.verifyAndConsumeCode(code, state);
+      } catch (e) {
+        // Maybe return something differend based on the error (state or not) later.
+        apiLogger.error(ctx, "Microsoft auth error:", e);
+        return ctx.text("Internal server error.", 500);
+      }
+
+      const res = await client.get("/me", [
         "displayName",
         "department",
         "userPrincipalName",
@@ -86,19 +87,6 @@ const auth = factory
       );
     }
   )
-  .get("/token", async (ctx) => {
-    // Getting a short lived JWT token for my testing
-    const token = await newToken("aa7123@ic.ac.uk");
-
-    // 2 min
-    const maxAge = 14 * 24 * 60 * 60;
-    ctx.header(
-      "Set-Cookie",
-      `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
-    );
-
-    return ctx.text("ok", 200);
-  })
   .get("/details", grantAccessTo("authenticated"), async (ctx) => {
     // Just so I can test signed ins for now.
     const email = ctx.get("email");
