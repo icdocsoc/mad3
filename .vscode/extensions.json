@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "Nuxtr.nuxt-vscode-extentions",
+    "bradlc.vscode-tailwindcss",
+  ]
+}
