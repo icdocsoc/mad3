@@ -1,6 +1,4 @@
-// import buildUrl from 'build-url-ts';
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
 import { z } from "zod";
 import { MsAuthClient } from "./MsApiClient";
 import { grantAccessTo, newToken } from "./jwt";
@@ -13,48 +11,51 @@ const msAuth = new MsAuthClient(
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!,
   },
-  `http://${process.env.BASE_URL}/api/oauth/callback`
+  `http://${process.env.BASE_URL}/api/auth/callback`
 );
 
-const callbackSchema = z
-  .object({
-    error: z.string(),
-    error_description: z.string(),
-    code: z.string(),
-    state: z.string(),
-  })
-  .partial();
+const errorSchema = z.object({
+  error: z.string(),
+  error_description: z.string(),
+});
+
+const callbackSchema = z.object({
+  code: z.string(),
+  state: z.string(),
+});
 
 // Note to self:
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 
-const oauth = factory
+const auth = factory
   .createApp()
   .get("/signIn", async (ctx) => {
     return ctx.redirect(msAuth.getRedirectUrl());
   })
-  .get("/signOut", grantAccessTo("all"), async (ctx) => {
-    // We don't bother checking if they're signed in as this is very cheap & will instruct the browser to clear the cookie regardless.
+  .get("/signOut", grantAccessTo("authenticated"), async (ctx) => {
     ctx.header("Set-Cookie", `Authorization= ; Max-Age=0; HttpOnly`);
     return ctx.text("", 200);
   })
   .get(
     "/callback",
-    zValidator("query", callbackSchema, async (zRes, ctx) => {
-      if (!zRes.success) {
-        return ctx.text("Invalid request.", 400);
-      } else if (zRes.data.error) {
+    zValidator("query", errorSchema, async (zRes, ctx) => {
+      if (zRes.success) {
         return ctx.text(
           `Error while authenticating: ${zRes.data.error_description}`,
           400
         );
       }
     }),
+    zValidator("query", callbackSchema, async (zRes, ctx) => {
+      if (!zRes.success) {
+        return ctx.text("Invalid request.", 400);
+      }
+    }),
     async (ctx) => {
       // Code and state (once we implement that) are guaranteed to be defined.
       const { code, state } = ctx.req.valid("query");
 
-      const client = await msAuth.verifyAndConsumeCode(code!);
+      const client = await msAuth.verifyAndConsumeCode(code);
       const res = await client.msGet("/me", [
         "displayName",
         "department",
@@ -112,4 +113,4 @@ const oauth = factory
     );
   });
 
-export default oauth;
+export default auth;

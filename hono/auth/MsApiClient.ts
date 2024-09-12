@@ -1,3 +1,5 @@
+import { buildUrl } from 'build-url-ts'
+
 type Secrets = {
   tenantId: string;
   clientId: string;
@@ -19,13 +21,22 @@ export class MsAuthClient {
     );
   }
 
-  public getRedirectUrl(): string {
+  public getRedirectUrl(state?: string): string {
     // Todo: Add a state & build url
-    return `${this.msAuthEndpoint}/authorize?client_id=${
-      this.secrets.clientId
-    }&response_type=code&redirect_uri=${
-      this.redirectUri
-    }&response_mode=query&prompt=consent&scope=${this.scopeUrls.join(" ")}`;
+
+    const url = buildUrl(this.msAuthEndpoint, {
+      path: '/authorize',
+      queryParams: {
+        client_id: this.secrets.clientId,
+        redirect_uri: this.redirectUri,
+        scope: this.scopeUrls.join(" "),
+        response_type: 'code',
+        response_mode: 'query',
+        prompt: 'consent',
+      }
+    })
+
+    return url;
   }
 
   public async verifyAndConsumeCode(code: string) {
@@ -79,7 +90,16 @@ export class MicrosoftGraphClient {
     const selectQueryString =
       select == null ? "" : `?$select=${select.join(",")}`;
 
-    const req = await fetch(`${this.baseUrl}${path}${selectQueryString}`, {
+    const selectQuery = select == null ? undefined : {
+      $select: select.join(",")
+    }
+
+    const url = buildUrl(this.baseUrl, {
+      path: path,
+      queryParams: selectQuery
+    })
+
+    const req = await fetch(url, {
       headers: {
         Authorization: this.access_token,
         "Content-Type": "application/json",

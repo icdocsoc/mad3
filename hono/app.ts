@@ -1,10 +1,9 @@
-import { Hono } from "hono";
-import oauth from "./auth/oauth";
+import auth from "./auth/auth";
 import { decodeToken } from "./auth/jwt";
 import factory from "./factory";
 
 const app = factory.createApp()
 .use(decodeToken)
-.route('/oauth', oauth)
+.route('/auth', auth)
 
 export default app;

@@ -1,4 +1,3 @@
-import { createMiddleware } from "hono/factory";
 import { sign, verify } from "hono/jwt";
 import type { AuthRoles, UserRole } from "../types";
 import { getCookie } from "hono/cookie";
@@ -74,7 +73,7 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
 
     if (role == null) {
       if ("unauthenticated" in roles) return await next();
-      else return ctx.redirect("/api/oauth/signIn");
+      else return ctx.redirect("/api/auth/signIn");
     }
 
     if (roles.includes(role) || roles.includes("authenticated")) {
