@@ -1,4 +1,4 @@
-import { buildUrl } from "build-url-ts";
+import { buildUrl } from 'build-url-ts';
 
 type Secrets = {
   tenantId: string;
@@ -27,7 +27,7 @@ export class MsAuthClient {
   ) {
     this.msAuthEndpoint = `https://login.microsoftonline.com/${secrets.tenantId}/oauth2/v2.0`;
     this.scopeUrls = this.scopes.map(
-      (val) => `https://graph.microsoft.com/${val}`
+      val => `https://graph.microsoft.com/${val}`
     );
   }
 
@@ -37,20 +37,20 @@ export class MsAuthClient {
     // Flush the states for performance
     if (noStates > this.maxStates) {
       states.length = 1;
-      states[0] = _state
+      states[0] = _state;
     }
 
     const url = buildUrl(this.msAuthEndpoint, {
-      path: "/authorize",
+      path: '/authorize',
       queryParams: {
         client_id: this.secrets.clientId,
         redirect_uri: this.redirectUri,
-        scope: this.scopeUrls.join(" "),
+        scope: this.scopeUrls.join(' '),
         state: _state,
-        response_type: "code",
-        response_mode: "query",
-        prompt: "consent",
-      },
+        response_type: 'code',
+        response_mode: 'query',
+        prompt: 'consent'
+      }
     });
 
     return url;
@@ -64,18 +64,18 @@ export class MsAuthClient {
     states.splice(index, 1);
 
     const req = await fetch(`${this.msAuthEndpoint}/token`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams({
         client_id: this.secrets.clientId,
-        scope: this.scopeUrls.join(" "),
+        scope: this.scopeUrls.join(' '),
         code: code,
         redirect_uri: this.redirectUri,
-        grant_type: "authorization_code",
-        client_secret: this.secrets.clientSecret,
-      }).toString(),
+        grant_type: 'authorization_code',
+        client_secret: this.secrets.clientSecret
+      }).toString()
     });
 
     const res = await req.json();
@@ -94,7 +94,7 @@ export class MsAuthClient {
 
 export class MicrosoftGraphClient {
   public expiresAt: Date;
-  private baseUrl = "https://graph.microsoft.com/v1.0";
+  private baseUrl = 'https://graph.microsoft.com/v1.0';
 
   public constructor(
     public access_token: string,
@@ -114,19 +114,19 @@ export class MicrosoftGraphClient {
       select == null
         ? undefined
         : {
-            $select: select.join(","),
+            $select: select.join(',')
           };
 
     const url = buildUrl(this.baseUrl, {
       path: path,
-      queryParams: selectQuery,
+      queryParams: selectQuery
     });
 
     const req = await fetch(url, {
       headers: {
         Authorization: this.access_token,
-        "Content-Type": "application/json",
-      },
+        'Content-Type': 'application/json'
+      }
     });
 
     const res = await req.json();
@@ -139,7 +139,7 @@ export class MicrosoftGraphClient {
       return res as Record<K, any>;
     } else {
       const toRet: Partial<Record<K, any>> = {};
-      select.forEach((key) => {
+      select.forEach(key => {
         toRet[key] = res[key];
       });
       return res as Record<K, any>;

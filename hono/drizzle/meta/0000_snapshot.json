@@ -28,12 +28,8 @@
           "name": "family_kid_student_shortcode_fk",
           "tableFrom": "family",
           "tableTo": "student",
-          "columnsFrom": [
-            "kid"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["kid"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -41,12 +37,8 @@
           "name": "family_id_marriage_id_fk",
           "tableFrom": "family",
           "tableTo": "marriage",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -99,12 +91,8 @@
           "name": "marriage_parent1_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": [
-            "parent1"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["parent1"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -112,12 +100,8 @@
           "name": "marriage_parent2_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": [
-            "parent2"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["parent2"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -149,12 +133,8 @@
           "name": "proposals_proposer_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": [
-            "proposer"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["proposer"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -162,12 +142,8 @@
           "name": "proposals_proposee_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": [
-            "proposee"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["proposee"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

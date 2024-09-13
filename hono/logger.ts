@@ -1,12 +1,12 @@
-import type { Context } from "hono";
-import { logger } from "hono/logger";
-import pc from "picocolors";
+import type { Context } from 'hono';
+import { logger } from 'hono/logger';
+import pc from 'picocolors';
 
 enum Level {
-  DEBUG = "DEBUG",
-  INFO = "INFO",
-  WARN = "WARN",
-  ERROR = "ERROR",
+  DEBUG = 'DEBUG',
+  INFO = 'INFO',
+  WARN = 'WARN',
+  ERROR = 'ERROR'
 }
 
 export const apiLogger = {
@@ -16,7 +16,7 @@ export const apiLogger = {
     customLogger(
       pc.bgBlue(level),
       pc.bold(ctx.req.path),
-      [...messages].join(" -- ")
+      [...messages].join(' -- ')
     );
   },
   info(ctx: Context, ...messages: [any, ...any[]]): void {
@@ -25,7 +25,7 @@ export const apiLogger = {
     customLogger(
       pc.bgWhite(level),
       pc.bold(ctx.req.path),
-      [...messages].join(" -- ")
+      [...messages].join(' -- ')
     );
   },
   warn(ctx: Context, ...messages: [any, ...any[]]): void {
@@ -34,7 +34,7 @@ export const apiLogger = {
     customLogger(
       pc.bgYellow(level),
       pc.bold(ctx.req.path),
-      [...messages].join(" -- ")
+      [...messages].join(' -- ')
     );
   },
   error(ctx: Context, ...messages: [any, ...any[]]): void {
@@ -43,9 +43,9 @@ export const apiLogger = {
     customLogger(
       pc.bgRed(level),
       pc.bold(ctx.req.path),
-      [...messages].join(" -- ")
+      [...messages].join(' -- ')
     );
-  },
+  }
 };
 
 const customLogger = (message: string, ...rest: string[]) => {

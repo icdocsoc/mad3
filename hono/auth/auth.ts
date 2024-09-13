@@ -15,7 +15,7 @@ const msAuth = new MsAuthClient(
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!
   },
-  `http://${process.env.BASE_URL}/finish-oauth`,
+  `http://${process.env.BASE_URL}/finish-oauth`
 );
 
 const callbackSchema = z.object({
