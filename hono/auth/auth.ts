@@ -15,7 +15,7 @@ const msAuth = new MsAuthClient(
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!
   },
-  `http://${process.env.BASE_URL}/api/auth/callback`
+  `http://${process.env.BASE_URL}/finish-oauth`,
 );
 
 const callbackSchema = z.object({
@@ -28,9 +28,11 @@ const callbackSchema = z.object({
 const auth = factory
   .createApp()
   .post('/signIn', grantAccessTo('unauthenticated'), async ctx => {
+    // Redirect the user to the Microsoft oAuth sign in.
     return ctx.redirect(msAuth.getRedirectUrl());
   })
   .post('/signOut', grantAccessTo('authenticated'), async ctx => {
+    // Delete their JWT cookie.
     ctx.header('Set-Cookie', `Authorization= ; Max-Age=0; HttpOnly`);
     return ctx.text('', 200);
   })
@@ -54,11 +56,11 @@ const auth = factory
       try {
         client = await msAuth.verifyAndConsumeCode(code, state);
       } catch (e) {
-        // Maybe return something differend based on the error (state or not) later.
         apiLogger.error(ctx, 'Microsoft auth error:', e);
         return ctx.text('Internal server error.', 500);
       }
 
+      // Get their department, short, and long email.
       const res = await client.get('/me', [
         'department',
         'userPrincipalName',
@@ -88,6 +90,7 @@ const auth = factory
       try {
         token = await newToken(res.mail, shortcode[0]);
       } catch (e) {
+        // The only error we can get is that it fails to get an entry year.
         return ctx.json(
           {
             error: 'User has no entry year. Are you a professor?'
@@ -97,8 +100,9 @@ const auth = factory
       }
       const user_is = isFresherOrParent(res.mail);
 
-      // 14 days
-      const maxAge = 14 * 24 * 60 * 60;
+      // Expire the JWT after 4 weeks.
+      // Should be long enough for MaDs to only sign in once.
+      const maxAge = 28 * 24 * 60 * 60;
       ctx.header(
         'Set-Cookie',
         `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
@@ -121,7 +125,7 @@ const auth = factory
     }
   )
   .get('/details', grantAccessTo('authenticated'), async ctx => {
-    // Just so I can test signed ins for now.
+    // Mostly a test route but doesn't hurt to keep.
     const shortcode = ctx.get('shortcode');
     const user_is = ctx.get('user_is');
 

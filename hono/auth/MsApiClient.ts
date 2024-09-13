@@ -8,12 +8,11 @@ type Secrets = {
 
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 
-// We only want to ensure the request originated from our website,
-// hence no identifiable information. In memory as your request
-// should be done pretty fast, c'mon.
-
 // Todo: custom errors
 
+// We only want to ensure the request originated from our website,
+// hence no identifiable information. An in memory array as your request
+// should be done pretty fast + we have a maxStates variable.
 const states: string[] = [];
 
 export class MsAuthClient {
@@ -23,7 +22,8 @@ export class MsAuthClient {
   public constructor(
     private scopes: string[],
     private secrets: Secrets,
-    private redirectUri: string
+    private redirectUri: string,
+    private maxStates: number = 200
   ) {
     this.msAuthEndpoint = `https://login.microsoftonline.com/${secrets.tenantId}/oauth2/v2.0`;
     this.scopeUrls = this.scopes.map(
@@ -33,7 +33,12 @@ export class MsAuthClient {
 
   public getRedirectUrl(state?: string): string {
     const _state = state || crypto.randomUUID();
-    states.push(_state);
+    const noStates = states.push(_state);
+    // Flush the states for performance
+    if (noStates > this.maxStates) {
+      states.length = 1;
+      states[0] = _state
+    }
 
     const url = buildUrl(this.msAuthEndpoint, {
       path: "/authorize",
