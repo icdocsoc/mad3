@@ -1,46 +1,9 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "eacca372-6cb0-4b43-8617-f3c1aede89f9",
+  "id": "d581fb85-8317-418c-a26d-9e1634816128",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "auth": {
-      "name": "auth",
-      "columns": {
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "access_token": {
-          "name": "access_token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "refresh_token": {
-          "name": "refresh_token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "family": {
       "name": "family",
       "columns": {
@@ -55,21 +18,21 @@
           "name": "id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "family_kid_student_email_fk": {
-          "name": "family_kid_student_email_fk",
+        "family_kid_student_shortcode_fk": {
+          "name": "family_kid_student_shortcode_fk",
           "tableFrom": "family",
           "tableTo": "student",
           "columnsFrom": [
             "kid"
           ],
           "columnsTo": [
-            "email"
+            "shortcode"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -101,8 +64,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "email": {
-          "name": "email",
+        "parent1": {
+          "name": "parent1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent2": {
+          "name": "parent2",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -125,15 +95,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "marriage_email_student_email_fk": {
-          "name": "marriage_email_student_email_fk",
+        "marriage_parent1_student_shortcode_fk": {
+          "name": "marriage_parent1_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
           "columnsFrom": [
-            "email"
+            "parent1"
           ],
           "columnsTo": [
-            "email"
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "marriage_parent2_student_shortcode_fk": {
+          "name": "marriage_parent2_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "tableTo": "student",
+          "columnsFrom": [
+            "parent2"
+          ],
+          "columnsTo": [
+            "shortcode"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -145,8 +128,15 @@
     "proposals": {
       "name": "proposals",
       "columns": {
-        "email": {
-          "name": "email",
+        "proposer": {
+          "name": "proposer",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "proposee": {
+          "name": "proposee",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -155,15 +145,28 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "proposals_email_student_email_fk": {
-          "name": "proposals_email_student_email_fk",
+        "proposals_proposer_student_shortcode_fk": {
+          "name": "proposals_proposer_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
           "columnsFrom": [
-            "email"
+            "proposer"
           ],
           "columnsTo": [
-            "email"
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "proposals_proposee_student_shortcode_fk": {
+          "name": "proposals_proposee_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "tableTo": "student",
+          "columnsFrom": [
+            "proposee"
+          ],
+          "columnsTo": [
+            "shortcode"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -175,8 +178,8 @@
     "student": {
       "name": "student",
       "columns": {
-        "email": {
-          "name": "email",
+        "shortcode": {
+          "name": "shortcode",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -200,7 +203,7 @@
           "name": "jmc",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "socials": {
@@ -219,21 +222,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "student_email_auth_email_fk": {
-          "name": "student_email_auth_email_fk",
-          "tableFrom": "student",
-          "tableTo": "auth",
-          "columnsFrom": [
-            "email"
-          ],
-          "columnsTo": [
-            "email"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     }

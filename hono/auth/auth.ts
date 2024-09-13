@@ -1,16 +1,19 @@
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import { MicrosoftGraphClient, MsAuthClient } from "./MsApiClient";
-import { grantAccessTo, newToken } from "./jwt";
-import factory from "../factory";
-import { apiLogger } from "../logger";
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { MicrosoftGraphClient, MsAuthClient } from './MsApiClient';
+import { grantAccessTo, isFresherOrParent, newToken } from './jwt';
+import factory from '../factory';
+import { apiLogger } from '../logger';
+import db from '../db';
+import { student } from '../db/student';
+import { eq } from 'drizzle-orm';
 
 const msAuth = new MsAuthClient(
-  ["profile"],
+  ['profile'],
   {
     tenantId: process.env.TENANT_ID!,
     clientId: process.env.CLIENT_ID!,
-    clientSecret: process.env.CLIENT_SECRET!,
+    clientSecret: process.env.CLIENT_SECRET!
   },
   `http://${process.env.BASE_URL}/api/auth/callback`
 );
@@ -19,83 +22,113 @@ const callbackSchema = z.object({
   code: z.string(),
   state: z.string(),
   error: z.string().optional(),
-  error_description: z.string().optional(),
+  error_description: z.string().optional()
 });
 
 const auth = factory
   .createApp()
-  .post("/signIn", grantAccessTo("unauthenticated"), async (ctx) => {
+  .post('/signIn', grantAccessTo('unauthenticated'), async ctx => {
     return ctx.redirect(msAuth.getRedirectUrl());
   })
-  .post("/signOut", grantAccessTo("authenticated"), async (ctx) => {
-    ctx.header("Set-Cookie", `Authorization= ; Max-Age=0; HttpOnly`);
-    return ctx.text("", 200);
+  .post('/signOut', grantAccessTo('authenticated'), async ctx => {
+    ctx.header('Set-Cookie', `Authorization= ; Max-Age=0; HttpOnly`);
+    return ctx.text('', 200);
   })
   .post(
-    "/callback",
-    grantAccessTo("unauthenticated"),
-    zValidator("query", callbackSchema, async (zRes, ctx) => {
+    '/callback',
+    grantAccessTo('unauthenticated'),
+    zValidator('query', callbackSchema, async (zRes, ctx) => {
       if (!zRes.success || zRes.data.error_description) {
         apiLogger.warn(
           ctx,
-          "Microsoft Entra Error:",
+          'Microsoft Entra Error:',
           zRes.data.error_description
         );
-        return ctx.text("Invalid request.", 400);
+        return ctx.text('Invalid request.', 400);
       }
     }),
-    async (ctx) => {
-      // Code and state (once we implement that) are guaranteed to be defined.
-      const { code, state } = ctx.req.valid("query");
+    async ctx => {
+      const { code, state } = ctx.req.valid('query');
 
       let client: MicrosoftGraphClient;
       try {
         client = await msAuth.verifyAndConsumeCode(code, state);
       } catch (e) {
         // Maybe return something differend based on the error (state or not) later.
-        apiLogger.error(ctx, "Microsoft auth error:", e);
-        return ctx.text("Internal server error.", 500);
+        apiLogger.error(ctx, 'Microsoft auth error:', e);
+        return ctx.text('Internal server error.', 500);
       }
 
-      const res = await client.get("/me", [
-        "displayName",
-        "department",
-        "userPrincipalName",
+      const res = await client.get('/me', [
+        'department',
+        'userPrincipalName',
+        'mail'
       ]);
 
-      if (res.department != "Computing") {
-        return ctx.text("You are not a Computing student :(", 403);
+      if (res.department != 'Computing') {
+        return ctx.json(
+          {
+            error: 'You are not a Computing student :('
+          },
+          403
+        );
       }
 
-      const token = await newToken(res.userPrincipalName);
+      const shortcode = res.userPrincipalName.match(/.*(?=@)/g);
+      if (shortcode == null) {
+        return ctx.json(
+          {
+            error: 'User has no shortcode.'
+          },
+          400
+        );
+      }
+
+      let token: string;
+      try {
+        token = await newToken(res.mail, shortcode[0]);
+      } catch (e) {
+        return ctx.json(
+          {
+            error: 'User has no entry year. Are you a professor?'
+          },
+          400
+        );
+      }
+      const user_is = isFresherOrParent(res.mail);
 
       // 14 days
       const maxAge = 14 * 24 * 60 * 60;
       ctx.header(
-        "Set-Cookie",
+        'Set-Cookie',
         `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
       );
 
-      // TODO: Replace this with role
+      let doneSurvey = false;
+      const studentInDb = await db
+        .select()
+        .from(student)
+        .where(eq(student.shortcode, shortcode[0]));
+      if (studentInDb.length == 1) doneSurvey = true;
+
       return ctx.json(
         {
-          name: res.displayName,
-          department: res.department,
-          email: res.userPrincipalName,
+          user_is: user_is,
+          done_survey: doneSurvey
         },
         200
       );
     }
   )
-  .get("/details", grantAccessTo("authenticated"), async (ctx) => {
+  .get('/details', grantAccessTo('authenticated'), async ctx => {
     // Just so I can test signed ins for now.
-    const email = ctx.get("email");
-    const user_is = ctx.get("user_is");
+    const shortcode = ctx.get('shortcode');
+    const user_is = ctx.get('user_is');
 
     return ctx.json(
       {
-        email: email,
-        user_is: user_is,
+        shortcode: shortcode,
+        user_is: user_is
       },
       200
     );

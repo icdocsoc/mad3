@@ -34,7 +34,7 @@ export type AuthRoles = "parent" | "fresher" | "authenticated" | "all" | "unauth
 
 export type Env = {
   Variables: {
-    email: string | null;
+    shortcode: string | null;
     user_is: UserRole | null
   }
 }

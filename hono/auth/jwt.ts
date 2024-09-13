@@ -10,23 +10,29 @@ import { apiLogger } from "../logger";
 
 const secret = process.env.JWT_SECRET!;
 
-export async function newToken(email: string): Promise<string> {
-  const gradYear = email.match(/[0-9]{2}(?=@)/);
+export function isFresherOrParent(email: string): "fresher" | "parent" {
+  const entryYear = email.match(/[0-9]{2}(?=@)/);
 
-  if (gradYear == null) {
-    throw new Error("User email has no graduation year.");
+  if (entryYear == null) {
+    throw new Error("User email has no entry year.");
   }
 
   const now = new Date();
   const academicYear =
     now.getFullYear() - Math.floor(now.getFullYear() / 100) * 100;
-  const user_is = +gradYear[0] == academicYear ? "fresher" : "parent";
+  const user_is = +entryYear[0] == academicYear ? "fresher" : "parent";
 
+  return user_is;
+}
+
+export async function newToken(email: string, shortcode: string): Promise<string> {
+  const user_is = isFresherOrParent(email);
+  
   const jwtExpiry = new Date();
   jwtExpiry.setMonth(jwtExpiry.getDay() + 14);
 
   const payload = {
-    email: email,
+    shortcode: shortcode,
     user_is: user_is,
     exp: Math.floor(jwtExpiry.getTime() / 1000),
   };
@@ -39,7 +45,7 @@ export async function newToken(email: string): Promise<string> {
 export const decodeToken = () =>
   factory.createMiddleware(async (ctx, next) => {
     ctx.set("user_is", null);
-    ctx.set("email", null);
+    ctx.set("shortcode", null);
 
     const jwt_token = getCookie(ctx, "Authorization");
 
@@ -51,10 +57,10 @@ export const decodeToken = () =>
       const payload = await verify(jwt_token, secret);
 
       const userIs = payload.user_is as UserRole;
-      const email = payload.email as string;
+      const shortcode = payload.shortcode as string;
 
       ctx.set("user_is", userIs);
-      ctx.set("email", email);
+      ctx.set("shortcode", shortcode);
     } catch (e) {
       if (e instanceof JwtTokenSignatureMismatched) {
         const data = decode(jwt_token);
