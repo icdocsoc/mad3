@@ -24,14 +24,14 @@ const callbackSchema = z.object({
 
 const auth = factory
   .createApp()
-  .get("/signIn", grantAccessTo("unauthenticated"), async (ctx) => {
+  .post("/signIn", grantAccessTo("unauthenticated"), async (ctx) => {
     return ctx.redirect(msAuth.getRedirectUrl());
   })
-  .get("/signOut", grantAccessTo("authenticated"), async (ctx) => {
+  .post("/signOut", grantAccessTo("authenticated"), async (ctx) => {
     ctx.header("Set-Cookie", `Authorization= ; Max-Age=0; HttpOnly`);
     return ctx.text("", 200);
   })
-  .get(
+  .post(
     "/callback",
     grantAccessTo("unauthenticated"),
     zValidator("query", callbackSchema, async (zRes, ctx) => {
@@ -76,7 +76,7 @@ const auth = factory
         `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
       );
 
-      // TODO: Replace this with a redirect to the landing page or whatever
+      // TODO: Replace this with role
       return ctx.json(
         {
           name: res.displayName,

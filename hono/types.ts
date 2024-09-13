@@ -1,11 +1,3 @@
-export type Socials = {
-  twitter: string;
-  tiktok: string;
-  discord: string;
-  instagram: string;
-  spotify: string;
-};
-
 const interestKeys = [
   "alcohol",
   "anime",
@@ -35,7 +27,7 @@ const interestKeys = [
   "tabletopGames",
   "videoGames",
 ] as const;
-export type Interests = Record<(typeof interestKeys)[number], 0 | 1 | 2 | 3>;
+export type Interests = Record<(typeof interestKeys)[number], 0 | 1 | 2>;
 
 export type UserRole = "parent" | "fresher"
 export type AuthRoles = "parent" | "fresher" | "authenticated" | "all" | "unauthenticated";
