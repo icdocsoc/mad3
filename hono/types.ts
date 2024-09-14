@@ -41,7 +41,8 @@ export type AuthRoles =
   | 'fresher'
   | 'authenticated'
   | 'all'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'admin';
 
 export type Env = {
   Variables: {
@@ -51,3 +52,11 @@ export type Env = {
 };
 
 export type Student = z.infer<typeof selectStudentSchema>;
+
+export const stateOptions = [
+  'parents_open',
+  'parents_close',
+  'freshers_open',
+  'closed'
+] as const;
+export type State = (typeof stateOptions)[number];

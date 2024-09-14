@@ -9,6 +9,7 @@ import factory from '../factory';
 import { apiLogger } from '../logger';
 
 const secret = process.env.JWT_SECRET!;
+const webmasters = process.env.WEBMASTERS!.split(',');
 
 export function isFresherOrParent(email: string): 'fresher' | 'parent' {
   const entryYear = email.match(/[0-9]{2}(?=@)/);
@@ -95,6 +96,8 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
       if (roles.includes('unauthenticated')) return await next();
       else return ctx.text(no_auth, 403);
     }
+
+    if (roles.includes('admin') && webmasters.includes(shortcode)) return await next(); 
 
     if (roles.includes(role) || roles.includes('authenticated')) {
       return await next();
