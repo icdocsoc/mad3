@@ -44,7 +44,7 @@ export const admin = factory
       }),
       async (zRes, ctx) => {
         if (!zRes.success) {
-          return ctx.text('You know better, Jay and Nishant.', 400)
+          return ctx.text('You know better, Jay and Nishant.', 400);
         }
       }
     ),
@@ -56,4 +56,71 @@ export const admin = factory
 
       return ctx.text('', 200);
     }
-  );
+  )
+  .get('/all-families', grantAccessTo('admin'), async ctx => {
+    /* 
+    Given types
+    
+    Student: {
+      firstName: string,
+      lastName: string,
+      preferredName: string,
+      gender: string (Female | Male | other | na) but only female actually matters,
+      shortcode: string,
+      course: string,
+      socialMedia: string[]
+    }
+
+    Fresher: {
+      _id: idfk python isn't typed,
+      student: Student
+      interests: Interests
+      family: i dont know. python isn't typed. kill me.
+    }
+    
+    Parent: {
+      _id: idk,
+      student: Student,
+      interests: Interests,
+      family: idk. python isn't typed.
+    }
+
+    Need to return JSON of 
+    id: 
+    {
+      parents: [
+        proposerId: Parent
+        proposeeId: Parent
+      ]
+      _id: idk
+      kids: Fresher[]
+      hasFemale: bool,
+      hasJmc: bool
+    }
+    */
+
+  })
+  .get('/all-unallocated-freshers', grantAccessTo('admin'), async ctx => {
+    /*
+    Given types 
+      Student: {
+      firstName: string,
+      lastName: string,
+      preferredName: string,
+      gender: string (Female | Male | other | na) but only female actually matters,
+      shortcode: string,
+      course: string,
+      socialMedia: string[]
+    }
+
+    Fresher: {
+      _id: idfk python isn't typed,
+      student: Student
+      interests: Interests
+      family: i dont know. python isn't typed. kill me.
+    }
+
+    Need to return JSON of 
+    id: Fresher
+    */
+  });
