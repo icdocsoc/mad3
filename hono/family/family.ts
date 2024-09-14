@@ -193,7 +193,26 @@ const family = factory
     }
   )
   .get('/proposals', grantAccessTo('parent'), async ctx => {
-    // TODO
+    const shortcode = ctx.get('shortcode')!;
+    const userInDb = await db
+      .select()
+      .from(students)
+      .where(eq(students.shortcode, shortcode));
+
+    // Guaranteed to be defined
+    if (userInDb[0]!.role != 'parent') {
+      return ctx.text(
+        "You're too young to have any proposals. Focus on your studies.",
+        400
+      );
+    }
+
+    const proposalsInDb = await db
+      .select()
+      .from(proposals)
+      .where(eq(proposals.proposee, shortcode));
+
+    return ctx.json(proposalsInDb, 200);
   })
   .get('/me', grantAccessTo('authenticated'), async ctx => {
     const shortcode = ctx.get('shortcode')!;
