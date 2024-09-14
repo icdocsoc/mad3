@@ -25,10 +25,10 @@
 **200** - Succesful log in. Sets JWT cookie and returns JSON.
 
 ```ts
-{
-    user_is: "parent" || "fresher",
-    done_survey: boolean
-}
+type Reponse = {
+  user_is: 'parent' | 'fresher';
+  done_survey: boolean;
+};
 ```
 
 ## `GET /details`
@@ -36,8 +36,9 @@
 **200** - Mainly a testing route. Decodes JWT & returns JSON.
 
 ```ts
-{
-    shortcode: string,
-    user_is: "parent" || "fresher"
-}
+type Response = {
+  shortcode: string;
+  user_is: 'parent' | 'fresher';
+  doneSurvey: boolean;
+};
 ```
