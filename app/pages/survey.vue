@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { z } from 'zod';
 
+// Page setup stuff
 const headers = useRequestHeaders(); // since it is SSR, we need to retrieve the headers in the server
 const responseSchema = z.object({
   shortcode: z.string().regex(/^[a-z]{2,3}\d{2,4}$/),
   user_is: z.enum(['parent', 'fresher']),
   doneSurvey: z.boolean()
+});
+definePageMeta({
+  middleware: []
 });
 const { data, status, error } = useAsyncData('get-details', async () => {
   // check if the user exists and completed the survey
