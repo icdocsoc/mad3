@@ -87,10 +87,11 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
   factory.createMiddleware(async (ctx, next) => {
     const no_auth = 'You do not have access to this route.';
     const role = ctx.get('user_is');
+    const shortcode = ctx.get('shortcode');
 
     if (roles.includes('all')) return await next();
 
-    if (role == null) {
+    if (role == null || shortcode == null) {
       if (roles.includes('unauthenticated')) return await next();
       else return ctx.text(no_auth, 403);
     }

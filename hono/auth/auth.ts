@@ -39,7 +39,7 @@ const auth = factory
   .post(
     '/callback',
     grantAccessTo('unauthenticated'),
-    zValidator('query', callbackSchema, async (zRes, ctx) => {
+    zValidator('json', callbackSchema, async (zRes, ctx) => {
       if (!zRes.success || zRes.data.error_description) {
         apiLogger.warn(
           ctx,
@@ -50,7 +50,7 @@ const auth = factory
       }
     }),
     async ctx => {
-      const { code, state } = ctx.req.valid('query');
+      const { code, state } = ctx.req.valid('json');
 
       let client: MicrosoftGraphClient;
       try {
@@ -126,13 +126,21 @@ const auth = factory
   )
   .get('/details', grantAccessTo('authenticated'), async ctx => {
     // Mostly a test route but doesn't hurt to keep.
-    const shortcode = ctx.get('shortcode');
-    const user_is = ctx.get('user_is');
+    const shortcode = ctx.get('shortcode')!;
+    const user_is = ctx.get('user_is')!;
+
+    let doneSurvey = false;
+    const studentInDb = await db
+      .select()
+      .from(student)
+      .where(eq(student.shortcode, shortcode));
+    if (studentInDb.length == 1) doneSurvey = true;
 
     return ctx.json(
       {
         shortcode: shortcode,
-        user_is: user_is
+        user_is: user_is,
+        doneSurvey
       },
       200
     );
