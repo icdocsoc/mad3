@@ -1,7 +1,7 @@
 {
   "dialect": "sqlite",
   "out": "./hono/schema",
-  "schema": "./hono/db",
+  "schema": "./hono/**/schema.ts",
   "dbCredentials": {
     "url": "file:./sqlite.db"
   }

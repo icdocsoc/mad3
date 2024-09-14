@@ -4,9 +4,8 @@ import factory from '../factory';
 import { z } from 'zod';
 import { type Interests } from '../types';
 import db from '../db';
-import { students, surveySchema } from '../db/student';
 import { and, eq, or } from 'drizzle-orm';
-import { families, marriages, proposals } from '../db/family';
+import { families, marriages, proposals, students, surveySchema } from './schema';
 
 const proposalSchema = z.object({
   shortcode: z.string()

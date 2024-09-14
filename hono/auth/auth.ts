@@ -5,7 +5,7 @@ import { grantAccessTo, isFresherOrParent, newToken } from './jwt';
 import factory from '../factory';
 import { apiLogger } from '../logger';
 import db from '../db';
-import { students } from '../db/student';
+import { students } from '../family/schema';
 import { eq } from 'drizzle-orm';
 
 const msAuth = new MsAuthClient(
@@ -142,8 +142,8 @@ const auth = factory
     let doneSurvey = false;
     const studentInDb = await db
       .select()
-      .from(student)
-      .where(eq(student.shortcode, shortcode));
+      .from(students)
+      .where(eq(students.shortcode, shortcode));
     if (studentInDb.length == 1) doneSurvey = true;
 
     return ctx.json(

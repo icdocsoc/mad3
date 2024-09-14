@@ -1,3 +1,8 @@
+CREATE TABLE `meta` (
+	`id` integer PRIMARY KEY DEFAULT 1 CHECK (id = 1) NOT NULL,
+	`state` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `family` (
 	`kid` text PRIMARY KEY NOT NULL,
 	`id` integer NOT NULL,
@@ -19,10 +24,6 @@ CREATE TABLE `proposals` (
 	PRIMARY KEY(`proposer`, `proposee`),
 	FOREIGN KEY (`proposer`) REFERENCES `student`(`shortcode`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`proposee`) REFERENCES `student`(`shortcode`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `meta` (
-	`state` text
 );
 --> statement-breakpoint
 CREATE TABLE `student` (
