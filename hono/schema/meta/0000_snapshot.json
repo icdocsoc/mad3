@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "dd116078-35f2-4ccc-8c0e-656be1eb7a6a",
+  "id": "ad19a26b-262b-42e5-8dc9-75ec954a2c75",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "family": {
@@ -132,14 +132,14 @@
         "proposer": {
           "name": "proposer",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "proposee": {
           "name": "proposee",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
@@ -173,7 +173,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "proposals_proposer_proposee_pk": {
+          "columns": [
+            "proposer",
+            "proposee"
+          ],
+          "name": "proposals_proposer_proposee_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "meta": {

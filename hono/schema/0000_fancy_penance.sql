@@ -14,8 +14,9 @@ CREATE TABLE `marriage` (
 );
 --> statement-breakpoint
 CREATE TABLE `proposals` (
-	`proposer` text PRIMARY KEY NOT NULL,
-	`proposee` text PRIMARY KEY NOT NULL,
+	`proposer` text NOT NULL,
+	`proposee` text NOT NULL,
+	PRIMARY KEY(`proposer`, `proposee`),
 	FOREIGN KEY (`proposer`) REFERENCES `student`(`shortcode`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`proposee`) REFERENCES `student`(`shortcode`) ON UPDATE no action ON DELETE no action
 );

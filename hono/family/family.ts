@@ -192,6 +192,9 @@ const family = factory
       });
     }
   )
+  .get('/proposals', grantAccessTo('parent'), async ctx => {
+    // TODO
+  })
   .get('/me', grantAccessTo('authenticated'), async ctx => {
     const shortcode = ctx.get('shortcode')!;
 

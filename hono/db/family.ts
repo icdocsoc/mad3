@@ -1,15 +1,28 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text
+} from 'drizzle-orm/sqlite-core';
 import { students } from './student';
 
-export const proposals = sqliteTable('proposals', {
-  proposer: text('proposer')
-    .references(() => students.shortcode)
-    .primaryKey(),
-  proposee: text('proposee')
-    .references(() => students.shortcode)
-    .notNull()
-    .primaryKey()
-});
+export const proposals = sqliteTable(
+  'proposals',
+  {
+    proposer: text('proposer')
+      .references(() => students.shortcode)
+      .notNull(),
+    proposee: text('proposee')
+      .references(() => students.shortcode)
+      .notNull()
+      .notNull()
+  },
+  proposals => {
+    return {
+      pk: primaryKey({ columns: [proposals.proposer, proposals.proposee] })
+    };
+  }
+);
 
 export const marriages = sqliteTable('marriage', {
   id: integer('id').primaryKey(),
