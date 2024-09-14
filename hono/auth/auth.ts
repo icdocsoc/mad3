@@ -5,7 +5,7 @@ import { grantAccessTo, isFresherOrParent, newToken } from './jwt';
 import factory from '../factory';
 import { apiLogger } from '../logger';
 import db from '../db';
-import { student } from '../db/student';
+import { students } from '../db/student';
 import { eq } from 'drizzle-orm';
 
 const msAuth = new MsAuthClient(
@@ -108,17 +108,27 @@ const auth = factory
         `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
       );
 
-      let doneSurvey = false;
+      let completedSurvey = false;
       const studentInDb = await db
         .select()
-        .from(student)
-        .where(eq(student.shortcode, shortcode[0]));
-      if (studentInDb.length == 1) doneSurvey = true;
+        .from(students)
+        .where(eq(students.shortcode, shortcode[0]));
+      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
+        completedSurvey = true;
+      else {
+        // TBD: Implement JMC check.
+        await db.insert(students).values({
+          shortcode: shortcode[0],
+          role: user_is,
+          completedSurvey: false,
+          jmc: false
+        });
+      }
 
       return ctx.json(
         {
           user_is: user_is,
-          done_survey: doneSurvey
+          done_survey: completedSurvey
         },
         200
       );

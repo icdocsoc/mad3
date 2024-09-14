@@ -1,32 +1,35 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { student } from './student';
+import { students } from './student';
 
 export const proposals = sqliteTable('proposals', {
   proposer: text('proposer')
-    .references(() => student.shortcode)
+    .references(() => students.shortcode)
     .primaryKey(),
   proposee: text('proposee')
-    .references(() => student.shortcode)
+    .references(() => students.shortcode)
     .notNull()
+    .primaryKey()
 });
 
-export const marriage = sqliteTable('marriage', {
-  id: text('id').primaryKey(),
+export const marriages = sqliteTable('marriage', {
+  id: integer('id').primaryKey(),
   parent1: text('parent1')
-    .references(() => student.shortcode)
-    .notNull(),
+    .references(() => students.shortcode)
+    .notNull()
+    .unique(),
   parent2: text('parent2')
-    .references(() => student.shortcode)
-    .notNull(),
-  hasFemale: integer('has_female', { mode: 'boolean' }).notNull(),
-  hasJmc: integer('has_jmc', { mode: 'boolean' }).notNull()
+    .references(() => students.shortcode)
+    .notNull()
+    .unique()
+  // hasFemale: integer('has_female', { mode: 'boolean' }).notNull(),
+  // hasJmc: integer('has_jmc', { mode: 'boolean' }).notNull()
 });
 
-export const family = sqliteTable('family', {
+export const families = sqliteTable('family', {
   kid: text('kid')
-    .references(() => student.shortcode)
+    .references(() => students.shortcode)
     .primaryKey(),
-  id: text('id')
-    .references(() => marriage.id)
+  id: integer('id')
+    .references(() => marriages.id)
     .notNull()
 });

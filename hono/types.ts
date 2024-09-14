@@ -1,4 +1,4 @@
-const interestKeys = [
+export const interestKeys = [
   'alcohol',
   'anime',
   'artGraphics',
@@ -28,6 +28,9 @@ const interestKeys = [
   'videoGames'
 ] as const;
 export type Interests = Record<(typeof interestKeys)[number], 0 | 1 | 2>;
+
+export const genderOptions = ["male", "female", "other", "n/a"] as const;
+export type Gender = typeof genderOptions[number]; 
 
 export type UserRole = 'parent' | 'fresher';
 export type AuthRoles =
