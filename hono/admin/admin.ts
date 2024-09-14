@@ -41,7 +41,12 @@ export const admin = factory
       'json',
       z.object({
         state: z.enum(stateOptions)
-      })
+      }),
+      async (zRes, ctx) => {
+        if (!zRes.success) {
+          return ctx.text('You know better, Jay and Nishant.', 400)
+        }
+      }
     ),
     async ctx => {
       const { state } = ctx.req.valid('json');

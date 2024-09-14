@@ -11,7 +11,7 @@ try {
   db.insert(meta).values({
     id: 1,
     state: 'parents_open'
-  })
+  }).run()
 } catch (e) {
   // This just means the meta row is already inserted,
   // so do nothing.

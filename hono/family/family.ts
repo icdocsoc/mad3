@@ -11,7 +11,7 @@ const proposalSchema = z.object({
   shortcode: z.string()
 });
 
-const family = factory
+export const family = factory
   .createApp()
   .post(
     '/survey',
