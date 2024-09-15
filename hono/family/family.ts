@@ -34,7 +34,7 @@ export const family = factory
         .select({ completedSurvey: students.completedSurvey })
         .from(students)
         .where(eq(students.shortcode, shortcode));
-      if (currDb[0]?.completedSurvey == true) {
+      if (currDb[0]!.completedSurvey == true) {
         return ctx.text('You have already completed the survey.', 400);
       }
 

@@ -107,7 +107,7 @@ type Response = {
 {
   proposal: string;
   proposee: string;
-}
+}[]
 ```
 
 ## `GET /me` - authenticated
