@@ -1,3 +1,5 @@
+> Note that where 400 indicates multiple errors, a relevant error message will be returned by the backend.
+
 # **middleware**
 
 ## `grantAccessTo`
@@ -6,15 +8,15 @@
 
 # **/auth**
 
-## `POST /signIn`
+## `POST /signIn` - unauthenticated
 
 **302** - Redirects to Microsoft Auth sign in
 
-## `POST /signOut`
+## `POST /signOut` - authenticated
 
 **200** - Clears JWT cookie from browser (signs out)
 
-## `POST /callback`
+## `POST /callback` - unauthenticated
 
 **400** - Microsoft auth error, user has no shortcode, or user has no entry year.
 
@@ -31,7 +33,7 @@ type Reponse = {
 };
 ```
 
-## `GET /details`
+## `GET /details` - authenticated
 
 **200** - Mainly a testing route. Decodes JWT & returns JSON.
 
@@ -41,4 +43,115 @@ type Response = {
   user_is: 'parent' | 'fresher';
   doneSurvey: boolean;
 };
+```
+
+# **/family**
+
+## `POST /survey` - authenticated
+
+```ts
+{
+  name: string,
+  gender: 'male' | 'female' | 'other' | 'n/a',
+  interests: Interests,
+  aboutMe: string | null,
+  socials: string[] | null
+}
+```
+
+**400** - Invalid body or already completed survey.
+
+**200** - Updates these details for the user.
+
+## `POST /propose` - parent
+
+```ts
+{
+  shortcode: string;
+}
+```
+
+**400** - Invalid body, already married, attempted to propose to self or invalid person, already proposed to max (3) number, already proposed to person.
+
+**200** - Proposes to `shortcode`.
+
+## `DELETE /propose` - parent
+
+```ts
+{
+  shortcode: string;
+}
+```
+
+**400** - Invalid body or proposal does not exist.
+
+**200** - Revokes proposal to `shortcode`.
+
+## `POST /acceptProposal` - parent
+
+```ts
+{
+  shortcode: string;
+}
+```
+
+**400** - Invalid body or proposal does not exist.
+
+**200** - Accepts proposal from `shortcode`.
+
+## `GET /proposals` - parent
+
+**200** - Returns array of proposals.
+
+```ts
+{
+  proposal: string;
+  proposee: string;
+}
+```
+
+## `GET /me` - authenticated
+
+**200** - Returns user details.
+
+```ts
+{
+  shortcode: string;
+  jmc: boolean;
+  role: "parent" | "fresher";
+  completedSurvey: boolean;
+  name: string | null;
+  gender: "male" | "female" | "other" | "n/a" | null;
+  interests: Interests | null;
+  socials: string[] | null;
+  aboutMe: string | null;
+}
+```
+
+## `GET /myFamily` - authenticated
+
+**400** - User does not have a family.
+
+**200** - Returns family.
+
+```ts
+type Student = {
+  shortcode: string;
+  jmc: boolean;
+  role: "parent" | "fresher";
+  completedSurvey: boolean;
+  name: string | null;
+  gender: "male" | "female" | "other" | "n/a" | null;
+  interests: Interests | null;
+  socials: string[] | null;
+  aboutMe: string | null;
+}
+
+{
+  parents: [
+    parent1: Student
+    parent2: Student
+  ],
+  kids: Student[]
+}
 ```

@@ -207,6 +207,8 @@ export const family = factory
           parent2: proposer
         });
       });
+
+      return ctx.text('', 200);
     }
   )
   .get('/proposals', grantAccessTo('parent'), async ctx => {
@@ -256,7 +258,7 @@ export const family = factory
     }
 
     if (familyInDb.length == 0) {
-      return ctx.text("You do not have a family. I'm sorry.");
+      return ctx.text("You do not have a family. I'm sorry.", 400);
     }
 
     const familyId = familyInDb[0]!.id;
@@ -293,8 +295,11 @@ export const family = factory
         .where(eq(students.shortcode, marriageInDb[0]!.parent2))
     ]);
 
-    return ctx.json({
-      parents: [parent1[0], parent2[0]],
-      kids: kids
-    });
+    return ctx.json(
+      {
+        parents: [parent1[0], parent2[0]],
+        kids: kids
+      },
+      200
+    );
   });
