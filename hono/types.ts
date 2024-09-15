@@ -1,4 +1,7 @@
-const interestKeys = [
+import type { z } from 'zod';
+import type { selectStudentSchema } from './family/schema';
+
+export const interestKeys = [
   'alcohol',
   'anime',
   'artGraphics',
@@ -29,6 +32,9 @@ const interestKeys = [
 ] as const;
 export type Interests = Record<(typeof interestKeys)[number], 0 | 1 | 2>;
 
+export const genderOptions = ['male', 'female', 'other', 'n/a'] as const;
+export type Gender = (typeof genderOptions)[number];
+
 export type UserRole = 'parent' | 'fresher';
 export type AuthRoles =
   | 'parent'
@@ -43,3 +49,5 @@ export type Env = {
     user_is: UserRole | null;
   };
 };
+
+export type Student = z.infer<typeof selectStudentSchema>;
