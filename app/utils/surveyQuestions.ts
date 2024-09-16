@@ -54,7 +54,7 @@ export const surveyQuestions: SurveyQuestions = {
       'Social Media links so other family members can contact you prior to the first social.',
     schema: {
       type: 'text',
-      title: 'Link: '
+      title: ''
     }
   },
   gender: {
@@ -70,7 +70,7 @@ export const surveyQuestions: SurveyQuestions = {
   },
   course: {
     type: 'select',
-    title: 'Gender: ',
+    title: 'Course: ',
     required: true,
     options: {
       computing: 'Computing',

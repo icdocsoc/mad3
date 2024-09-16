@@ -41,6 +41,10 @@ async function handleSubmit(surveyResult: Record<string, any>) {
 
 <template>
   <Card>
-    <Survey :questions="surveyQuestions" />
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+      <template v-for="(question, label) in surveyQuestions" :key="name">
+        <SurveySelector :question="question" :label="label" />
+      </template>
+    </form>
   </Card>
 </template>

@@ -13,7 +13,9 @@ const props = defineProps<Props>();
 
 <template>
   <div>
+    <h3>{{ props.question.title }}</h3>
     <input
+      class="inline-block w-full"
       type="text"
       :placeholder="props.question.placeholder"
       :required="props.question.required" />

@@ -12,6 +12,10 @@ const props = defineProps<Props>();
 
 <template>
   <div>
-    <textarea type="text" :required="props.question.required" />
+    <h3>{{ props.question.title }}</h3>
+    <textarea
+      class="inline-block w-full"
+      type="text"
+      :required="props.question.required" />
   </div>
 </template>
