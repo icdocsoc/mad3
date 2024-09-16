@@ -13,7 +13,21 @@ function handleSubmit() {
 <template>
   <div>
     <form @submit.prevent="handleSubmit">
-      {{ props.questions }}
+      <div v-for="(question, label) in props.questions" :key="name">
+        <SurveyText v-if="question.type === 'text'" :question="question" />
+        <SurveyMatrix
+          v-else-if="question.type === 'matrix'"
+          :question="question" />
+        <SurveyTextarea
+          v-else-if="question.type === 'textarea'"
+          :question="question" />
+        <SurveyArray
+          v-else-if="question.type === 'array'"
+          :question="question" />
+        <SurveySelect
+          v-else-if="question.type === 'select'"
+          :question="question" />
+      </div>
     </form>
   </div>
 </template>

@@ -13,7 +13,7 @@ definePageMeta({
 });
 const { data, status, error } = useAsyncData('get-details', async () => {
   // check if the user exists and completed the survey
-  const response = await $fetch('/api/details', { headers });
+  const response = await $fetch('/api/auth/details', { headers });
   const validated = await responseSchema.parseAsync(response);
   if (validated.doneSurvey) {
     throw new Error('You have already completed the survey');
@@ -40,19 +40,7 @@ async function handleSubmit(surveyResult: Record<string, any>) {
 </script>
 
 <template>
-  <div>
-    <div v-if="status == 'pending'">
-      <p>Loading...</p>
-    </div>
-    <div v-else-if="status == 'error'">
-      <p>{{ error?.message }}</p>
-    </div>
-    <div v-else-if="data">
-      <p>
-        Welcome, {{ data.shortcode }}! Please complete this survey properly, you
-        may not be able to edit these later.
-      </p>
-      <p>{{ data }}</p>
-    </div>
-  </div>
+  <Card>
+    <Survey :questions="surveyQuestions" />
+  </Card>
 </template>
