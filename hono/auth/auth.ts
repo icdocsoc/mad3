@@ -27,7 +27,7 @@ const callbackSchema = z.object({
 
 const auth = factory
   .createApp()
-  .post('/signIn', grantAccessTo('unauthenticated'), async ctx => {
+  .get('/signIn', grantAccessTo('unauthenticated'), async ctx => {
     // Redirect the user to the Microsoft oAuth sign in.
     return ctx.redirect(msAuth.getRedirectUrl());
   })

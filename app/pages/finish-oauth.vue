@@ -3,18 +3,27 @@ const route = useRoute();
 
 const {
   code: msCode,
-  status: msStatus,
+  state: msState,
   error: msError,
   error_description: msErrorDesc
 } = route.query;
-const { status, error } = useFetch('/api/auth/callback', {
-  method: 'POST',
-  body: {
+
+let body;
+if (msError == undefined) {
+  body = {
     code: msCode,
-    status: msStatus,
+    state: msState
+  };
+} else {
+  body = {
     error: msError,
     error_description: msErrorDesc
-  }
+  };
+}
+
+const { status, error } = await useFetch('/api/auth/callback', {
+  method: 'POST',
+  body: body
 });
 watch(status, () => {
   if (status.value == 'success') {

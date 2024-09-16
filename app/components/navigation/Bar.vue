@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // TODO: login must come from backend
-const isLoggedIn = ref(false);
+const { status, data } = await useFetch('/api/family/me');
+const route = useRoute()
+const isLoggedIn = ref(status.value == 'success');
 </script>
 
 <template>
@@ -19,6 +21,11 @@ const isLoggedIn = ref(false);
       <li>
         <NavigationLink to="/fresher">
           <span class="md:text-xl">Fresher</span>
+        </NavigationLink>
+      </li>
+      <li>
+        <NavigationLink to="/api/auth/signIn">
+          <span class="font-bold md:text-xl">Log In</span>
         </NavigationLink>
       </li>
     </ul>
