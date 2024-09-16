@@ -22,6 +22,18 @@ const { data, status, error } = useAsyncData('get-details', async () => {
   return validated;
 });
 
+const answers = ref<Record<string, any>>({});
+function handleChange(answer: string, value: any) {
+  answers.value = {
+    ...answers.value,
+    [answer]: value
+  };
+}
+
+watch(answers, () => {
+  console.log(answers.value);
+});
+
 async function handleSubmit(surveyResult: Record<string, any>) {
   // TODO add the survey result type
   // submit the survey
@@ -43,8 +55,15 @@ async function handleSubmit(surveyResult: Record<string, any>) {
   <Card>
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <template v-for="(question, label) in surveyQuestions" :key="name">
-        <SurveySelector :question="question" :label="label" />
+        <SurveySelector
+          :question="question"
+          :label="label"
+          @change="(v: any) => handleChange(label, v)" />
       </template>
+      <input
+        type="submit"
+        value="Finish"
+        class="cursor-pointer bg-primary py-2 font-semibold text-white" />
     </form>
   </Card>
 </template>
