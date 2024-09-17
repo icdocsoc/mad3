@@ -20,7 +20,7 @@ const msAuth = new MsAuthClient(
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!
   },
-  `http://${process.env.BASE_URL}/finish-oauth`
+  `${process.env.BASE_URL}/finish-oauth`
 );
 
 const callbackSchema = z.object({
@@ -53,7 +53,6 @@ const auth = factory
       const path = query.redirect || ''
       const redirectUrl = process.env.BASE_URL! + path + "?loggedOut=true";
 
-      console.log(redirectUrl)
       return ctx.redirect(redirectUrl);
     }
   )
