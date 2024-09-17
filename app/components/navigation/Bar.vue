@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// This will only work on the client. This is okay.
 const { authState } = useAuth();
 
 // Note: url will only work on host, not server. This is okay.
@@ -26,18 +25,16 @@ const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
           <span class="md:text-xl">Fresher</span>
         </NavigationLink>
       </li>
-      <ClientOnly>
-        <li v-if="authState == 'loggedOut'">
-          <NavigationLink :to="logInUrl">
-            <span class="font-bold md:text-xl">Log In</span>
-          </NavigationLink>
-        </li>
-        <li v-else="authState == 'loggedIn'">
-          <NavigationLink :to="logOutUrl">
-            <span class="font-bold md:text-xl">Log Out</span>
-          </NavigationLink>
-        </li>
-      </ClientOnly>
+      <li v-if="authState == 'loggedOut'">
+        <NavigationLink :to="logInUrl">
+          <span class="font-bold md:text-xl">Log In</span>
+        </NavigationLink>
+      </li>
+      <li v-else="authState == 'loggedIn'">
+        <NavigationLink :to="logOutUrl">
+          <span class="font-bold md:text-xl">Log Out</span>
+        </NavigationLink>
+      </li>
     </ul>
   </nav>
 </template>
