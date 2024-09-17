@@ -5,7 +5,13 @@ import { z } from 'zod';
 import { type Interests } from '../types';
 import db from '../db';
 import { and, eq, or } from 'drizzle-orm';
-import { families, marriages, proposals, students, surveySchema } from './schema';
+import {
+  families,
+  marriages,
+  proposals,
+  students,
+  surveySchema
+} from './schema';
 
 const proposalSchema = z.object({
   shortcode: z.string()
@@ -28,7 +34,7 @@ export const family = factory
         .select({ completedSurvey: students.completedSurvey })
         .from(students)
         .where(eq(students.shortcode, shortcode));
-      if (currDb[0]?.completedSurvey == true) {
+      if (currDb[0]!.completedSurvey == true) {
         return ctx.text('You have already completed the survey.', 400);
       }
 
@@ -67,10 +73,20 @@ export const family = factory
           or(eq(marriages.parent1, proposer), eq(marriages.parent2, proposer))
         );
       if (marriageInDb.length > 0) {
-        return ctx.text('You are already married. No cheating, nor polamory.');
+        return ctx.text(
+          'You are already married. No cheating, nor polamory.',
+          400
+        );
       }
 
       const { shortcode: proposee } = ctx.req.valid('json');
+
+      if (proposee == proposer) {
+        return ctx.text(
+          "I'm glad you love yourself, but the kids need two parents.",
+          400
+        );
+      }
 
       const proposeeInDb = await db
         .select({ shortcode: students.shortcode })
@@ -92,6 +108,7 @@ export const family = factory
           400
         );
       }
+
       // No dupe proposals
       currProposals.forEach(({ proposer: _proposer, proposee: _proposee }) => {
         if (_proposee == proposee)
@@ -160,6 +177,7 @@ export const family = factory
             eq(proposals.proposer, proposer)
           )
         );
+
       if (proposalsInDb.length != 1) {
         return ctx.text(
           "This proposal does not exist. You can't force a marriage where love doesn't exist.",
@@ -189,22 +207,12 @@ export const family = factory
           parent2: proposer
         });
       });
+
+      return ctx.text('', 200);
     }
   )
   .get('/proposals', grantAccessTo('parent'), async ctx => {
     const shortcode = ctx.get('shortcode')!;
-    const userInDb = await db
-      .select()
-      .from(students)
-      .where(eq(students.shortcode, shortcode));
-
-    // Guaranteed to be defined
-    if (userInDb[0]!.role != 'parent') {
-      return ctx.text(
-        "You're too young to have any proposals. Focus on your studies.",
-        400
-      );
-    }
 
     const proposalsInDb = await db
       .select()
@@ -225,20 +233,22 @@ export const family = factory
   })
   .get('/myFamily', grantAccessTo('authenticated'), async ctx => {
     const reqShortcode = ctx.get('shortcode')!;
+    const role = ctx.get('user_is');
 
-    let familyInDb = await db
-      .select({
-        id: marriages.id
-      })
-      .from(marriages)
-      .where(
-        or(
-          eq(marriages.parent1, reqShortcode),
-          eq(marriages.parent2, reqShortcode)
-        )
-      );
-
-    if (familyInDb.length == 0) {
+    let familyInDb: { id: number }[];
+    if (role == 'parent') {
+      familyInDb = await db
+        .select({
+          id: marriages.id
+        })
+        .from(marriages)
+        .where(
+          or(
+            eq(marriages.parent1, reqShortcode),
+            eq(marriages.parent2, reqShortcode)
+          )
+        );
+    } else {
       familyInDb = await db
         .select({
           id: families.id
@@ -248,7 +258,7 @@ export const family = factory
     }
 
     if (familyInDb.length == 0) {
-      return ctx.text("You do not have a family. I'm sorry.");
+      return ctx.text("You do not have a family. I'm sorry.", 400);
     }
 
     const familyId = familyInDb[0]!.id;
@@ -269,7 +279,6 @@ export const family = factory
       .where(eq(families.id, familyId))
       .innerJoin(students, eq(families.kid, students.shortcode));
 
-    // Can't reuse the earlier familyInDb because of the types.
     const marriageInDb = await db
       .select()
       .from(marriages)
@@ -286,8 +295,11 @@ export const family = factory
         .where(eq(students.shortcode, marriageInDb[0]!.parent2))
     ]);
 
-    return ctx.json({
-      parents: [parent1[0], parent2[0]],
-      kids: kids
-    });
+    return ctx.json(
+      {
+        parents: [parent1[0], parent2[0]],
+        kids: kids
+      },
+      200
+    );
   });
