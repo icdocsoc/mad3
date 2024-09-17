@@ -1,8 +1,15 @@
 <script setup lang="ts">
-// TODO: login must come from backend
-const { status, data } = await useFetch('/api/family/me');
-const route = useRoute()
-const isLoggedIn = ref(status.value == 'success');
+// This will only work on the client. This is okay.
+const { status: loggedIn, data } = await useFetch('/api/family/me', {
+  server: false,
+  credentials: 'same-origin'
+});
+
+// Note: url will only work on host, not server. This is okay.
+const url = useRequestURL();
+const logInUrl = 'http://' + url.host + '/api/auth/signIn';
+const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
+
 </script>
 
 <template>
@@ -23,11 +30,18 @@ const isLoggedIn = ref(status.value == 'success');
           <span class="md:text-xl">Fresher</span>
         </NavigationLink>
       </li>
-      <li>
-        <NavigationLink to="/api/auth/signIn">
-          <span class="font-bold md:text-xl">Log In</span>
-        </NavigationLink>
-      </li>
+      <ClientOnly>
+        <li v-if="loggedIn == 'error'">
+          <NavigationLink :to="logInUrl">
+            <span class="font-bold md:text-xl">Log In</span>
+          </NavigationLink>
+        </li>
+        <li v-else>
+          <NavigationLink :to="logOutUrl">
+            <span class="font-bold md:text-xl">Log Out</span>
+          </NavigationLink>
+        </li>
+      </ClientOnly>
     </ul>
   </nav>
 </template>

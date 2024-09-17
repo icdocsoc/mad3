@@ -23,7 +23,8 @@ if (msError == undefined) {
 
 const { status, error } = await useFetch('/api/auth/callback', {
   method: 'POST',
-  body: body
+  body: body,
+  server: false
 });
 watch(status, () => {
   if (status.value == 'success') {

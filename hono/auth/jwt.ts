@@ -11,6 +11,9 @@ import { apiLogger } from '../logger';
 const secret = process.env.JWT_SECRET!;
 const webmasters = process.env.WEBMASTERS!.split(',');
 
+export const generateCookieHeader = (token: string, maxAge: number) =>
+  `Authorization=${token}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax; Path=/`;
+
 export function isFresherOrParent(email: string): 'fresher' | 'parent' {
   const entryYear = email.match(/[0-9]{2}(?=@)/);
 
@@ -97,7 +100,8 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
       else return ctx.text(no_auth, 403);
     }
 
-    if (roles.includes('admin') && webmasters.includes(shortcode)) return await next(); 
+    if (roles.includes('admin') && webmasters.includes(shortcode))
+      return await next();
 
     if (roles.includes(role) || roles.includes('authenticated')) {
       return await next();
