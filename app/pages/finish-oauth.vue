@@ -21,16 +21,17 @@ if (msError == undefined) {
   };
 }
 
-const { status, error } = await useFetch('/api/auth/callback', {
+const { data, status, error } = await useFetch('/api/auth/callback', {
   method: 'POST',
   body: body,
   server: false
 });
-watch(status, () => {
-  console.log(status.value);
-  if (status.value == 'success') {
-    navigateTo('/survey');
-  }
+
+watch(data, () => {
+  if (data == null) return;
+
+  if (data.value.done_survey) navigateTo('/family');
+  else navigateTo('/survey');
 });
 </script>
 
