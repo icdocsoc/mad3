@@ -1,41 +1,29 @@
 <script setup lang="ts">
 type Props = {
-  question: {
-    type: 'select';
-    title: string;
-    options: Record<string, string>;
-    required?: boolean;
-  };
-  label: string;
+  options: string[];
+  labels: string[];
+  name: string;
+  required?: boolean;
 };
-const props = defineProps<Props>();
+const { options, labels, name, required = false } = defineProps<Props>();
 
-type Emits = {
-  update: [obj: string];
-};
-const emit = defineEmits<Emits>();
-const selected = ref('');
-watch(selected, () => emit('update', selected.value));
+const model = defineModel<string>();
 </script>
 
 <template>
   <div>
-    <h3 class="inline">
-      {{ props.question.title }}
-      <span class="text-red-600" v-if="props.question.required">*</span>
-    </h3>
     <div class="flex flex-wrap gap-4">
       <div
-        v-for="(value, key) in props.question.options"
-        :key="key"
+        v-for="(value, index) in options"
+        :key="index"
         class="flex items-center gap-2">
         <input
-          :name="props.label"
+          :name="name"
           type="radio"
           :value="value"
-          v-model="selected"
-          :required="props.question.required" />
-        <span>{{ value }}</span>
+          v-model="model"
+          :required="required" />
+        <span>{{ labels[index] }}</span>
       </div>
     </div>
   </div>
