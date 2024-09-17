@@ -1,0 +1,293 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "6d3f0e3b-6316-4edb-a037-957b7d523e68",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "meta": {
+      "name": "meta",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "1 CHECK (id = 1)"
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "family": {
+      "name": "family",
+      "columns": {
+        "kid": {
+          "name": "kid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "family_kid_student_shortcode_fk": {
+          "name": "family_kid_student_shortcode_fk",
+          "tableFrom": "family",
+          "tableTo": "student",
+          "columnsFrom": [
+            "kid"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "family_id_marriage_id_fk": {
+          "name": "family_id_marriage_id_fk",
+          "tableFrom": "family",
+          "tableTo": "marriage",
+          "columnsFrom": [
+            "id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "marriage": {
+      "name": "marriage",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent1": {
+          "name": "parent1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent2": {
+          "name": "parent2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "marriage_parent1_unique": {
+          "name": "marriage_parent1_unique",
+          "columns": [
+            "parent1"
+          ],
+          "isUnique": true
+        },
+        "marriage_parent2_unique": {
+          "name": "marriage_parent2_unique",
+          "columns": [
+            "parent2"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "marriage_parent1_student_shortcode_fk": {
+          "name": "marriage_parent1_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "tableTo": "student",
+          "columnsFrom": [
+            "parent1"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "marriage_parent2_student_shortcode_fk": {
+          "name": "marriage_parent2_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "tableTo": "student",
+          "columnsFrom": [
+            "parent2"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "proposals": {
+      "name": "proposals",
+      "columns": {
+        "proposer": {
+          "name": "proposer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "proposee": {
+          "name": "proposee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "proposals_proposer_student_shortcode_fk": {
+          "name": "proposals_proposer_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "tableTo": "student",
+          "columnsFrom": [
+            "proposer"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "proposals_proposee_student_shortcode_fk": {
+          "name": "proposals_proposee_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "tableTo": "student",
+          "columnsFrom": [
+            "proposee"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "proposals_proposer_proposee_pk": {
+          "columns": [
+            "proposer",
+            "proposee"
+          ],
+          "name": "proposals_proposer_proposee_pk"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "student": {
+      "name": "student",
+      "columns": {
+        "shortcode": {
+          "name": "shortcode",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "jmc": {
+          "name": "jmc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_survey": {
+          "name": "completed_survey",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "interests": {
+          "name": "interests",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "socials": {
+          "name": "socials",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "about_me": {
+          "name": "about_me",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
