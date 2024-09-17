@@ -1,3 +1,4 @@
+import { admin } from './admin/admin';
 import auth from './auth/auth';
 import { decodeToken } from './auth/jwt';
 import factory from './factory';
@@ -9,6 +10,7 @@ const app = factory
   .use(logger())
   .use(decodeToken())
   .route('/auth', auth)
-  .route('/family', family);
+  .route('/family', family)
+  .route('/admin', admin);
 
 export default app;

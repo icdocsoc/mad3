@@ -27,7 +27,7 @@ const callbackSchema = z.object({
 
 const auth = factory
   .createApp()
-  .post('/signIn', grantAccessTo('unauthenticated'), async ctx => {
+  .get('/signIn', grantAccessTo('unauthenticated'), async ctx => {
     // Redirect the user to the Microsoft oAuth sign in.
     return ctx.redirect(msAuth.getRedirectUrl());
   })
@@ -113,10 +113,10 @@ const auth = factory
         .select()
         .from(students)
         .where(eq(students.shortcode, shortcode[0]));
-      if (studentInDb.length == 1 && studentInDb[0]!.completedSurvey)
+      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
         completedSurvey = true;
-      else {
-        // TODO: Implement JMC check.
+      else if (studentInDb.length == 0) {
+        // TBD: Implement JMC check.
         await db.insert(students).values({
           shortcode: shortcode[0],
           role: user_is,
