@@ -1,6 +1,5 @@
 <script setup lang="ts">
-const { authState } = useAuth();
-
+const { user } = useAuth();
 // Note: url will only work on host, not server. This is okay.
 const url = useRequestURL();
 const logInUrl = 'http://' + url.host + '/api/auth/signIn';
@@ -22,15 +21,15 @@ const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
       </li>
       <li>
         <NavigationLink to="/fresher">
-          <span class="md:text-xl">Fresher</span>
+          <span class="md:text-xl">Fresher</span> 
         </NavigationLink>
       </li>
-      <li v-if="authState == 'loggedOut'">
+      <li v-if="user == undefined">
         <NavigationLink :to="logInUrl">
           <span class="font-bold md:text-xl">Log In</span>
         </NavigationLink>
       </li>
-      <li v-else="authState == 'loggedIn'">
+      <li v-else>
         <NavigationLink :to="logOutUrl">
           <span class="font-bold md:text-xl">Log Out</span>
         </NavigationLink>
