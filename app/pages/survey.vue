@@ -58,6 +58,10 @@ const socialMedia = ref<string[]>([]);
 const gender = ref('male');
 const course = ref('computing');
 
+watch(socialMedia, () => {
+  console.log(socialMedia.value);
+});
+
 const matrixLabels = {
   alcohol: 'Alcohol - Drinking',
   anime: 'Anime',
@@ -132,15 +136,24 @@ async function handleSubmit(surveyResult: Record<string, any>) {
       <SurveyGroup
         label="Social Media links so other family members can contact you prior to the first social:"
         :required="false">
-        <input
-          class="inline-block w-full"
-          type="text"
-          v-model="preferredName" />
-        <button
-          class="mt-2 border bg-primary px-3 py-1 text-white"
-          @click.prevent="">
-          Add more
-        </button>
+        <div class="flex flex-col gap-2">
+          <div
+            class="flex items-center"
+            v-for="(_, index) in socialMedia"
+            :key="index">
+            <input type="text" v-model="socialMedia[index]" />
+            <span
+              class="aspect-square bg-red-600 text-center text-white"
+              @click.prevent="socialMedia = socialMedia.slice()">
+              x
+            </span>
+            <span
+              class="aspect-square bg-primary text-center text-white"
+              @click.prevent="socialMedia = [...socialMedia, '']">
+              +
+            </span>
+          </div>
+        </div>
       </SurveyGroup>
 
       <SurveyGroup label="Gender:" :required="true">
