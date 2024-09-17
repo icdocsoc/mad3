@@ -39,7 +39,7 @@ const auth = factory
   .get(
     '/signOut',
     zValidator(
-      'json',
+      'query',
       z.object({
         redirect: z.string().optional()
       })
@@ -48,9 +48,10 @@ const auth = factory
     async ctx => {
       // Delete their JWT cookie.
       ctx.header('Set-Cookie', generateCookieHeader('', 0));
-
-      const redirectPath = ctx.req.valid('redirect') || '';
-      const redirectUrl = process.env.BASE_URL + redirectPath + "?loggedOut=true";
+      const query = ctx.req.valid('query');
+      
+      const path = query.redirect || ''
+      const redirectUrl = process.env.BASE_URL! + path + "?loggedOut=true";
 
       console.log(redirectUrl)
       return ctx.redirect(redirectUrl);
