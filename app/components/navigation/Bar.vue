@@ -21,7 +21,7 @@ const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
       </li>
       <li>
         <NavigationLink to="/fresher">
-          <span class="md:text-xl">Fresher</span> 
+          <span class="md:text-xl">Fresher</span>
         </NavigationLink>
       </li>
       <li v-if="user == undefined">

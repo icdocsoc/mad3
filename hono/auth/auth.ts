@@ -49,9 +49,9 @@ const auth = factory
       // Delete their JWT cookie.
       ctx.header('Set-Cookie', generateCookieHeader('', 0));
       const query = ctx.req.valid('query');
-      
-      const path = query.redirect || ''
-      const redirectUrl = process.env.BASE_URL! + path + "?loggedOut=true";
+
+      const path = query.redirect || '';
+      const redirectUrl = process.env.BASE_URL! + path + '?loggedOut=true';
 
       return ctx.redirect(redirectUrl);
     }
