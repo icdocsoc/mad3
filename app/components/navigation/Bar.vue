@@ -1,15 +1,11 @@
 <script setup lang="ts">
 // This will only work on the client. This is okay.
-const { status: loggedIn, data } = await useFetch('/api/family/me', {
-  server: false,
-  credentials: 'same-origin'
-});
+const { authState } = useAuth();
 
 // Note: url will only work on host, not server. This is okay.
 const url = useRequestURL();
 const logInUrl = 'http://' + url.host + '/api/auth/signIn';
 const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
-
 </script>
 
 <template>
@@ -31,12 +27,12 @@ const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
         </NavigationLink>
       </li>
       <ClientOnly>
-        <li v-if="loggedIn == 'error'">
+        <li v-if="authState == 'loggedOut'">
           <NavigationLink :to="logInUrl">
             <span class="font-bold md:text-xl">Log In</span>
           </NavigationLink>
         </li>
-        <li v-else>
+        <li v-else="authState == 'loggedIn'">
           <NavigationLink :to="logOutUrl">
             <span class="font-bold md:text-xl">Log Out</span>
           </NavigationLink>
