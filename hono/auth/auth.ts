@@ -1,7 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { MicrosoftGraphClient, MsAuthClient } from './MsApiClient';
-import { grantAccessTo, isFresherOrParent, newToken } from './jwt';
+import {
+  generateCookieHeader,
+  grantAccessTo,
+  isFresherOrParent,
+  newToken
+} from './jwt';
 import factory from '../factory';
 import { apiLogger } from '../logger';
 import db from '../db';
@@ -9,13 +14,13 @@ import { students } from '../family/schema';
 import { eq } from 'drizzle-orm';
 
 const msAuth = new MsAuthClient(
-  ['profile'],
+  ['User.Read'],
   {
     tenantId: process.env.TENANT_ID!,
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!
   },
-  `http://${process.env.BASE_URL}/finish-oauth`
+  `${process.env.BASE_URL}/finish-oauth`
 );
 
 const callbackSchema = z.object({
@@ -31,11 +36,26 @@ const auth = factory
     // Redirect the user to the Microsoft oAuth sign in.
     return ctx.redirect(msAuth.getRedirectUrl());
   })
-  .post('/signOut', grantAccessTo('authenticated'), async ctx => {
-    // Delete their JWT cookie.
-    ctx.header('Set-Cookie', `Authorization= ; Max-Age=0; HttpOnly`);
-    return ctx.text('', 200);
-  })
+  .get(
+    '/signOut',
+    zValidator(
+      'query',
+      z.object({
+        redirect: z.string().optional()
+      })
+    ),
+    grantAccessTo('authenticated'),
+    async ctx => {
+      // Delete their JWT cookie.
+      ctx.header('Set-Cookie', generateCookieHeader('', 0));
+      const query = ctx.req.valid('query');
+
+      const path = query.redirect || '';
+      const redirectUrl = process.env.BASE_URL! + path + '?loggedOut=true';
+
+      return ctx.redirect(redirectUrl);
+    }
+  )
   .post(
     '/callback',
     grantAccessTo('unauthenticated'),
@@ -103,10 +123,7 @@ const auth = factory
       // Expire the JWT after 4 weeks.
       // Should be long enough for MaDs to only sign in once.
       const maxAge = 28 * 24 * 60 * 60;
-      ctx.header(
-        'Set-Cookie',
-        `Authorization=${token}; Max-Age=${maxAge}; HttpOnly`
-      );
+      ctx.header('Set-Cookie', generateCookieHeader(token, maxAge));
 
       let completedSurvey = false;
       const studentInDb = await db

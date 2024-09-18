@@ -98,7 +98,6 @@ export const admin = factory
       hasJmc: bool
     }
     */
-
   })
   .get('/all-unallocated-freshers', grantAccessTo('admin'), async ctx => {
     /*

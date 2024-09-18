@@ -17,6 +17,11 @@ const parent2: IStudent = {
 };
 
 const kids: IStudent[] = [];
+
+definePageMeta({
+  auth: 'parent',
+  middleware: ['restrict-page-user']
+});
 </script>
 
 <template>

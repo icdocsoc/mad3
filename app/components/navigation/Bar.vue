@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// TODO: login must come from backend
-const isLoggedIn = ref(false);
+const { currentUser } = useAuth();
 </script>
 
 <template>
@@ -20,6 +19,20 @@ const isLoggedIn = ref(false);
         <NavigationLink to="/fresher">
           <span class="md:text-xl">Fresher</span>
         </NavigationLink>
+      </li>
+      <li v-if="currentUser == null">
+        <a
+          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
+          href="/api/auth/signIn">
+          Log In
+        </a>
+      </li>
+      <li v-else>
+        <a
+          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
+          href="/api/auth/signOut">
+          Log Out
+        </a>
       </li>
     </ul>
   </nav>

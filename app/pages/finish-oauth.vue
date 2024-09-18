@@ -3,20 +3,31 @@ const route = useRoute();
 
 const {
   code: msCode,
-  status: msStatus,
+  state: msState,
   error: msError,
   error_description: msErrorDesc
 } = route.query;
-const { status, error } = useFetch('/api/auth/callback', {
-  method: 'POST',
-  body: {
+
+let body;
+if (msError == undefined) {
+  body = {
     code: msCode,
-    status: msStatus,
+    state: msState
+  };
+} else {
+  body = {
     error: msError,
     error_description: msErrorDesc
-  }
+  };
+}
+
+const { status, error } = await useFetch('/api/auth/callback', {
+  method: 'POST',
+  body: body,
+  server: false
 });
 watch(status, () => {
+  console.log(status.value);
   if (status.value == 'success') {
     navigateTo('/survey');
   }
@@ -25,15 +36,19 @@ watch(status, () => {
 
 <template>
   <div>
-    <p v-if="status == 'pending'">We're signing you in...</p>
-    <p v-else-if="status == 'error'">Error: {{ error }}</p>
-    <div v-else>
-      <p>You are being redirected</p>
-      <p>
+    <Card v-if="status == 'pending' || status == 'idle'">
+      <CardTitle>We're signing you in...</CardTitle>
+    </Card>
+    <Card v-else-if="status == 'error'">
+      <CardText>{{ error }}</CardText>
+    </Card>
+    <Card v-else-if="status == 'success'">
+      <CardTitle>You are being redirected</CardTitle>
+      <CardText>
         Please click
         <NuxtLink to="/survey">this link</NuxtLink>
         if not automatically redirected.
-      </p>
-    </div>
+      </CardText>
+    </Card>
   </div>
 </template>
