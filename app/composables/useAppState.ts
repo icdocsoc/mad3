@@ -1,6 +1,6 @@
 export default () => {
-  const currentState = useState<State>('state', () => 'parents_open');
-  const setState = (state: string) => {
+  const currentState = useState<State>('state', () => 'closed');
+  const setState = (state: State) => {
     currentState.value = state;
   };
 

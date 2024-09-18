@@ -12,10 +12,10 @@ declare interface IStudent {
 
 // Is it worth making a sharedTypes for this one singular type?
 // Unsure if IStudent would be able to go under that as it's a z.infer
-export const stateOptions = [
+declare const stateOptions = [
   'parents_open',
   'parents_close',
   'freshers_open',
   'closed'
 ] as const;
-export type State = (typeof stateOptions)[number];
+declare type State = (typeof stateOptions)[number];
