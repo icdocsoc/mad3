@@ -20,7 +20,7 @@ const kids: IStudent[] = [];
 
 definePageMeta({
   auth: 'parent',
-  middleware: ['restrict-page']
+  middleware: ['restrict-page-user']
 });
 </script>
 
