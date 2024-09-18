@@ -6,12 +6,12 @@ import { stateOptions, type State } from '../types';
 import { meta } from './schema';
 import { z } from 'zod';
 
-export const requireState = (state: State) =>
+export const requireState = (...states: [State, ...State[]]) =>
   factory.createMiddleware(async (ctx, next) => {
     const settings = await db.select().from(meta);
     const currState = settings[0]!.state;
 
-    if (currState != state) {
+    if (!states.includes(currState)) {
       return ctx.text(
         'It is not yet time to use this route, but I appreciate your enthusiasm.',
         403

@@ -6,6 +6,10 @@
 
 **403** - No access to route, based on role stored in JWT.
 
+## `requireState`
+
+**403** - Cannot access page in current state.
+
 # **/auth**
 
 ## `POST /signIn` - unauthenticated
@@ -47,7 +51,7 @@ type Response = {
 
 # **/family**
 
-## `POST /survey` - authenticated
+## `POST /survey` - authenticated, parents_open | freshers_open
 
 ```ts
 {
@@ -63,7 +67,7 @@ type Response = {
 
 **200** - Updates these details for the user.
 
-## `POST /propose` - parent
+## `POST /propose` - parent, parents_open
 
 ```ts
 {
@@ -75,7 +79,7 @@ type Response = {
 
 **200** - Proposes to `shortcode`.
 
-## `DELETE /propose` - parent
+## `DELETE /propose` - parent, parents_open
 
 ```ts
 {
@@ -87,7 +91,7 @@ type Response = {
 
 **200** - Revokes proposal to `shortcode`.
 
-## `POST /acceptProposal` - parent
+## `POST /acceptProposal` - parent, parents_open
 
 ```ts
 {
@@ -99,7 +103,7 @@ type Response = {
 
 **200** - Accepts proposal from `shortcode`.
 
-## `GET /proposals` - parent
+## `GET /proposals` - parent, parents_open
 
 **200** - Returns array of proposals.
 
@@ -129,7 +133,7 @@ type Response = {
 }
 ```
 
-## `GET /myFamily` - authenticated
+## `GET /myFamily` - authenticated, closed
 
 **400** - User does not have a family.
 
@@ -156,3 +160,27 @@ type Student = {
   kids: Student[]
 }
 ```
+
+# **/admin**
+
+## `GET /state`
+
+**200** - returns JSON with current state.
+
+```ts
+{
+  state: 'parents_open' | 'parents_close' | 'freshers_open' | 'closed';
+}
+```
+
+## `PUT /state` - admin
+
+```ts
+{
+  state: 'parents_open' | 'parents_close' | 'freshers_open' | 'closed';
+}
+```
+
+**400** - Invalid body.
+
+**200** - Updated state.

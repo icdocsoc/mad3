@@ -12,6 +12,7 @@ import {
   students,
   surveySchema
 } from './schema';
+import { requireState } from '../admin/admin';
 
 const proposalSchema = z.object({
   shortcode: z.string()
@@ -21,6 +22,7 @@ export const family = factory
   .createApp()
   .post(
     '/survey',
+    requireState('parents_open', 'freshers_open'),
     grantAccessTo('authenticated'),
     zValidator('json', surveySchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -57,6 +59,7 @@ export const family = factory
   )
   .post(
     '/propose',
+    requireState('parents_open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -125,6 +128,7 @@ export const family = factory
   )
   .delete(
     '/proposal',
+    requireState('parents_open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -158,6 +162,7 @@ export const family = factory
   )
   .post(
     '/acceptProposal',
+    requireState('parents_open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -211,16 +216,21 @@ export const family = factory
       return ctx.text('', 200);
     }
   )
-  .get('/proposals', grantAccessTo('parent'), async ctx => {
-    const shortcode = ctx.get('shortcode')!;
+  .get(
+    '/proposals',
+    requireState('parents_open'),
+    grantAccessTo('parent'),
+    async ctx => {
+      const shortcode = ctx.get('shortcode')!;
 
-    const proposalsInDb = await db
-      .select()
-      .from(proposals)
-      .where(eq(proposals.proposee, shortcode));
+      const proposalsInDb = await db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.proposee, shortcode));
 
-    return ctx.json(proposalsInDb, 200);
-  })
+      return ctx.json(proposalsInDb, 200);
+    }
+  )
   .get('/me', grantAccessTo('authenticated'), async ctx => {
     const shortcode = ctx.get('shortcode')!;
 
@@ -231,75 +241,80 @@ export const family = factory
 
     return ctx.json(userInDb[0], 200);
   })
-  .get('/myFamily', grantAccessTo('authenticated'), async ctx => {
-    const reqShortcode = ctx.get('shortcode')!;
-    const role = ctx.get('user_is');
+  .get(
+    '/myFamily',
+    requireState('closed'),
+    grantAccessTo('authenticated'),
+    async ctx => {
+      const reqShortcode = ctx.get('shortcode')!;
+      const role = ctx.get('user_is');
 
-    let familyInDb: { id: number }[];
-    if (role == 'parent') {
-      familyInDb = await db
+      let familyInDb: { id: number }[];
+      if (role == 'parent') {
+        familyInDb = await db
+          .select({
+            id: marriages.id
+          })
+          .from(marriages)
+          .where(
+            or(
+              eq(marriages.parent1, reqShortcode),
+              eq(marriages.parent2, reqShortcode)
+            )
+          );
+      } else {
+        familyInDb = await db
+          .select({
+            id: families.id
+          })
+          .from(families)
+          .where(eq(families.kid, reqShortcode));
+      }
+
+      if (familyInDb.length == 0) {
+        return ctx.text("You do not have a family. I'm sorry.", 400);
+      }
+
+      const familyId = familyInDb[0]!.id;
+
+      const kids = await db
         .select({
-          id: marriages.id
-        })
-        .from(marriages)
-        .where(
-          or(
-            eq(marriages.parent1, reqShortcode),
-            eq(marriages.parent2, reqShortcode)
-          )
-        );
-    } else {
-      familyInDb = await db
-        .select({
-          id: families.id
+          shortcode: students.shortcode,
+          jmc: students.jmc,
+          role: students.role,
+          completedSurvey: students.completedSurvey,
+          name: students.name,
+          gender: students.gender,
+          interests: students.interests,
+          socials: students.socials,
+          aboutMe: students.aboutMe
         })
         .from(families)
-        .where(eq(families.kid, reqShortcode));
-    }
+        .where(eq(families.id, familyId))
+        .innerJoin(students, eq(families.kid, students.shortcode));
 
-    if (familyInDb.length == 0) {
-      return ctx.text("You do not have a family. I'm sorry.", 400);
-    }
-
-    const familyId = familyInDb[0]!.id;
-
-    const kids = await db
-      .select({
-        shortcode: students.shortcode,
-        jmc: students.jmc,
-        role: students.role,
-        completedSurvey: students.completedSurvey,
-        name: students.name,
-        gender: students.gender,
-        interests: students.interests,
-        socials: students.socials,
-        aboutMe: students.aboutMe
-      })
-      .from(families)
-      .where(eq(families.id, familyId))
-      .innerJoin(students, eq(families.kid, students.shortcode));
-
-    const marriageInDb = await db
-      .select()
-      .from(marriages)
-      .where(eq(marriages.id, familyId));
-
-    const [parent1, parent2] = await Promise.all([
-      db
+      const marriageInDb = await db
         .select()
-        .from(students)
-        .where(eq(students.shortcode, marriageInDb[0]!.parent1)),
-      db
-        .select()
-        .from(students)
-        .where(eq(students.shortcode, marriageInDb[0]!.parent2))
-    ]);
+        .from(marriages)
+        .where(eq(marriages.id, familyId));
 
-    return ctx.json(
-      {
-        parents: [parent1[0], parent2[0]],
-        kids: kids
-      },
-      200
-    );
-  });
+      const [parent1, parent2] = await Promise.all([
+        db
+          .select()
+          .from(students)
+          .where(eq(students.shortcode, marriageInDb[0]!.parent1)),
+        db
+          .select()
+          .from(students)
+          .where(eq(students.shortcode, marriageInDb[0]!.parent2))
+      ]);
+
+      return ctx.json(
+        {
+          parents: [parent1[0], parent2[0]],
+          kids: kids
+        },
+        200
+      );
+    }
+  );
