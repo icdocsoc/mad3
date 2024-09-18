@@ -1,9 +1,5 @@
 <script setup lang="ts">
-const { user } = useAuth();
-// Note: url will only work on host, not server. This is okay.
-const url = useRequestURL();
-const logInUrl = 'http://' + url.host + '/api/auth/signIn';
-const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
+const { currentUser } = useAuth();
 </script>
 
 <template>
@@ -24,15 +20,19 @@ const logOutUrl = 'http://' + url.host + '/api/auth/signOut';
           <span class="md:text-xl">Fresher</span>
         </NavigationLink>
       </li>
-      <li v-if="user == undefined">
-        <NavigationLink :to="logInUrl">
-          <span class="font-bold md:text-xl">Log In</span>
-        </NavigationLink>
+      <li v-if="currentUser == null">
+        <a
+          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
+          href="/api/auth/signIn">
+          Log In
+        </a>
       </li>
       <li v-else>
-        <NavigationLink :to="logOutUrl">
-          <span class="font-bold md:text-xl">Log Out</span>
-        </NavigationLink>
+        <a
+          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
+          href="/api/auth/signOut">
+          Log Out
+        </a>
       </li>
     </ul>
   </nav>

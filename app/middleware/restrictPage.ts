@@ -1,9 +1,9 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   if (
-    user == undefined ||
-    (user.value?.role != to.meta.auth && to.meta.auth != 'authenticated')
+    currentUser == undefined ||
+    (currentUser.value?.role != to.meta.auth && to.meta.auth != 'authenticated')
   )
     return abortNavigation();
 });

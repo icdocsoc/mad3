@@ -1,7 +1,11 @@
 export default () => {
-  const user = useState<IStudent | undefined>('user', () => undefined);
+  const currentUser = useState<IStudent | null>('user', () => null);
+  const setUser = (newUser: IStudent | null) => {
+    currentUser.value = newUser;
+  };
 
   return {
-    user
+    currentUser,
+    setUser
   };
 };
