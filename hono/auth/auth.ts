@@ -14,7 +14,7 @@ import { students } from '../family/schema';
 import { eq } from 'drizzle-orm';
 
 const msAuth = new MsAuthClient(
-  ['profile'],
+  ['User.Read'],
   {
     tenantId: process.env.TENANT_ID!,
     clientId: process.env.CLIENT_ID!,
