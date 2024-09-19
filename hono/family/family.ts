@@ -84,6 +84,17 @@ export const family = factory
     async ctx => {
       const proposer = ctx.get('shortcode')!;
 
+      const proposerInDb = await db
+        .select()
+        .from(students)
+        .where(eq(students.shortcode, proposer));
+      if (!proposerInDb[0]!.completedSurvey) {
+        return ctx.text(
+          'My good fellow, how do you want to propose without having told us *anything* about yourself?',
+          400
+        );
+      }
+
       const marriageInDb = await db
         .select()
         .from(marriages)
