@@ -25,7 +25,7 @@ const { data, status, error } = useAsyncData('get-details', async () => {
 
 <template>
   <Card>
-    <CardTitle>Welcome to the portal, {{ currentUser!.name }}</CardTitle>
+    <CardTitle>Welcome to the portal, {{ currentUser!.shortcode }}</CardTitle>
 
     <CardDetails v-if="status == 'pending'">
       <strong>Loading...</strong>

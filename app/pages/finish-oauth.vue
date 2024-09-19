@@ -24,8 +24,8 @@ const { status, error } = await useFetch('/api/auth/callback', {
   server: false
 });
 
-watch([status, error], () => {
-  if (status.value == 'success' && error.value != null) navigateTo('/portal');
+watch(status, () => {
+  if (status.value == 'success') navigateTo('/portal');
 });
 </script>
 
