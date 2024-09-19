@@ -51,9 +51,9 @@ export const families = sqliteTable('family', {
 
 export const students = sqliteTable('student', {
   shortcode: text('shortcode').primaryKey(),
-  jmc: integer('jmc', { mode: 'boolean' }).notNull(),
   role: text('role', { enum: ['parent', 'fresher'] }).notNull(),
   completedSurvey: integer('completed_survey', { mode: 'boolean' }).notNull(),
+  jmc: integer('jmc', { mode: 'boolean' }),
   name: text('name'),
   gender: text('gender', { enum: genderOptions }),
   interests: text('interests', { mode: 'json' }).$type<Interests>(),
@@ -81,12 +81,12 @@ export const selectStudentSchema = createSelectSchema(students).extend({
 export const surveySchema = selectStudentSchema
   .omit({
     shortcode: true,
-    jmc: true,
     role: true,
     completedSurvey: true
   })
   .extend({
     name: z.string(),
+    jmc: z.boolean(),
     gender: z.enum(genderOptions),
     interests: interestsSchema
   });

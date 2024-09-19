@@ -13,6 +13,7 @@ import {
   surveySchema
 } from './schema';
 import { requireState } from '../admin/admin';
+import { meta } from '../admin/schema';
 
 const proposalSchema = z.object({
   shortcode: z.string()
@@ -32,15 +33,25 @@ export const family = factory
     async ctx => {
       const shortcode = ctx.get('shortcode')!;
 
-      const currDb = await db
-        .select({ completedSurvey: students.completedSurvey })
+      const studentInDb = await db
+        .select({
+          role: students.role,
+          completedSurvey: students.completedSurvey
+        })
         .from(students)
         .where(eq(students.shortcode, shortcode));
-      // TODO @Dropheart since you're allowing two states to access this route,
-      //    a parent could complete the survey during fresher_open (past their deadline).
-      //    if they were smart enough to manipulate frontend state.
-      if (currDb[0]!.completedSurvey == true) {
+      if (studentInDb[0]!.completedSurvey == true) {
         return ctx.text('You have already completed the survey.', 400);
+      }
+
+      // Ensure that parents can only complete the route during parents_open,
+      // and students can only complete the route during students_open.
+      const metaInDb = await db.select().from(meta);
+      if (!metaInDb[0]!.state.includes(studentInDb[0]!.role)) {
+        return ctx.text(
+          `It is not yet your time o ${studentInDb[0]!.role}.`,
+          400
+        );
       }
 
       const { name, interests, aboutMe, socials, gender } =

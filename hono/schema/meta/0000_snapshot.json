@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6d3f0e3b-6316-4edb-a037-957b7d523e68",
+  "id": "ac0639ee-facd-4f1a-a1e9-66b8c4342af9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "meta": {
@@ -52,8 +52,12 @@
           "name": "family_kid_student_shortcode_fk",
           "tableFrom": "family",
           "tableTo": "student",
-          "columnsFrom": ["kid"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "kid"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -61,8 +65,12 @@
           "name": "family_id_marriage_id_fk",
           "tableFrom": "family",
           "tableTo": "marriage",
-          "columnsFrom": ["id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -98,12 +106,16 @@
       "indexes": {
         "marriage_parent1_unique": {
           "name": "marriage_parent1_unique",
-          "columns": ["parent1"],
+          "columns": [
+            "parent1"
+          ],
           "isUnique": true
         },
         "marriage_parent2_unique": {
           "name": "marriage_parent2_unique",
-          "columns": ["parent2"],
+          "columns": [
+            "parent2"
+          ],
           "isUnique": true
         }
       },
@@ -112,8 +124,12 @@
           "name": "marriage_parent1_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": ["parent1"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "parent1"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -121,8 +137,12 @@
           "name": "marriage_parent2_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": ["parent2"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "parent2"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -154,8 +174,12 @@
           "name": "proposals_proposer_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": ["proposer"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "proposer"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -163,15 +187,22 @@
           "name": "proposals_proposee_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": ["proposee"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "proposee"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "proposals_proposer_proposee_pk": {
-          "columns": ["proposer", "proposee"],
+          "columns": [
+            "proposer",
+            "proposee"
+          ],
           "name": "proposals_proposer_proposee_pk"
         }
       },
@@ -187,13 +218,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "jmc": {
-          "name": "jmc",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "role": {
           "name": "role",
           "type": "text",
@@ -206,6 +230,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "jmc": {
+          "name": "jmc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "name": {

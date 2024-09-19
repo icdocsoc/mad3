@@ -133,12 +133,10 @@ const auth = factory
       if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
         completedSurvey = true;
       else if (studentInDb.length == 0) {
-        // TBD: Implement JMC check.
         await db.insert(students).values({
           shortcode: shortcode[0],
           role: user_is,
           completedSurvey: false,
-          jmc: false
         });
       }
 

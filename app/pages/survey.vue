@@ -103,8 +103,8 @@ async function handleSubmit() {
         interests: formData.interests,
         aboutMe: formData.aboutMe,
         socials: formData.socials,
-        gender: formData.gender
-        // course: formData.course TODO @Dropheart to add this in the API
+        gender: formData.gender,
+        course: formData.course
       }
     });
 

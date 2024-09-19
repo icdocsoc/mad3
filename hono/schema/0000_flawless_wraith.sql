@@ -28,9 +28,9 @@ CREATE TABLE `proposals` (
 --> statement-breakpoint
 CREATE TABLE `student` (
 	`shortcode` text PRIMARY KEY NOT NULL,
-	`jmc` integer NOT NULL,
 	`role` text NOT NULL,
 	`completed_survey` integer NOT NULL,
+	`jmc` integer,
 	`name` text,
 	`gender` text,
 	`interests` text,

@@ -56,6 +56,7 @@ type Response = {
 ```ts
 {
   name: string,
+  jmc: boolean
   gender: 'male' | 'female' | 'other' | 'n/a',
   interests: Interests,
   aboutMe: string | null,
@@ -63,7 +64,7 @@ type Response = {
 }
 ```
 
-**400** - Invalid body or already completed survey.
+**400** - Invalid body, already completed survey, or student.
 
 **200** - Updates these details for the user.
 
