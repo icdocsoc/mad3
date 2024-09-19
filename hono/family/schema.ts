@@ -87,5 +87,6 @@ export const surveySchema = selectStudentSchema
     name: z.string(),
     jmc: z.boolean(),
     gender: z.enum(genderOptions),
-    interests: interestsSchema
+    interests: interestsSchema,
+    socials: z.array(z.string().url()).optional()
   });

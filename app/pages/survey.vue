@@ -75,6 +75,24 @@ async function handleSubmit() {
     alert(err.message);
   }
 }
+
+let isValidUrl = reactive([] as boolean[]);
+let focus = reactive([] as boolean[]);
+function validateUrl(index: number) {
+  if (
+    formData.socials[index] != undefined &&
+    formData.socials[index]!.length > 11
+  ) {
+    try {
+      z.string().url().parse(formData.socials[index]);
+      isValidUrl[index] = true;
+    } catch {
+      isValidUrl[index] = false;
+    }
+  } else {
+    isValidUrl[index] = true;
+  }
+}
 </script>
 
 <template>
@@ -106,25 +124,41 @@ async function handleSubmit() {
         :required="false">
         <div class="flex flex-col gap-2">
           <div
-            class="flex gap-5"
+            class="relative flex gap-5"
             v-for="(_, index) in formData.socials"
             :key="index">
+            <span
+              v-if="!isValidUrl[index] && focus[index]"
+              class="absolute bottom-full z-10 mb-2 rounded-xl bg-slate-600 p-3 text-sm text-white">
+              Invalid URL - did you forget to type https://?
+            </span>
             <input
               type="text"
               class="flex-grow"
-              v-model="formData.socials[index]" />
+              v-model="formData.socials[index]"
+              placeholder="https://instagram.com/docsoc"
+              :class="!isValidUrl[index] ? 'border-red-600' : null"
+              @input="validateUrl(index)"
+              @focusin="focus[index] = true"
+              @focusout="focus[index] = false" />
             <button
               v-if="formData.socials[index]?.length"
               class="rounded bg-red-600 p-2 text-center text-white"
               @click.prevent="
-                formData.socials = formData.socials.splice(index - 1, 1)
+                formData.socials = formData.socials.splice(index - 1, 1);
+                isValidUrl = isValidUrl.splice(index - 1, 1);
+                focus = focus.splice(index - 1, 1)
               ">
               Remove Link
             </button>
           </div>
           <button
             class="self-start rounded bg-green-600 p-2 text-center text-white"
-            @click.prevent="formData.socials = [...formData.socials, '']">
+            @click.prevent="
+              formData.socials = [...formData.socials, ''];
+              isValidUrl = [...isValidUrl, true]
+              focus.push(false);
+            ">
             Add Link
           </button>
         </div>
