@@ -1,3 +1,18 @@
+<script setup lang="ts">
+definePageMeta({
+  middleware: [
+    'require-auth',
+    function () {
+      const { currentUser } = useAuth();
+
+      if (currentUser.value!.role !== 'parent') {
+        navigateTo('/portal');
+      }
+    }
+  ]
+});
+</script>
+
 <template>
   <div>
     <Card>
