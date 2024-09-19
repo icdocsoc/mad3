@@ -135,21 +135,27 @@ async function handleSubmit() {
         :required="false">
         <div class="flex flex-col gap-2">
           <div
-            class="flex items-center"
+            class="flex gap-5"
             v-for="(_, index) in formData.socials"
             :key="index">
-            <input type="text" v-model="formData.socials[index]" />
-            <span
-              class="aspect-square bg-red-600 text-center text-white"
-              @click.prevent="formData.socials = formData.socials.slice()">
-              x
-            </span>
-            <span
-              class="aspect-square bg-primary text-center text-white"
-              @click.prevent="formData.socials = [...formData.socials, '']">
-              +
-            </span>
+            <input
+              type="text"
+              class="flex-grow"
+              v-model="formData.socials[index]" />
+            <button
+              v-if="formData.socials[index]?.length"
+              class="rounded bg-red-600 p-2 text-center text-white"
+              @click.prevent="
+                formData.socials = formData.socials.splice(index - 1, 1)
+              ">
+              Remove Link
+            </button>
           </div>
+          <button
+            class="self-start rounded bg-green-600 p-2 text-center text-white"
+            @click.prevent="formData.socials = [...formData.socials, '']">
+            Add Link
+          </button>
         </div>
       </SurveyGroup>
 
@@ -173,7 +179,7 @@ async function handleSubmit() {
       <input
         type="submit"
         value="Submit"
-        class="cursor-pointer border bg-primary px-3 py-1 font-semibold text-white" />
+        class="cursor-pointer rounded border bg-primary px-3 py-1 font-semibold text-white" />
     </form>
   </Card>
 </template>

@@ -51,7 +51,7 @@ function handleReject(shortcode: string) {}
     <Card>
       <CardTitle>Info:</CardTitle>
 
-      <CardText class="mt-3">
+      <CardText class="mt-2">
         To complete your registration you must be in a family. You can do that
         by either proposing to someone or accepting a proposal.
         <ul class="mt-2 list-disc ps-4">
