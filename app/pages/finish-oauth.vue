@@ -8,29 +8,24 @@ const {
   error_description: msErrorDesc
 } = route.query;
 
-let body;
-if (msError == undefined) {
-  body = {
-    code: msCode,
-    state: msState
-  };
-} else {
-  body = {
-    error: msError,
-    error_description: msErrorDesc
-  };
-}
+const body = !msError
+  ? {
+      code: msCode,
+      state: msState
+    }
+  : {
+      error: msError,
+      error_description: msErrorDesc
+    };
 
 const { status, error } = await useFetch('/api/auth/callback', {
   method: 'POST',
   body: body,
   server: false
 });
+
 watch(status, () => {
-  console.log(status.value);
-  if (status.value == 'success') {
-    navigateTo('/survey');
-  }
+  if (status.value == 'success') navigateTo('/portal');
 });
 </script>
 
@@ -46,7 +41,7 @@ watch(status, () => {
       <CardTitle>You are being redirected</CardTitle>
       <CardText>
         Please click
-        <NuxtLink to="/survey">this link</NuxtLink>
+        <NuxtLink to="/portal">this link</NuxtLink>
         if not automatically redirected.
       </CardText>
     </Card>

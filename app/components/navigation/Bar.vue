@@ -10,16 +10,6 @@ const { currentUser } = useAuth();
       <span class="max-md:hidden md:text-xl">Mums & Dads</span>
     </NavigationLink>
     <ul class="flex items-center gap-3">
-      <li>
-        <NavigationLink to="/parent">
-          <span class="md:text-xl">Parent</span>
-        </NavigationLink>
-      </li>
-      <li>
-        <NavigationLink to="/fresher">
-          <span class="md:text-xl">Fresher</span>
-        </NavigationLink>
-      </li>
       <li v-if="currentUser == null">
         <a
           class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
@@ -27,7 +17,12 @@ const { currentUser } = useAuth();
           Log In
         </a>
       </li>
-      <li v-else>
+      <li v-if="currentUser != null">
+        <NavigationLink to="/portal">
+          <span class="md:text-xl">Portal</span>
+        </NavigationLink>
+      </li>
+      <li v-if="currentUser != null">
         <a
           class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
           href="/api/auth/signOut">

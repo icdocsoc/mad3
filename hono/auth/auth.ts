@@ -156,18 +156,16 @@ const auth = factory
     const shortcode = ctx.get('shortcode')!;
     const user_is = ctx.get('user_is')!;
 
-    let doneSurvey = false;
     const studentInDb = await db
       .select()
       .from(students)
       .where(eq(students.shortcode, shortcode));
-    if (studentInDb.length == 1) doneSurvey = true;
 
     return ctx.json(
       {
         shortcode: shortcode,
         user_is: user_is,
-        doneSurvey
+        doneSurvey: studentInDb[0]?.completedSurvey || false
       },
       200
     );

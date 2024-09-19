@@ -9,9 +9,9 @@ const responseSchema = z.object({
   doneSurvey: z.boolean()
 });
 definePageMeta({
-  middleware: []
+  middleware: ['require-auth']
 });
-const { data, status, error } = useAsyncData('get-details', async () => {
+const { status, error } = useAsyncData('get-details', async () => {
   // check if the user exists and completed the survey
   const response = await $fetch('/api/auth/details', { headers });
   const validated = await responseSchema.parseAsync(response);
@@ -22,46 +22,43 @@ const { data, status, error } = useAsyncData('get-details', async () => {
   return validated;
 });
 
-// Form stuff
-const preferredName = ref('');
-const interests = ref({
-  alcohol: 0,
-  anime: 0,
-  artGraphics: 0,
-  baking: 0,
-  tabletopGames: 0,
-  charity: 0,
-  clubbing: 0,
-  cooking: 0,
-  danceBallroom: 0,
-  danceContemporary: 0,
-  dramatics: 0,
-  film: 0,
-  finance: 0,
-  exerciseAndHeath: 0,
-  hiking: 0,
-  kpop: 0,
-  martialArts: 0,
-  performingMusicPopRockJazz: 0,
-  performingMusicClassical: 0,
-  photography: 0,
-  politics: 0,
-  videoGames: 0,
-  football: 0,
-  rugby: 0,
-  rowing: 0,
-  racketSports: 0,
-  otherSports: 0
+// Survey form stuff
+const formData = reactive({
+  name: '',
+  interests: {
+    alcohol: 0,
+    anime: 0,
+    artGraphics: 0,
+    baking: 0,
+    tabletopGames: 0,
+    charity: 0,
+    clubbing: 0,
+    cooking: 0,
+    danceBallroom: 0,
+    danceContemporary: 0,
+    dramatics: 0,
+    film: 0,
+    finance: 0,
+    exerciseAndHeath: 0,
+    hiking: 0,
+    kpop: 0,
+    martialArts: 0,
+    performingMusicPopRockJazz: 0,
+    performingMusicClassical: 0,
+    photography: 0,
+    politics: 0,
+    videoGames: 0,
+    football: 0,
+    rugby: 0,
+    rowing: 0,
+    racketSports: 0,
+    otherSports: 0
+  },
+  aboutMe: '',
+  socials: [] as string[],
+  gender: 'male',
+  course: 'computing'
 });
-const selfDescription = ref('');
-const socialMedia = ref<string[]>([]);
-const gender = ref('male');
-const course = ref('computing');
-
-watch(socialMedia, () => {
-  console.log(socialMedia.value);
-});
-
 const matrixLabels = {
   alcohol: 'Alcohol - Drinking',
   anime: 'Anime',
@@ -91,17 +88,27 @@ const matrixLabels = {
   racketSports: 'Racket Sports - Tennis, Badminton, other racket sports',
   otherSports: 'Other Sports'
 };
+async function handleSubmit() {
+  const confirmation = confirm(
+    'Are you sure you want to submit? You cannot redo this survey.'
+  );
+  if (!confirmation) return;
 
-async function handleSubmit(surveyResult: Record<string, any>) {
-  // TODO add the survey result type
-  // submit the survey
   try {
-    const response = await $fetch('/api/survey', {
+    await $fetch('/api/family/survey', {
       method: 'POST',
       headers,
-      body: { surveyResult }
+      body: {
+        name: formData.name,
+        interests: formData.interests,
+        aboutMe: formData.aboutMe,
+        socials: formData.socials,
+        gender: formData.gender
+        // course: formData.course TODO @Dropheart to add this in the API
+      }
     });
-    // show the result
+
+    navigateTo('/portal');
   } catch (err) {
     // @ts-ignore error type to be checked later
     alert(err.message);
@@ -111,26 +118,27 @@ async function handleSubmit(surveyResult: Record<string, any>) {
 
 <template>
   <Card>
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <CardTitle v-if="error">Oops, {{ error.message }}</CardTitle>
+    <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <SurveyGroup label="Preferred Name:" :required="true">
         <input
           class="inline-block w-full"
           type="text"
-          v-model="preferredName"
+          v-model="formData.name"
           required />
       </SurveyGroup>
 
       <SurveyGroup label="Interests:" :required="true">
         <SurveyMatrix
           :labels="matrixLabels"
-          v-model="interests"
+          v-model="formData.interests"
           :required="true" />
       </SurveyGroup>
 
       <SurveyGroup
         label="If you'd like to write a few words to introduce yourself to the rest of your family, here's your chance. Your family will see this once the families have been assigned:"
         :required="false">
-        <textarea class="inline-block w-full" v-model="selfDescription" />
+        <textarea class="inline-block w-full" v-model="formData.aboutMe" />
       </SurveyGroup>
 
       <SurveyGroup
@@ -139,17 +147,17 @@ async function handleSubmit(surveyResult: Record<string, any>) {
         <div class="flex flex-col gap-2">
           <div
             class="flex items-center"
-            v-for="(_, index) in socialMedia"
+            v-for="(_, index) in formData.socials"
             :key="index">
-            <input type="text" v-model="socialMedia[index]" />
+            <input type="text" v-model="formData.socials[index]" />
             <span
               class="aspect-square bg-red-600 text-center text-white"
-              @click.prevent="socialMedia = socialMedia.slice()">
+              @click.prevent="formData.socials = formData.socials.slice()">
               x
             </span>
             <span
               class="aspect-square bg-primary text-center text-white"
-              @click.prevent="socialMedia = [...socialMedia, '']">
+              @click.prevent="formData.socials = [...formData.socials, '']">
               +
             </span>
           </div>
@@ -161,7 +169,7 @@ async function handleSubmit(surveyResult: Record<string, any>) {
           :options="['male', 'female', 'other', 'na']"
           :labels="['Male', 'Female', 'Other', 'Prefer not to say']"
           name="gender"
-          v-model="gender"
+          v-model="formData.gender"
           :required="true" />
       </SurveyGroup>
       <SurveyGroup label="Course:" :required="true">
@@ -169,7 +177,7 @@ async function handleSubmit(surveyResult: Record<string, any>) {
           :options="['computing', 'jmc']"
           :labels="['Computing', 'JMC']"
           name="course"
-          v-model="course"
+          v-model="formData.course"
           :required="true" />
       </SurveyGroup>
 
