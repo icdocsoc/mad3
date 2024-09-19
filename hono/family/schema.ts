@@ -17,7 +17,6 @@ export const proposals = sqliteTable(
     proposee: text('proposee')
       .references(() => students.shortcode)
       .notNull()
-      .notNull()
   },
   proposals => {
     return {

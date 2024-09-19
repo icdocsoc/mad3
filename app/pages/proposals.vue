@@ -11,6 +11,39 @@ definePageMeta({
     }
   ]
 });
+
+const { currentUser } = useAuth();
+type Proposal = {
+  proposer: string;
+  proposee: string;
+};
+const { data, status, error } = useFetch<Proposal[]>('/api/family/proposals');
+const receivedProposals = computed(() =>
+  data.value?.filter(p => p.proposee === currentUser.value!.shortcode)
+);
+const sentProposals = computed(() =>
+  data.value?.filter(p => p.proposer === currentUser.value!.shortcode)
+);
+
+const proposeInput = ref('');
+async function handlePropose() {
+  if (!proposeInput.value) {
+    return;
+  }
+
+  try {
+    const response = await $fetch('/api/family/propose', {
+      method: 'POST',
+      body: {
+        shortcode: proposeInput.value
+      }
+    });
+  } catch (err) {
+    alert(err.message);
+  }
+}
+function handleAccept(shortcode: string) {}
+function handleReject(shortcode: string) {}
 </script>
 
 <template>
@@ -40,30 +73,29 @@ definePageMeta({
       <CardTitle>People who proposed to you:</CardTitle>
 
       <div class="mt-4 flex flex-wrap gap-2 self-start">
-        <div class="flex gap-5 border px-2 py-1">
+        <p v-if="status == 'pending'">Loading...</p>
+        <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
+        <p v-else-if="data && !receivedProposals?.length">
+          You have no proposals yet, ask your partner to propose to you or
+          propose them.
+        </p>
+        <div
+          v-else
+          v-for="proposal in receivedProposals"
+          :key="proposal.proposer"
+          class="flex gap-5 border px-2 py-1">
           <div class="flex flex-col items-start">
-            <strong>Nishant</strong>
-            <p class="text-sm">nj421</p>
+            <strong>{{ proposal.proposer }}</strong>
           </div>
           <div class="flex items-start gap-3">
-            <span class="cursor-pointer bg-green-400 p-1 text-sm text-white">
+            <span
+              class="cursor-pointer bg-green-400 p-1 text-sm text-white"
+              @click="handleAccept(proposal.proposer)">
               Accept
             </span>
-            <span class="cursor-pointer bg-red-400 p-1 text-sm text-white">
-              Reject
-            </span>
-          </div>
-        </div>
-        <div class="flex gap-5 border px-2 py-1">
-          <div class="flex flex-col items-start">
-            <strong>Nishant</strong>
-            <p class="text-sm">nj421</p>
-          </div>
-          <div class="flex items-start gap-3">
-            <span class="cursor-pointer bg-green-400 p-1 text-sm text-white">
-              Accept
-            </span>
-            <span class="cursor-pointer bg-red-400 p-1 text-sm text-white">
+            <span
+              class="cursor-pointer bg-red-400 p-1 text-sm text-white"
+              @click="handleReject(proposal.proposer)">
               Reject
             </span>
           </div>
@@ -74,10 +106,19 @@ definePageMeta({
       <CardTitle>People that you proposed to:</CardTitle>
 
       <div class="mt-4 flex flex-wrap gap-2 self-start">
-        <div class="flex gap-5 border px-2 py-1">
+        <p v-if="status == 'pending'">Loading...</p>
+        <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
+        <p v-else-if="data && !sentProposals?.length">
+          You have not proposed to anyone yet. It's time to take that leap of
+          faith to get what you want.
+        </p>
+        <div
+          v-else
+          v-for="proposal in sentProposals"
+          :key="proposal.proposee"
+          class="flex gap-5 border px-2 py-1">
           <div class="flex flex-col items-start">
-            <strong>Nishant</strong>
-            <p class="text-sm">nj421</p>
+            <strong>{{ proposal.proposee }}</strong>
           </div>
           <div class="flex items-start gap-3">
             <span class="cursor-pointer bg-yellow-400 p-1 text-sm text-white">
@@ -92,7 +133,22 @@ definePageMeta({
           Want to send a proposal to a potential partner? Enter their exact
           shortcode:
         </strong>
-        <input type="text" placeholder="e.g. nj421" />
+        <div class="flex gap-4">
+          <input
+            type="text"
+            class="flex-grow"
+            placeholder="e.g. nj421"
+            v-model="proposeInput" />
+          <button
+            class="hover flex items-center gap-2 rounded bg-[#ff4669] px-2 text-white"
+            @click="handlePropose">
+            Propose
+            <img
+              src="~/assets/icons/docsoc-love.webp"
+              alt="Propose"
+              class="aspect-square w-5" />
+          </button>
+        </div>
       </CardDetails>
     </Card>
   </div>

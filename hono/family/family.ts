@@ -241,7 +241,12 @@ export const family = factory
       const proposalsInDb = await db
         .select()
         .from(proposals)
-        .where(eq(proposals.proposee, shortcode));
+        .where(
+          or(
+            eq(proposals.proposee, shortcode),
+            eq(proposals.proposer, shortcode)
+          )
+        );
 
       return ctx.json(proposalsInDb, 200);
     }
