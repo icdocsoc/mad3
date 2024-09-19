@@ -39,7 +39,7 @@ const formData = reactive({
     dramatics: 0,
     film: 0,
     finance: 0,
-    exerciseAndHeath: 0,
+    exerciseAndHealth: 0,
     hiking: 0,
     kpop: 0,
     martialArts: 0,
@@ -104,7 +104,7 @@ async function handleSubmit() {
         aboutMe: formData.aboutMe,
         socials: formData.socials,
         gender: formData.gender,
-        course: formData.course
+        jmc: formData.course == 'jmc'
       }
     });
 
