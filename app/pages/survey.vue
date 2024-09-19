@@ -95,7 +95,7 @@ async function handleSubmit() {
   if (!confirmation) return;
 
   try {
-    await $fetch('/api/survey', {
+    await $fetch('/api/family/survey', {
       method: 'POST',
       headers,
       body: {
