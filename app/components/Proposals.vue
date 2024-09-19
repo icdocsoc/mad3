@@ -1,38 +1,12 @@
-<script setup lang="ts">
-const parent1: IStudent = {
-  firstName: 'John',
-  lastName: 'Doe',
-  preferredName: 'JD',
-  selfDescription: 'I am a parent',
-  socialMedia: 'https://twitter.com/johndoe',
-  shortcode: 'jd123'
-};
-const parent2: IStudent = {
-  firstName: 'Jane',
-  lastName: 'Doe',
-  preferredName: 'Jane',
-  selfDescription: 'I am a parent',
-  socialMedia: 'https://twitter.com/janedoe',
-  shortcode: 'jd223'
-};
-
-const kids: IStudent[] = [];
-
-definePageMeta({
-  auth: 'parent',
-  middleware: ['restrict-page-user']
-});
-</script>
-
 <template>
   <div>
     <Card>
       <CardTitle>Info:</CardTitle>
 
-      <CardText>
+      <CardText class="mt-3">
         To complete your registration you must be in a family. You can do that
         by either proposing to someone or accepting a proposal.
-        <ul class="list-disc ps-4">
+        <ul class="mt-2 list-disc ps-4">
           <li>
             If you have any proposals they will appear on this page, and you can
             accept one to complete registration.
