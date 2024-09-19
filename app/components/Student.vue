@@ -1,24 +1,19 @@
 <script setup lang="ts">
 const props = defineProps<{ student: IStudent }>();
-
-const getName = (student: IStudent) => {
-  const firstName = student.preferredName ?? student.firstName;
-  return `${firstName} ${student.lastName}`;
-};
 </script>
 
 <template>
   <Card>
     <CardTitle>
-      <h3>{{ getName(props.student) }}</h3>
+      <h3>{{ props.student.name }}</h3>
     </CardTitle>
-    <CardText v-if="props.student.selfDescription" class="mt-2">
-      About Me: {{ props.student.selfDescription }}
+    <CardText v-if="props.student.aboutMe" class="mt-2">
+      <strong>About Me:</strong> {{ props.student.aboutMe }}
     </CardText>
-    <CardText v-if="props.student.socialMedia">
-      Social Media:
-      <a :href="props.student.socialMedia" target="_blank">
-        {{ props.student.socialMedia }}
+    <CardText v-if="props.student.socials">
+      <strong>Social Media:</strong>
+      <a v-for="social in props.student.socials" :href="social" target="_blank">
+        <br>{{ social }}
       </a>
     </CardText>
   </Card>
