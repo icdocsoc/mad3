@@ -275,7 +275,7 @@ export const family = factory
       }
 
       if (familyInDb.length == 0) {
-        return ctx.text("You do not have a family. I'm sorry.", 400);
+        return ctx.text('You do not have a family.', 400);
       }
 
       const familyId = familyInDb[0]!.id;
