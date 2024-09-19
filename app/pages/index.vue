@@ -72,9 +72,10 @@ const data = ref({
         <strong>How will freshers be allocated?</strong>
         <CardText>
           Based on the interests filled in, we do our best to assign each
-          fresher to fellow freshers and parents with similar interests.
-          <!-- If you're interested to find out more, the source code of this
-          application is available <a href="https://github.com/icdocsoc/mad3">here</a> -->
+          fresher to fellow freshers and parents with similar interests. If
+          you're interested to find out more, the source code of this
+          application is available
+          <a href="https://github.com/icdocsoc/mad3">here</a>
         </CardText>
       </CardDetails>
     </Card>
