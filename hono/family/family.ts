@@ -24,7 +24,7 @@ export const family = factory
     '/survey',
     requireState('parents_open', 'freshers_open'),
     grantAccessTo('authenticated'),
-    zValidator('json', surveySchema, async (zRes, ctx) => {
+    zValidator('json', surveySchema.strict(), async (zRes, ctx) => {
       if (!zRes.success) {
         return ctx.text('Invalid body.', 400);
       }
@@ -36,6 +36,9 @@ export const family = factory
         .select({ completedSurvey: students.completedSurvey })
         .from(students)
         .where(eq(students.shortcode, shortcode));
+      // TODO @Dropheart since you're allowing two states to access this route,
+      //    a parent could complete the survey during fresher_open (past their deadline).
+      //    if they were smart enough to manipulate frontend state.
       if (currDb[0]!.completedSurvey == true) {
         return ctx.text('You have already completed the survey.', 400);
       }

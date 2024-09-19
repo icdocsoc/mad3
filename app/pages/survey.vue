@@ -11,7 +11,7 @@ const responseSchema = z.object({
 definePageMeta({
   middleware: ['require-auth']
 });
-const { data, status, error } = useAsyncData('get-details', async () => {
+const { status, error } = useAsyncData('get-details', async () => {
   // check if the user exists and completed the survey
   const response = await $fetch('/api/auth/details', { headers });
   const validated = await responseSchema.parseAsync(response);
@@ -24,7 +24,7 @@ const { data, status, error } = useAsyncData('get-details', async () => {
 
 // Survey form stuff
 const formData = reactive({
-  preferredName: '',
+  name: '',
   interests: {
     alcohol: 0,
     anime: 0,
@@ -54,8 +54,8 @@ const formData = reactive({
     racketSports: 0,
     otherSports: 0
   },
-  selfDescription: '',
-  socialMedia: [] as string[],
+  aboutMe: '',
+  socials: [] as string[],
   gender: 'male',
   course: 'computing'
 });
@@ -88,16 +88,27 @@ const matrixLabels = {
   racketSports: 'Racket Sports - Tennis, Badminton, other racket sports',
   otherSports: 'Other Sports'
 };
-async function handleSubmit(surveyResult: Record<string, any>) {
-  // TODO add the survey result type
-  // submit the survey
+async function handleSubmit() {
+  const confirmation = confirm(
+    'Are you sure you want to submit? You cannot redo this survey.'
+  );
+  if (!confirmation) return;
+
   try {
-    const response = await $fetch('/api/survey', {
+    await $fetch('/api/survey', {
       method: 'POST',
       headers,
-      body: { surveyResult }
+      body: {
+        name: formData.name,
+        interests: formData.interests,
+        aboutMe: formData.aboutMe,
+        socials: formData.socials,
+        gender: formData.gender
+        // course: formData.course TODO @Dropheart to add this in the API
+      }
     });
-    // show the result
+
+    navigateTo('/portal');
   } catch (err) {
     // @ts-ignore error type to be checked later
     alert(err.message);
@@ -107,12 +118,13 @@ async function handleSubmit(surveyResult: Record<string, any>) {
 
 <template>
   <Card>
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <CardTitle v-if="error">Oops, {{ error.message }}</CardTitle>
+    <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <SurveyGroup label="Preferred Name:" :required="true">
         <input
           class="inline-block w-full"
           type="text"
-          v-model="formData.preferredName"
+          v-model="formData.name"
           required />
       </SurveyGroup>
 
@@ -126,9 +138,7 @@ async function handleSubmit(surveyResult: Record<string, any>) {
       <SurveyGroup
         label="If you'd like to write a few words to introduce yourself to the rest of your family, here's your chance. Your family will see this once the families have been assigned:"
         :required="false">
-        <textarea
-          class="inline-block w-full"
-          v-model="formData.selfDescription" />
+        <textarea class="inline-block w-full" v-model="formData.aboutMe" />
       </SurveyGroup>
 
       <SurveyGroup
@@ -137,21 +147,17 @@ async function handleSubmit(surveyResult: Record<string, any>) {
         <div class="flex flex-col gap-2">
           <div
             class="flex items-center"
-            v-for="(_, index) in formData.socialMedia"
+            v-for="(_, index) in formData.socials"
             :key="index">
-            <input type="text" v-model="formData.socialMedia[index]" />
+            <input type="text" v-model="formData.socials[index]" />
             <span
               class="aspect-square bg-red-600 text-center text-white"
-              @click.prevent="
-                formData.socialMedia = formData.socialMedia.slice()
-              ">
+              @click.prevent="formData.socials = formData.socials.slice()">
               x
             </span>
             <span
               class="aspect-square bg-primary text-center text-white"
-              @click.prevent="
-                formData.socialMedia = [...formData.socialMedia, '']
-              ">
+              @click.prevent="formData.socials = [...formData.socials, '']">
               +
             </span>
           </div>
