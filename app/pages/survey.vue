@@ -49,35 +49,6 @@ const formData = reactive({
   gender: 'male',
   course: 'computing'
 });
-const matrixLabels = {
-  alcohol: 'Alcohol - Drinking',
-  anime: 'Anime',
-  artGraphics: 'Art/Graphics',
-  baking: 'Baking',
-  tabletopGames: 'Board/Tabletop Games',
-  charity: 'Charity',
-  clubbing: 'Clubbing',
-  cooking: 'Cooking',
-  danceBallroom: 'Dance - Salsa, Ballroom, other partnered dances',
-  danceContemporary: 'Dance - Hip hop, urban other contemporary dances',
-  dramatics: 'Dramatics - Drama or Musical Theatre',
-  film: 'Film and Cinematography',
-  finance: 'Finance and Entrepreneurship',
-  exerciseAndHealth: 'Fitness and Health',
-  hiking: 'Hiking',
-  kpop: 'K-pop',
-  martialArts: 'Martial Arts and Self Defence',
-  performingMusicPopRockJazz: 'Performing Music - Pop, Rock, Jazz',
-  performingMusicClassical: 'Performing Music - Classical, Chamber',
-  photography: 'Photography',
-  politics: 'Politics',
-  videoGames: 'Video Games',
-  football: 'Football (the British one!)',
-  rugby: 'Rugby',
-  rowing: 'Rowing',
-  racketSports: 'Racket Sports - Tennis, Badminton, other racket sports',
-  otherSports: 'Other Sports'
-};
 async function handleSubmit() {
   const confirmation = confirm(
     'Are you sure you want to submit? You cannot redo this survey.'
@@ -119,7 +90,7 @@ async function handleSubmit() {
 
       <SurveyGroup label="Interests:" :required="true">
         <SurveyMatrix
-          :labels="matrixLabels"
+          :labels="interestLabels"
           v-model="formData.interests"
           :required="true" />
       </SurveyGroup>
