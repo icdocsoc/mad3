@@ -7,6 +7,8 @@ const { data, status, error } = useFetch<any>('/api/family/myFamily', {
 definePageMeta({
   middleware: ['require-auth']
 });
+
+throw Error('Not implemented');
 </script>
 
 <template>
