@@ -60,6 +60,7 @@ export const family = factory
       await db
         .update(students)
         .set({
+          completedSurvey: true,
           name: name,
           interests: interests as Interests,
           aboutMe: aboutMe,

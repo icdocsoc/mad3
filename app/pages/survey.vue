@@ -1,26 +1,16 @@
 <script setup lang="ts">
 import { z } from 'zod';
+const { currentUser } = useAuth();
 
-// Page setup stuff
-const headers = useRequestHeaders(); // since it is SSR, we need to retrieve the headers in the server
-const responseSchema = z.object({
-  shortcode: z.string().regex(/^[a-z]{2,3}\d{2,4}$/),
-  user_is: z.enum(['parent', 'fresher']),
-  doneSurvey: z.boolean()
-});
 definePageMeta({
   middleware: ['require-auth']
 });
-const { status, error } = useAsyncData('get-details', async () => {
-  // check if the user exists and completed the survey
-  const response = await $fetch('/api/auth/details', { headers });
-  const validated = await responseSchema.parseAsync(response);
-  if (validated.doneSurvey) {
-    throw new Error('You have already completed the survey');
-  }
 
-  return validated;
-});
+// Page setup stuff
+const headers = useRequestHeaders(); // since it is SSR, we need to retrieve the headers in the server
+if (currentUser.value!.completedSurvey) {
+  throw new Error('You have already completed the survey');
+}
 
 // Survey form stuff
 const formData = reactive({
@@ -73,7 +63,7 @@ const matrixLabels = {
   dramatics: 'Dramatics - Drama or Musical Theatre',
   film: 'Film and Cinematography',
   finance: 'Finance and Entrepreneurship',
-  exerciseAndHeath: 'Fitness and Health',
+  exerciseAndHealth: 'Fitness and Health',
   hiking: 'Hiking',
   kpop: 'K-pop',
   martialArts: 'Martial Arts and Self Defence',
@@ -118,8 +108,7 @@ async function handleSubmit() {
 
 <template>
   <Card>
-    <CardTitle v-if="error">Oops, {{ error.message }}</CardTitle>
-    <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <SurveyGroup label="Preferred Name:" :required="true">
         <input
           class="inline-block w-full"
