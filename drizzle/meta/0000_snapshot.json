@@ -1,0 +1,282 @@
+{
+  "id": "c6e90f44-666c-4c43-b5ca-83e7becb227d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.meta": {
+      "name": "meta",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "1 CHECK (id = 1)"
+        },
+        "state": {
+          "name": "state",
+          "type": "app_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.family": {
+      "name": "family",
+      "schema": "",
+      "columns": {
+        "kid": {
+          "name": "kid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "family_kid_student_shortcode_fk": {
+          "name": "family_kid_student_shortcode_fk",
+          "tableFrom": "family",
+          "tableTo": "student",
+          "columnsFrom": [
+            "kid"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "family_id_marriage_id_fk": {
+          "name": "family_id_marriage_id_fk",
+          "tableFrom": "family",
+          "tableTo": "marriage",
+          "columnsFrom": [
+            "id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.marriage": {
+      "name": "marriage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parent1": {
+          "name": "parent1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent2": {
+          "name": "parent2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "marriage_parent1_student_shortcode_fk": {
+          "name": "marriage_parent1_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "tableTo": "student",
+          "columnsFrom": [
+            "parent1"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "marriage_parent2_student_shortcode_fk": {
+          "name": "marriage_parent2_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "tableTo": "student",
+          "columnsFrom": [
+            "parent2"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "marriage_parent1_unique": {
+          "name": "marriage_parent1_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "parent1"
+          ]
+        },
+        "marriage_parent2_unique": {
+          "name": "marriage_parent2_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "parent2"
+          ]
+        }
+      }
+    },
+    "public.proposals": {
+      "name": "proposals",
+      "schema": "",
+      "columns": {
+        "proposer": {
+          "name": "proposer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposee": {
+          "name": "proposee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "proposals_proposer_student_shortcode_fk": {
+          "name": "proposals_proposer_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "tableTo": "student",
+          "columnsFrom": [
+            "proposer"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "proposals_proposee_student_shortcode_fk": {
+          "name": "proposals_proposee_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "tableTo": "student",
+          "columnsFrom": [
+            "proposee"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "proposals_proposer_proposee_pk": {
+          "name": "proposals_proposer_proposee_pk",
+          "columns": [
+            "proposer",
+            "proposee"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "public.student": {
+      "name": "student",
+      "schema": "",
+      "columns": {
+        "shortcode": {
+          "name": "shortcode",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "student_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_survey": {
+          "name": "completed_survey",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jmc": {
+          "name": "jmc",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interests": {
+          "name": "interests",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "socials": {
+          "name": "socials",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "about_me": {
+          "name": "about_me",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

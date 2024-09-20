@@ -1,7 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './hono/admin/schema.ts',
+  schema: './hono/**/schema.ts',
   dialect: 'postgresql',
   verbose: true
 });
