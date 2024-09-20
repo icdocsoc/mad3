@@ -26,11 +26,11 @@
     "vue": "latest",
     "vue-router": "latest",
     "zod": "^3.23.8",
-    "zod-validator": "^1.0.1"
+    "zod-validator": "^1.0.1",
+    "@tailwindcss/forms": "^0.5.9"
   },
   "devDependencies": {
     "drizzle-kit": "^0.24.2",
-    "@tailwindcss/forms": "^0.5.9",
     "@types/bun": "latest",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.6"

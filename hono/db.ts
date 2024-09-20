@@ -4,7 +4,10 @@ import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import drizzleConfig from '../drizzle.config.json';
 import { meta } from './admin/schema';
 
-const database = new Database('db.sqlite', { create: true, strict: true });
+const database = new Database('./db/db.sqlite', {
+  create: true,
+  strict: true
+});
 const db = drizzle(database);
 migrate(db, { migrationsFolder: drizzleConfig.out });
 try {

@@ -17,11 +17,13 @@ logs
 .DS_Store
 .fleet
 .idea
+.vscode
 
 # Local env files
 .env
 .env.*
-!.env.example
 
 # the database, lol
 db/
+
+README.md
