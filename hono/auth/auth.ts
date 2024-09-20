@@ -9,7 +9,7 @@ import {
 } from './jwt';
 import factory from '../factory';
 import { apiLogger } from '../logger';
-import db from '../db';
+import { db } from '../db';
 import { students } from '../family/schema';
 import { eq } from 'drizzle-orm';
 
@@ -136,7 +136,7 @@ const auth = factory
         await db.insert(students).values({
           shortcode: shortcode[0],
           role: user_is,
-          completedSurvey: false,
+          completedSurvey: false
         });
       }
 

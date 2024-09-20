@@ -32,6 +32,7 @@ export const interestKeys = [
 ] as const;
 export type Interests = Record<(typeof interestKeys)[number], 0 | 1 | 2>;
 
+export const studentRoles = ['fresher', 'parent'] as const;
 export const genderOptions = ['male', 'female', 'other', 'n/a'] as const;
 export type Gender = (typeof genderOptions)[number];
 
