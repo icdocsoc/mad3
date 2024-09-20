@@ -26,18 +26,21 @@ const sentProposals = computed(() =>
 );
 
 const proposeInput = ref('');
+const router = useRouter();
 async function handlePropose() {
   if (!proposeInput.value) {
     return;
   }
 
   try {
-    const response = await $fetch('/api/family/propose', {
+    await $fetch('/api/family/propose', {
       method: 'POST',
       body: {
         shortcode: proposeInput.value
       }
     });
+
+    router.go(0);
   } catch (err) {
     alert(err.message);
   }

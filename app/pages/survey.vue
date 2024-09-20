@@ -45,11 +45,35 @@ const formData = reactive({
     otherSports: 0
   },
   aboutMe: '',
-  socials: [] as string[],
   gender: 'male',
   course: 'computing'
 });
+const formSocials = ref<string[]>([]);
+
+const validUrls = ref<boolean[]>([]);
+watch(
+  () => formSocials,
+  (_new, _old) => {
+    validUrls.value = formSocials.value.map(url => {
+      if (!url.length) return true;
+      const zResult = z.string().url().safeParse(url);
+      return zResult.success;
+    });
+    console.log(validUrls.value);
+  },
+  {
+    deep: true
+  }
+);
+
 async function handleSubmit() {
+  if (!validUrls.value.every(url => url)) {
+    alert(
+      'Some of the Social media URLs are invalid. Please check them again.'
+    );
+    return;
+  }
+
   const confirmation = confirm(
     'Are you sure you want to submit? You cannot redo this survey.'
   );
@@ -63,7 +87,7 @@ async function handleSubmit() {
         name: formData.name,
         interests: formData.interests,
         aboutMe: formData.aboutMe,
-        socials: formData.socials,
+        socials: formSocials.value.filter(url => url.length),
         gender: formData.gender,
         jmc: formData.course == 'jmc'
       }
@@ -73,24 +97,6 @@ async function handleSubmit() {
   } catch (err) {
     // @ts-ignore error type to be checked later
     alert(err.message);
-  }
-}
-
-let isValidUrl = reactive([] as boolean[]);
-let focus = reactive([] as boolean[]);
-function validateUrl(index: number) {
-  if (
-    formData.socials[index] != undefined &&
-    formData.socials[index]!.length > 11
-  ) {
-    try {
-      z.string().url().parse(formData.socials[index]);
-      isValidUrl[index] = true;
-    } catch {
-      isValidUrl[index] = false;
-    }
-  } else {
-    isValidUrl[index] = true;
   }
 }
 </script>
@@ -124,41 +130,30 @@ function validateUrl(index: number) {
         :required="false">
         <div class="flex flex-col gap-2">
           <div
-            class="relative flex gap-5"
-            v-for="(_, index) in formData.socials"
+            class="flex gap-5"
+            v-for="(_, index) in formSocials"
             :key="index">
-            <span
-              v-if="!isValidUrl[index] && focus[index]"
-              class="absolute bottom-full z-10 mb-2 rounded-xl bg-slate-600 p-3 text-sm text-white">
-              Invalid URL - did you forget to type https://?
-            </span>
-            <input
-              type="text"
-              class="flex-grow"
-              v-model="formData.socials[index]"
-              placeholder="https://instagram.com/docsoc"
-              :class="!isValidUrl[index] ? 'border-red-600' : null"
-              @input="validateUrl(index)"
-              @focusin="focus[index] = true"
-              @focusout="focus[index] = false" />
+            <div class="relative flex-grow">
+              <input
+                type="text"
+                :class="`w-full ${!validUrls[index] ? 'pr-20' : ''}`"
+                v-model="formSocials[index]"
+                placeholder="https://instagram.com/docsoc" />
+              <span
+                v-if="!validUrls[index]"
+                class="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-red-600 px-1 text-white">
+                Invalid
+              </span>
+            </div>
             <button
-              v-if="formData.socials[index]?.length"
               class="rounded bg-red-600 p-2 text-center text-white"
-              @click.prevent="
-                formData.socials = formData.socials.splice(index - 1, 1);
-                isValidUrl = isValidUrl.splice(index - 1, 1);
-                focus = focus.splice(index - 1, 1)
-              ">
+              @click.prevent="formSocials.splice(index, 1)">
               Remove Link
             </button>
           </div>
           <button
             class="self-start rounded bg-green-600 p-2 text-center text-white"
-            @click.prevent="
-              formData.socials = [...formData.socials, ''];
-              isValidUrl = [...isValidUrl, true]
-              focus.push(false);
-            ">
+            @click.prevent="formSocials.push('')">
             Add Link
           </button>
         </div>
