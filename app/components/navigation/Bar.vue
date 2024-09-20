@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { currentUser } = useAuth();
+const loginFeature = useFeature('login');
 </script>
 
 <template>
@@ -10,14 +11,14 @@ const { currentUser } = useAuth();
       <span class="max-md:hidden md:text-xl">Mums & Dads</span>
     </NavigationLink>
     <ul class="flex items-center gap-3">
-      <li v-if="currentUser === null">
+      <li v-if="loginFeature && currentUser === null">
         <a
           class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
           href="/api/auth/signIn">
           Log In
         </a>
       </li>
-      <li v-if="currentUser !== null">
+      <li v-if="loginFeature && currentUser !== null">
         <NavigationLink to="/portal">
           <span class="md:text-xl">Portal</span>
         </NavigationLink>

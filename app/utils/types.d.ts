@@ -19,3 +19,5 @@ declare const stateOptions = [
   'closed'
 ] as const;
 declare type State = (typeof stateOptions)[number];
+
+declare type FeatureFlag = 'login';
