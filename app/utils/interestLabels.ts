@@ -1,4 +1,4 @@
-export const interestLabels = {
+export const interestLabels: Record<string, string> = {
   alcohol: 'Alcohol - Drinking',
   anime: 'Anime',
   artGraphics: 'Art/Graphics',

@@ -45,11 +45,35 @@ const formData = reactive({
     otherSports: 0
   },
   aboutMe: '',
-  socials: [] as string[],
   gender: 'male',
   course: 'computing'
 });
+const formSocials = ref<string[]>([]);
+
+const validUrls = ref<boolean[]>([]);
+watch(
+  () => formSocials,
+  (_new, _old) => {
+    validUrls.value = formSocials.value.map(url => {
+      if (!url.length) return true;
+      const zResult = z.string().url().safeParse(url);
+      return zResult.success;
+    });
+    console.log(validUrls.value);
+  },
+  {
+    deep: true
+  }
+);
+
 async function handleSubmit() {
+  if (!validUrls.value.every(url => url)) {
+    alert(
+      'Some of the Social media URLs are invalid. Please check them again.'
+    );
+    return;
+  }
+
   const confirmation = confirm(
     'Are you sure you want to submit? You cannot redo this survey.'
   );
@@ -63,7 +87,7 @@ async function handleSubmit() {
         name: formData.name,
         interests: formData.interests,
         aboutMe: formData.aboutMe,
-        socials: formData.socials,
+        socials: formSocials.value.filter(url => url.length),
         gender: formData.gender,
         jmc: formData.course == 'jmc'
       }
@@ -107,24 +131,29 @@ async function handleSubmit() {
         <div class="flex flex-col gap-2">
           <div
             class="flex gap-5"
-            v-for="(_, index) in formData.socials"
+            v-for="(_, index) in formSocials"
             :key="index">
-            <input
-              type="text"
-              class="flex-grow"
-              v-model="formData.socials[index]" />
+            <div class="relative flex-grow">
+              <input
+                type="text"
+                :class="`w-full ${!validUrls[index] ? 'pr-20' : ''}`"
+                v-model="formSocials[index]"
+                placeholder="https://instagram.com/docsoc" />
+              <span
+                v-if="!validUrls[index]"
+                class="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-red-600 px-1 text-white">
+                Invalid
+              </span>
+            </div>
             <button
-              v-if="formData.socials[index]?.length"
               class="rounded bg-red-600 p-2 text-center text-white"
-              @click.prevent="
-                formData.socials = formData.socials.splice(index - 1, 1)
-              ">
+              @click.prevent="formSocials.splice(index, 1)">
               Remove Link
             </button>
           </div>
           <button
             class="self-start rounded bg-green-600 p-2 text-center text-white"
-            @click.prevent="formData.socials = [...formData.socials, '']">
+            @click.prevent="formSocials.push('')">
             Add Link
           </button>
         </div>

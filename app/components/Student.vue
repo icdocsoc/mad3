@@ -34,7 +34,7 @@ const mildInterests = computed(() => {
       <strong>About Me:</strong>
       {{ props.student.aboutMe }}
     </CardText>
-    <CardText v-if="props.student.socials">
+    <CardText v-if="props.student.socials?.length">
       <strong>Social Media:</strong>
       <a v-for="social in props.student.socials" :href="social" target="_blank">
         <br />
@@ -43,16 +43,16 @@ const mildInterests = computed(() => {
     </CardText>
     <details v-if="strongInterests != null">
       <summary>Strong Interests:</summary>
-      <ul>
-        <li v-for="interest in strongInterests!.keys">
+      <ul class="list-inside list-disc">
+        <li v-for="[interest, _2] in strongInterests" :key="interest">
           {{ interestLabels[interest] }}
         </li>
       </ul>
     </details>
     <details v-if="mildInterests != null">
       <summary>Mild Interests:</summary>
-      <ul>
-        <li v-for="interest in mildInterests!.keys">
+      <ul class="list-inside list-disc">
+        <li v-for="[interest, _1] in mildInterests" :key="interest">
           {{ interestLabels[interest] }}
         </li>
       </ul>
