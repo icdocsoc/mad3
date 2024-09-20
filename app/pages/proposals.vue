@@ -45,8 +45,18 @@ async function handlePropose() {
     alert(err.message);
   }
 }
-function handleAccept(shortcode: string) {}
-function handleReject(shortcode: string) {}
+async function handleAccept(shortcode: string) {
+  try {
+    await $fetch('/api/family/acceptProposal', {
+      method: 'POST',
+      body: { shortcode }
+    });
+
+    router.go(0);
+  } catch (err) {
+    alert(err.message);
+  }
+}
 </script>
 
 <template>
@@ -95,11 +105,6 @@ function handleReject(shortcode: string) {}
               class="cursor-pointer bg-green-400 p-1 text-sm text-white"
               @click="handleAccept(proposal.proposer)">
               Accept
-            </span>
-            <span
-              class="cursor-pointer bg-red-400 p-1 text-sm text-white"
-              @click="handleReject(proposal.proposer)">
-              Reject
             </span>
           </div>
         </div>
