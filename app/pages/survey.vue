@@ -59,7 +59,6 @@ watch(
       const zResult = z.string().url().safeParse(url);
       return zResult.success;
     });
-    console.log(validUrls.value);
   },
   {
     deep: true

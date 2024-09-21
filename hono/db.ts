@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import fs from 'node:fs';
 
 export const pool = new Pool({
   user: process.env.PGUSER,
@@ -10,7 +9,7 @@ export const pool = new Pool({
   port: +(process.env.PGPORT || 5432),
   ssl: {
     rejectUnauthorized: true,
-    ca: fs.readFileSync(process.env.PGCERT_PATH || '').toString()
+    ca: process.env.PGCA
   }
 });
 
