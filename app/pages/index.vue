@@ -1,8 +1,32 @@
 <script lang="ts" setup>
-const data = ref({
-  notificationTitle: 'Parents signup is now open!',
-  notificationDescription:
-    'Once you have signed up, we will inform you via email when you have been allocated a family!'
+const { currentState } = useAppState();
+
+const data = computed(() => {
+  switch (currentState.value) {
+    case 'parents_open':
+      return {
+        notificationTitle: 'Parents signup is now open!',
+        notificationDescription:
+          'Sign up to be a parent and help freshers settle into university life!'
+      };
+    case 'parents_close':
+      return {
+        notificationTitle: 'Parents signup is now closed!',
+        notificationDescription:
+          'If you have signed up, look out for an email soon! Fresher signup will open soon.'
+      };
+    case 'freshers_open':
+      return {
+        notificationTitle: 'Freshers signup is now open!',
+        notificationDescription: 'Sign up to be adopted by a DoCSoc family'
+      };
+    case 'closed':
+      return {
+        notificationTitle: 'Mums and Dads is now closed!',
+        notificationDescription:
+          'Thank you for signing up! Look out for any emails for more information.'
+      };
+  }
 });
 </script>
 
