@@ -1,1 +1,0 @@
-INSERT INTO meta VALUES (1, 'parents_open');
