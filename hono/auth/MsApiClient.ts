@@ -1,4 +1,5 @@
 import { buildUrl } from 'build-url-ts';
+import { apiLogger } from '../logger';
 
 type Secrets = {
   tenantId: string;
@@ -37,6 +38,8 @@ export class MsAuthClient {
     this.statesTail = (this.statesTail + 1) % this.maxStates;
     this.states[this.statesTail] = _state;
 
+    console.log(`New state added: ${_state}\nCurrent tail: ${this.statesTail}\nStates: ${this.states}`);
+
     const url = buildUrl(this.msAuthEndpoint, {
       path: '/authorize',
       queryParams: {
@@ -55,10 +58,12 @@ export class MsAuthClient {
 
   public async verifyAndConsumeCode(code: string, state: string) {
     const index = this.states.indexOf(state);
+    console.log(`State ${state} at index ${index}\nState array: ${this.states}\nstates[index] = ${this.states[index]}`)
     if (index == -1) {
       throw new Error(`Failed to verify code: Mismatched state.`);
     }
     this.states[index] = undefined;
+    console.log(`Removed state ${state} at index ${index}\nState array: ${this.states}\nstates[index] = ${this.states[index]}`)
 
     const req = await fetch(`${this.msAuthEndpoint}/token`, {
       method: 'POST',
