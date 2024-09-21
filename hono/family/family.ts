@@ -229,7 +229,7 @@ export const family = factory
               ),
               or(
                 eq(proposals.proposer, proposee),
-                eq(proposals.proposee, proposals)
+                eq(proposals.proposee, proposer)
               )
             )
           );
@@ -274,7 +274,6 @@ export const family = factory
   })
   .get(
     '/myFamily',
-    requireState('closed'),
     grantAccessTo('authenticated'),
     async ctx => {
       const reqShortcode = ctx.get('shortcode')!;
