@@ -1,5 +1,5 @@
 {
-  "id": "c6e90f44-666c-4c43-b5ca-83e7becb227d",
+  "id": "881295df-d911-4f2e-a5c6-8c4d0bd4c2c7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -271,7 +271,36 @@
       "uniqueConstraints": {}
     }
   },
-  "enums": {},
+  "enums": {
+    "public.app_state": {
+      "name": "app_state",
+      "schema": "public",
+      "values": [
+        "parents_open",
+        "parents_close",
+        "freshers_open",
+        "closed"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "male",
+        "female",
+        "other",
+        "n/a"
+      ]
+    },
+    "public.student_role": {
+      "name": "student_role",
+      "schema": "public",
+      "values": [
+        "fresher",
+        "parent"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "_meta": {

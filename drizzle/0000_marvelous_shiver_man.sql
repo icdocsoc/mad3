@@ -1,3 +1,21 @@
+DO $$ BEGIN
+ CREATE TYPE "public"."app_state" AS ENUM('parents_open', 'parents_close', 'freshers_open', 'closed');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."gender" AS ENUM('male', 'female', 'other', 'n/a');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."student_role" AS ENUM('fresher', 'parent');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "meta" (
 	"id" integer PRIMARY KEY DEFAULT 1 CHECK (id = 1) NOT NULL,
 	"state" "app_state" NOT NULL

@@ -17,8 +17,8 @@ import {
 import { z } from 'zod';
 import { createSelectSchema } from 'drizzle-zod';
 
-const studentRole = pgEnum('student_role', studentRoles);
-const gender = pgEnum('gender', genderOptions);
+export const studentRole = pgEnum('student_role', studentRoles);
+export const gender = pgEnum('gender', genderOptions);
 
 export const proposals = pgTable(
   'proposals',
