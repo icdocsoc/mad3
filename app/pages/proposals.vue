@@ -17,6 +17,17 @@ type Proposal = {
   proposer: string;
   proposee: string;
 };
+
+// See if they have a partner.
+const headers = useRequestHeaders();
+const {
+  data: familyData,
+  status: familyStatus,
+  error: familyError
+} = useFetch<any>('/api/family/myFamily', {
+  headers
+});
+
 const { data, status, error } = useFetch<Proposal[]>('/api/family/proposals');
 const receivedProposals = computed(() =>
   data.value?.filter(p => p.proposee === currentUser.value!.shortcode)
@@ -82,82 +93,93 @@ async function handleAccept(shortcode: string) {
         </ul>
       </CardText>
     </Card>
-    <Card>
-      <CardTitle>People who proposed to you:</CardTitle>
 
-      <div class="mt-4 flex flex-wrap gap-2 self-start">
-        <p v-if="status == 'pending'">Loading...</p>
-        <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
-        <p v-else-if="data && !receivedProposals?.length">
-          You have no proposals yet, ask your partner to propose to you or
-          propose them.
-        </p>
-        <div
-          v-else
-          v-for="proposal in receivedProposals"
-          :key="proposal.proposer"
-          class="flex gap-5 border px-2 py-1">
-          <div class="flex flex-col items-start">
-            <strong>{{ proposal.proposer }}</strong>
-          </div>
-          <div class="flex items-start gap-3">
-            <span
-              class="cursor-pointer bg-green-400 p-1 text-sm text-white"
-              @click="handleAccept(proposal.proposer)">
-              Accept
-            </span>
-          </div>
-        </div>
+    <Card v-if="familyData">
+      <CardTitle>It's a match!</CardTitle>
+      <div class="mt-4 flex gap-2">
+        <Student :student="familyData.parents[0]" />
+        <Student :student="familyData.parents[1]" />
       </div>
     </Card>
-    <Card>
-      <CardTitle>People that you proposed to:</CardTitle>
 
-      <div class="mt-4 flex flex-wrap gap-2 self-start">
-        <p v-if="status == 'pending'">Loading...</p>
-        <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
-        <p v-else-if="data && !sentProposals?.length">
-          You have not proposed to anyone yet. It's time to take that leap of
-          faith to get what you want.
-        </p>
-        <div
-          v-else
-          v-for="proposal in sentProposals"
-          :key="proposal.proposee"
-          class="flex gap-5 border px-2 py-1">
-          <div class="flex flex-col items-start">
-            <strong>{{ proposal.proposee }}</strong>
-          </div>
-          <div class="flex items-start gap-3">
-            <span class="cursor-pointer bg-yellow-400 p-1 text-sm text-white">
-              Pending
-            </span>
+    <div v-else>
+      <Card>
+        <CardTitle>People who proposed to you:</CardTitle>
+  
+        <div class="mt-4 flex flex-wrap gap-2 self-start">
+          <p v-if="status == 'pending'">Loading...</p>
+          <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
+          <p v-else-if="data && !receivedProposals?.length">
+            You have no proposals yet, ask your partner to propose to you or
+            propose them.
+          </p>
+          <div
+            v-else
+            v-for="proposal in receivedProposals"
+            :key="proposal.proposer"
+            class="flex gap-5 border px-2 py-1">
+            <div class="flex flex-col items-start">
+              <strong>{{ proposal.proposer }}</strong>
+            </div>
+            <div class="flex items-start gap-3">
+              <span
+                class="cursor-pointer bg-green-400 p-1 text-sm text-white"
+                @click="handleAccept(proposal.proposer)">
+                Accept
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-
-      <CardDetails>
-        <strong>
-          Want to send a proposal to a potential partner? Enter their exact
-          shortcode:
-        </strong>
-        <div class="flex gap-4">
-          <input
-            type="text"
-            class="flex-grow"
-            placeholder="e.g. nj421"
-            v-model="proposeInput" />
-          <button
-            class="hover flex items-center gap-2 rounded bg-[#ff4669] px-2 text-white"
-            @click="handlePropose">
-            Propose
-            <img
-              src="~/assets/icons/docsoc-love.webp"
-              alt="Propose"
-              class="aspect-square w-5" />
-          </button>
+      </Card>
+      <Card>
+        <CardTitle>People that you proposed to:</CardTitle>
+  
+        <div class="mt-4 flex flex-wrap gap-2 self-start">
+          <p v-if="status == 'pending'">Loading...</p>
+          <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
+          <p v-else-if="data && !sentProposals?.length">
+            You have not proposed to anyone yet. It's time to take that leap of
+            faith to get what you want.
+          </p>
+          <div
+            v-else
+            v-for="proposal in sentProposals"
+            :key="proposal.proposee"
+            class="flex gap-5 border px-2 py-1">
+            <div class="flex flex-col items-start">
+              <strong>{{ proposal.proposee }}</strong>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="cursor-pointer bg-yellow-400 p-1 text-sm text-white">
+                Pending
+              </span>
+            </div>
+          </div>
         </div>
-      </CardDetails>
-    </Card>
+  
+        <CardDetails>
+          <strong>
+            Want to send a proposal to a potential partner? Enter their exact
+            shortcode:
+          </strong>
+          <div class="flex gap-4">
+            <input
+              type="text"
+              class="flex-grow"
+              placeholder="e.g. nj421"
+              v-model="proposeInput" />
+            <button
+              class="hover flex items-center gap-2 rounded bg-[#ff4669] px-2 text-white"
+              @click="handlePropose">
+              Propose
+              <img
+                src="~/assets/icons/docsoc-love.webp"
+                alt="Propose"
+                class="aspect-square w-5" />
+            </button>
+          </div>
+        </CardDetails>
+      </Card>
+    </div>
   </div>
 </template>
