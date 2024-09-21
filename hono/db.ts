@@ -1,25 +1,12 @@
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import drizzleConfig from '../drizzle.config.json';
-import { meta } from './admin/schema';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 
-const database = new Database('./db/db.sqlite', {
-  create: true,
-  strict: true
+export const pool = new Pool({
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDB,
+  password: process.env.PGPASSWORD,
+  port: +(process.env.PGPORT || 5432)
 });
-const db = drizzle(database);
-migrate(db, { migrationsFolder: drizzleConfig.out });
-try {
-  db.insert(meta)
-    .values({
-      id: 1,
-      state: 'parents_open'
-    })
-    .run();
-} catch (e) {
-  // This just means the meta row is already inserted,
-  // so do nothing.
-}
 
-export default db;
+export const db = drizzle(pool);

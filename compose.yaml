@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mad3_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: rootpasswd
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./drizzle:/docker-entrypoint-initdb.d
+
+  web:
+    build: .
+    container_name: web
+    depends_on:
+      - postgres
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      - PGHOST=postgres
+
+volumes:
+  postgres_data:

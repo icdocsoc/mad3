@@ -3,7 +3,7 @@ import { grantAccessTo } from '../auth/jwt';
 import factory from '../factory';
 import { z } from 'zod';
 import { type Interests } from '../types';
-import db from '../db';
+import { db } from '../db';
 import { and, eq, or } from 'drizzle-orm';
 import {
   families,

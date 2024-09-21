@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { grantAccessTo } from '../auth/jwt';
-import db from '../db';
+import { db } from '../db';
 import factory from '../factory';
 import { stateOptions, type State } from '../types';
 import { meta } from './schema';

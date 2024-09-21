@@ -1,14 +1,26 @@
 import {
   integer,
   primaryKey,
-  sqliteTable,
-  text
-} from 'drizzle-orm/sqlite-core';
-import { type Interests, genderOptions, interestKeys } from '../types';
+  pgTable,
+  text,
+  boolean,
+  json,
+  serial,
+  pgEnum
+} from 'drizzle-orm/pg-core';
+import {
+  type Interests,
+  genderOptions,
+  interestKeys,
+  studentRoles
+} from '../types';
 import { z } from 'zod';
 import { createSelectSchema } from 'drizzle-zod';
 
-export const proposals = sqliteTable(
+export const studentRole = pgEnum('student_role', studentRoles);
+export const gender = pgEnum('gender', genderOptions);
+
+export const proposals = pgTable(
   'proposals',
   {
     proposer: text('proposer')
@@ -25,8 +37,8 @@ export const proposals = sqliteTable(
   }
 );
 
-export const marriages = sqliteTable('marriage', {
-  id: integer('id').primaryKey(),
+export const marriages = pgTable('marriage', {
+  id: serial('id').primaryKey(),
   parent1: text('parent1')
     .references(() => students.shortcode)
     .notNull()
@@ -39,7 +51,7 @@ export const marriages = sqliteTable('marriage', {
   // hasJmc: integer('has_jmc', { mode: 'boolean' }).notNull()
 });
 
-export const families = sqliteTable('family', {
+export const families = pgTable('family', {
   kid: text('kid')
     .references(() => students.shortcode)
     .primaryKey(),
@@ -48,15 +60,15 @@ export const families = sqliteTable('family', {
     .notNull()
 });
 
-export const students = sqliteTable('student', {
+export const students = pgTable('student', {
   shortcode: text('shortcode').primaryKey(),
-  role: text('role', { enum: ['parent', 'fresher'] }).notNull(),
-  completedSurvey: integer('completed_survey', { mode: 'boolean' }).notNull(),
-  jmc: integer('jmc', { mode: 'boolean' }),
+  role: studentRole('role').notNull(),
+  completedSurvey: boolean('completed_survey').notNull(),
+  jmc: boolean('jmc'),
   name: text('name'),
-  gender: text('gender', { enum: genderOptions }),
-  interests: text('interests', { mode: 'json' }).$type<Interests>(),
-  socials: text('socials', { mode: 'json' }).$type<string[]>(),
+  gender: gender('gender'),
+  interests: json('interests').$type<Interests>(),
+  socials: text('socials').array(),
   aboutMe: text('about_me')
 });
 

@@ -1,8 +1,0 @@
-{
-  "dialect": "sqlite",
-  "out": "./hono/schema",
-  "schema": "./hono/**/schema.ts",
-  "dbCredentials": {
-    "url": "file:./sqlite.db"
-  }
-}
