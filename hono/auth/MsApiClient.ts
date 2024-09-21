@@ -10,14 +10,15 @@ type Secrets = {
 
 // Todo: custom errors
 
-// We only want to ensure the request originated from our website,
-// hence no identifiable information. An in memory array as your request
-// should be done pretty fast + we have a maxStates variable.
-const states: string[] = [];
 
 export class MsAuthClient {
   msAuthEndpoint: string;
   scopeUrls: string[];
+  statesTail = -1;
+  // We only want to ensure the request originated from our website,
+  // hence no identifiable information. An in memory array as your request
+  // should be done pretty fast + we have a maxStates variable.
+  states = [] as (string | undefined)[];
 
   public constructor(
     private scopes: string[],
@@ -33,12 +34,8 @@ export class MsAuthClient {
 
   public getRedirectUrl(state?: string): string {
     const _state = state || crypto.randomUUID();
-    const noStates = states.push(_state);
-    // Flush the states for performance
-    if (noStates > this.maxStates) {
-      states.length = 1;
-      states[0] = _state;
-    }
+    this.statesTail = (this.statesTail + 1) % this.maxStates;
+    this.states[this.statesTail] = _state;
 
     const url = buildUrl(this.msAuthEndpoint, {
       path: '/authorize',
@@ -57,11 +54,11 @@ export class MsAuthClient {
   }
 
   public async verifyAndConsumeCode(code: string, state: string) {
-    const index = states.indexOf(state);
+    const index = this.states.indexOf(state);
     if (index == -1) {
       throw new Error(`Failed to verify code: Mismatched state.`);
     }
-    states.splice(index, 1);
+    this.states[index] = undefined;
 
     const req = await fetch(`${this.msAuthEndpoint}/token`, {
       method: 'POST',
