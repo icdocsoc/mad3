@@ -6,7 +6,8 @@ export const pool = new Pool({
   host: process.env.PGHOST,
   database: process.env.PGDB,
   password: process.env.PGPASSWORD,
-  port: +(process.env.PGPORT || 5432)
+  port: +(process.env.PGPORT || 5432),
+  ssl: true
 });
 
 export const db = drizzle(pool);
