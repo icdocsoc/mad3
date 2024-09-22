@@ -11,7 +11,29 @@ import factory from '../factory';
 import { apiLogger } from '../logger';
 import { db } from '../db';
 import { students } from '../family/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
+import { states } from '../admin/schema';
+
+const stateManager = {
+  newState: async (state: string) => {
+    // State expires 10 minutes from now
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await db.insert(states).values({
+      state: state,
+      expiresAt: expiresAt
+    });
+  },
+  stateExists: async (state: string) => {
+    const statesInDb = await db
+      .select()
+      .from(states)
+      .where(and(eq(states.state, state), gt(states.expiresAt, new Date())));
+    return statesInDb.length > 0;
+  },
+  removeState: async (state: string) => {
+    await db.delete(states).where(eq(states.state, state));
+  }
+};
 
 const msAuth = new MsAuthClient(
   ['User.Read'],
@@ -20,7 +42,8 @@ const msAuth = new MsAuthClient(
     clientId: process.env.CLIENT_ID!,
     clientSecret: process.env.CLIENT_SECRET!
   },
-  `${process.env.BASE_URL}/finish-oauth`
+  `${process.env.BASE_URL}/finish-oauth`,
+  stateManager
 );
 
 const callbackSchema = z.object({

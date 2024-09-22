@@ -1,5 +1,4 @@
 import { buildUrl } from 'build-url-ts';
-import { apiLogger } from '../logger';
 
 type Secrets = {
   tenantId: string;
@@ -7,10 +6,15 @@ type Secrets = {
   clientSecret: string;
 };
 
+type StateManagement = {
+  newState: (state: string) => void | Promise<void>;
+  stateExists: (state: string) => boolean | Promise<boolean>;
+  removeState: (state: string) => void | Promise<void>;
+};
+
 // https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 
 // Todo: custom errors
-
 
 export class MsAuthClient {
   msAuthEndpoint: string;
@@ -21,11 +25,21 @@ export class MsAuthClient {
   // should be done pretty fast + we have a maxStates variable.
   states = [] as (string | undefined)[];
 
-  public constructor(
+  constructor(
     private scopes: string[],
     private secrets: Secrets,
     private redirectUri: string,
-    private maxStates: number = 200
+    private stateManager: StateManagement = {
+      newState: state => {
+        this.statesTail = (this.statesTail + 1) % 200;
+        this.states[this.statesTail] = state;
+      },
+      stateExists: state => this.states.indexOf(state) != -1,
+      removeState: state => {
+        const index = this.states.indexOf(state);
+        this.states[index] = undefined;
+      }
+    }
   ) {
     this.msAuthEndpoint = `https://login.microsoftonline.com/${secrets.tenantId}/oauth2/v2.0`;
     this.scopeUrls = this.scopes.map(
@@ -35,10 +49,7 @@ export class MsAuthClient {
 
   public getRedirectUrl(state?: string): string {
     const _state = state || crypto.randomUUID();
-    this.statesTail = (this.statesTail + 1) % this.maxStates;
-    this.states[this.statesTail] = _state;
-
-    console.log(`New state added: ${_state}\nCurrent tail: ${this.statesTail}\nStates: ${this.states}`);
+    this.stateManager.newState(_state);
 
     const url = buildUrl(this.msAuthEndpoint, {
       path: '/authorize',
@@ -57,13 +68,11 @@ export class MsAuthClient {
   }
 
   public async verifyAndConsumeCode(code: string, state: string) {
-    const index = this.states.indexOf(state);
-    console.log(`State ${state} at index ${index}\nState array: ${this.states}\nstates[index] = ${this.states[index]}`)
-    if (index == -1) {
+    const validState = this.stateManager.stateExists(state);
+    if (!validState) {
       throw new Error(`Failed to verify code: Mismatched state.`);
     }
-    this.states[index] = undefined;
-    console.log(`Removed state ${state} at index ${index}\nState array: ${this.states}\nstates[index] = ${this.states[index]}`)
+    this.stateManager.removeState(state);
 
     const req = await fetch(`${this.msAuthEndpoint}/token`, {
       method: 'POST',

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, integer, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, integer, pgEnum, text, timestamp } from 'drizzle-orm/pg-core';
 import { stateOptions } from '../types';
 
 export const appState = pgEnum('app_state', stateOptions);
@@ -11,4 +11,9 @@ export const meta = pgTable('meta', {
     .primaryKey()
     .default(sql`1 CHECK (id = 1)`),
   state: appState('state').notNull()
+});
+
+export const states = pgTable('states', {
+  state: text('string').primaryKey(),
+  expiresAt: timestamp('expires_at').notNull()
 });
