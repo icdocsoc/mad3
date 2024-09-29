@@ -8,7 +8,7 @@ definePageMeta({
 });
 
 const { status } = useFetch('/api/family/myFamily', {
-  immediate: false
+  lazy: false
 });
 </script>
 
