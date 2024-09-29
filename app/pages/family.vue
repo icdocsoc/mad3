@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const headers = useRequestHeaders();
+// TODO specify the type of data
 const { data, status, error } = useFetch<any>('/api/family/myFamily', {
   headers
 });
@@ -7,8 +8,6 @@ const { data, status, error } = useFetch<any>('/api/family/myFamily', {
 definePageMeta({
   middleware: ['require-auth']
 });
-
-throw Error('Not implemented');
 </script>
 
 <template>
@@ -29,7 +28,7 @@ throw Error('Not implemented');
 
         <div v-if="!data.kids.length">
           You currently have 0 kids assigned. Return to this page soon to see
-          more information about your kids
+          more information about your kids.
         </div>
         <div v-else>
           <Student

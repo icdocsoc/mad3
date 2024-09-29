@@ -6,6 +6,10 @@ const { currentState } = useAppState();
 definePageMeta({
   middleware: ['require-auth']
 });
+
+const { status } = useFetch('/api/family/myFamily', {
+  immediate: false
+});
 </script>
 
 <template>
@@ -31,7 +35,7 @@ definePageMeta({
             to start sending proposals.
           </CardText>
           <div v-else>
-            <Student :student="currentUser!"/>
+            <Student :student="currentUser!" />
             <CardText>
               Visit the
               <NuxtLink to="/proposals">proposals page</NuxtLink>
@@ -53,10 +57,13 @@ definePageMeta({
         </CardDetails>
         <CardDetails v-else>
           <strong>Parent's survey & proposals. [CLOSED]</strong>
-          <CardText>
+          <CardText v-if="status == 'success'">
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
+          </CardText>
+          <CardText v-else-if="status == 'error'">
+            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
@@ -71,10 +78,13 @@ definePageMeta({
         </CardDetails>
         <CardDetails v-else>
           <strong>Parent's survey & proposals. [CLOSED]</strong>
-          <CardText>
+          <CardText v-if="status == 'success'">
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
+          </CardText>
+          <CardText v-else-if="status == 'error'">
+            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
@@ -88,10 +98,13 @@ definePageMeta({
             }}
             [CLOSED]
           </strong>
-          <CardText>
+          <CardText v-if="status == 'success'">
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
+          </CardText>
+          <CardText v-else-if="status == 'error'">
+            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
