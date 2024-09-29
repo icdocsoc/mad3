@@ -6,10 +6,6 @@ const { currentState } = useAppState();
 definePageMeta({
   middleware: ['require-auth']
 });
-
-const { status } = useFetch('/api/family/myFamily', {
-  lazy: false
-});
 </script>
 
 <template>
@@ -57,13 +53,10 @@ const { status } = useFetch('/api/family/myFamily', {
         </CardDetails>
         <CardDetails v-else>
           <strong>Parent's survey & proposals. [CLOSED]</strong>
-          <CardText v-if="status == 'success'">
+          <CardText>
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
-          </CardText>
-          <CardText v-else-if="status == 'error'">
-            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
@@ -78,13 +71,10 @@ const { status } = useFetch('/api/family/myFamily', {
         </CardDetails>
         <CardDetails v-else>
           <strong>Parent's survey & proposals. [CLOSED]</strong>
-          <CardText v-if="status == 'success'">
+          <CardText>
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
-          </CardText>
-          <CardText v-else-if="status == 'error'">
-            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
@@ -98,13 +88,10 @@ const { status } = useFetch('/api/family/myFamily', {
             }}
             [CLOSED]
           </strong>
-          <CardText v-if="status == 'success'">
+          <CardText>
             Visit your
             <NuxtLink to="/family">family page</NuxtLink>
             to see your family details.
-          </CardText>
-          <CardText v-else-if="status == 'error'">
-            Sorry, we could not fetch your family details. Please try again.
           </CardText>
         </CardDetails>
       </div>
