@@ -5,6 +5,8 @@ import factory from '../factory';
 import { stateOptions, type State } from '../types';
 import { meta } from './schema';
 import { z } from 'zod';
+import { and, count, eq } from 'drizzle-orm';
+import { families, students } from '../family/schema';
 
 export const requireState = (...states: [State, ...State[]]) =>
   factory.createMiddleware(async (ctx, next) => {
@@ -122,4 +124,37 @@ export const admin = factory
     Need to return JSON of 
     id: Fresher
     */
+  })
+  .get('/stats', grantAccessTo('admin'), async ctx => {
+    const familyCount = await db.select({ count: count() }).from(families);
+
+    const allParents = await db
+      .select({ count: count() })
+      .from(students)
+      .where(eq(students.role, 'parent'));
+    const registeredParents = await db
+      .select({ count: count() })
+      .from(students)
+      .where(
+        and(eq(students.role, 'parent'), eq(students.completedSurvey, true))
+      );
+
+    const allFreshers = await db
+      .select({ count: count() })
+      .from(students)
+      .where(eq(students.role, 'fresher'));
+    const registeredFreshers = await db
+      .select({ count: count() })
+      .from(students)
+      .where(
+        and(eq(students.role, 'fresher'), eq(students.completedSurvey, true))
+      );
+
+    return ctx.json({
+      families: familyCount[0]?.count,
+      all_parents: allParents[0]?.count,
+      registered_parents: registeredParents[0]?.count,
+      all_freshers: allFreshers[0]?.count,
+      registeredFreshers: registeredFreshers[0]?.count
+    });
   });
