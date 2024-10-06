@@ -54,7 +54,7 @@ export const family = factory
         );
       }
 
-      const { name, interests, aboutMe, socials, gender } =
+      const { name, interests, aboutMe, socials, gender, jmc } =
         ctx.req.valid('json');
 
       await db
@@ -65,7 +65,8 @@ export const family = factory
           interests: interests as Interests,
           aboutMe: aboutMe,
           socials: socials,
-          gender: gender
+          gender: gender,
+          jmc: jmc
         })
         .where(eq(students.shortcode, shortcode));
 
