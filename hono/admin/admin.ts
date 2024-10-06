@@ -245,5 +245,7 @@ export const admin = factory
           apiLogger.warn(ctx, 'Error in allocations; fresher or family is invalid:', e)
         }
       }
+
+      return ctx.text('', 200)
     }
   );
