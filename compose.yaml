@@ -23,6 +23,7 @@ services:
       - .env
     environment:
       - PGHOST=postgres
+      - WEBMASTERS=${WEBMASTERS}
 
 volumes:
   postgres_data:

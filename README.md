@@ -12,18 +12,42 @@ Although using Nuxt 3, we have opted to use Nuxt 4 in our build. [`app/`](/app/)
 
 ## Local development
 
-You must have bun installed. Clone the repository and install the dependencies:
+Visit [Microsoft Entra admin center](https://entra.microsoft.com/) -> App registrations -> \[your mums and dads app]. Copy your tenant ID and client ID into `.env`, and generate a client secret from 'Certificates & secrets' to copy into `.env`.
+
+Fill out the rest of the `.env` file - note that webmasters is comma seperated and restricts admin routes. JWT_SECRET should be a randomly generated long string with no dollar signs, or else Docker gets mad.
+
+Next, build the docker images.
 
 ```bash
-# bun
-bun install
+docker compose build
 ```
 
-Start the development server on `http://localhost:3000`:
-
+Now run the postgres image.
 ```bash
-bun --bun run dev
+# If you want to run it in the background
+docker compose start postgres
+# You will need to then later run 
+# docker compose stop postgres
+
+# If you want to run it in the foreground to see the logs
+docker compose up postgres
 ```
+
+Finally, run the website.
+```bash
+# The --bun is required as bunfigs are broken, as of writing this.
+bun run --bun dev
+```
+
+## Production
+
+Docker images are made available for easy running on prod.
+
+## Allocations
+
+Run `run.py` in the allocations folder.
+
+You can find your auth cookie from the developer tools (CTRL + SHIFT + I) -> Network -> refresh the page and see the Cookie tab of the request.
 
 ## Contributors
 
@@ -31,3 +55,6 @@ bun --bun run dev
 
 - [@cybercoder-naj](https://github.com/cybercoder-naj)
 - [@Dropheart](https://github.com/Dropheart)
+
+### mad2 Allocator Author 
+- [@jackpordi](https://github.com/jackpordi)

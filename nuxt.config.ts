@@ -23,6 +23,6 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
-    admins: process.env.WEBMASTERS?.split(',')
+    admins: process.env.WEBMASTERS!.split(',')
   }
 });
