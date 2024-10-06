@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { string, type z } from 'zod';
 import type { selectStudentSchema } from './family/schema';
 
 export const interestKeys = [
@@ -61,3 +61,41 @@ export const stateOptions = [
   'closed'
 ] as const;
 export type State = (typeof stateOptions)[number];
+
+export type AllocatorGender = 'Female' | 'Male' | 'other' | 'na'
+
+export type AllocatorStudent = {
+  firstName: string,
+  lastName: string,
+  preferredName: string,
+  gender: AllocatorGender,
+  shortcode: string,
+  course: string,
+  socialMedia: string[]
+}
+
+export type AllocatorFresher = {
+  _id: string,
+  student: AllocatorStudent
+  interests: Interests
+  family: number | undefined
+}
+
+export type AllocatorParent = {
+  _id: string,
+  student: AllocatorStudent,
+  interests: Interests,
+  family: number
+}
+
+export type AllocatorFamily = {
+  _id: number,
+  parents: {
+    proposerId: AllocatorParent
+    proposeeId: AllocatorParent
+  }
+  kids: AllocatorFresher[]
+  hasFemale: boolean,
+  hasJmc: boolean
+}
+
