@@ -1,0 +1,7 @@
+pandas
+mongoengine
+numpy
+rstr
+scikit-learn
+matplotlib
+requests
