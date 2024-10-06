@@ -21,5 +21,8 @@ export default defineNuxtConfig({
       tailwindcss: {},
       autoprefixer: {}
     }
+  },
+  runtimeConfig: {
+    admins: process.env.WEBMASTERS?.split(',')
   }
 });

@@ -155,6 +155,6 @@ export const admin = factory
       all_parents: allParents[0]?.count,
       registered_parents: registeredParents[0]?.count,
       all_freshers: allFreshers[0]?.count,
-      registeredFreshers: registeredFreshers[0]?.count
+      registered_freshers: registeredFreshers[0]?.count
     });
   });
