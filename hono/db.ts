@@ -12,7 +12,7 @@ export const pool = new Pool({
   ssl: ca
     ? {
         rejectUnauthorized: true,
-        ca: process.env.PGCA
+        ca
       }
     : undefined
 });
