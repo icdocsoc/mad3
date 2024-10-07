@@ -2,7 +2,7 @@ class Student:
 
     def __init__(self, data):
 
-        self.firstName = data['firstName'] if data['firstName'] != None else 'loser'
+        self.firstName = data['firstName']
         self.lastName = data['lastName']
         self.preferredName = data['preferredName']
         self.gender = data['gender']
