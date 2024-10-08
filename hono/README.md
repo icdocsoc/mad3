@@ -3,6 +3,7 @@
 ## API Reference
 
 > Note that where 400 indicates multiple errors, a relevant error message will be returned by the backend.
+> Types can be found in types.ts. This documentation will sometimes use the type definition instead of a type name, for ease of reading.
 
 # **middleware**
 
@@ -145,18 +146,6 @@ type Response = {
 **200** - Returns family.
 
 ```ts
-type Student = {
-  shortcode: string;
-  jmc: boolean;
-  role: "parent" | "fresher";
-  completedSurvey: boolean;
-  name: string | null;
-  gender: "male" | "female" | "other" | "n/a" | null;
-  interests: Interests | null;
-  socials: string[] | null;
-  aboutMe: string | null;
-}
-
 {
   parents: [
     parent1: Student
@@ -170,7 +159,7 @@ type Student = {
 
 ## `GET /state`
 
-**200** - returns JSON with current state.
+**200** - Returns JSON with current state.
 
 ```ts
 {
@@ -189,3 +178,72 @@ type Student = {
 **400** - Invalid body.
 
 **200** - Updated state.
+
+## `GET /allocations/all-families` - admin
+
+**200** - Returns array of all families in the format the allocator wants.
+
+```ts
+{
+  _id: number,
+  parents: {
+    proposerId: AllocatorParent
+    proposeeId: AllocatorParent
+  }
+  kids: AllocatorFresher[]
+  hasFemale: boolean,
+  hasJmc: boolean
+}[]
+```
+
+## `GET /allocations/all-unallocated-freshers` - admin
+
+**200** - Returns array of all freshers who aren't in a family.
+
+```ts
+AllocatorFresher = {
+  _id: string,
+  student: AllocatorStudent
+  interests: Interests
+  family: number | undefined
+}[]
+```
+
+## `POST /allocations` - admin
+
+```ts
+{
+  fresher: string,
+  family: number
+}
+```
+
+**200** - Successfully allocated students to families.
+
+**400** - Invalid body.
+
+## `GET /stats` - admin
+
+**200** - Returns various stats about the families and freshers.
+
+```ts
+{
+  families: number, // num of marriages
+  all_parents: number, // non-freshers who signed in at least once
+  registered_parents: number, // non-freshers who completed the survey
+  all_freshers: number, // all freshers, due to the seed file
+  registered_freshers: number // freshers who completed the survey
+}
+```
+
+## `GET /all-families` - admin
+
+**200** Returns all families. This differs from the allocation routes, as it uses our sensible types.
+
+```ts
+{
+  id: number,
+  parents: Student[],
+  kids: Student[]
+}[]
+```

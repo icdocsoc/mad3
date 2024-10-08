@@ -244,8 +244,8 @@ def allocations_request(families, url=LOCAL_URL):
 
 def allocate(auth, dry=True, url=LOCAL_URL, debug=False, max_children=MAX_CHILDREN):
     cookies = {"Authorization": auth}
-    families = requests.get(url + "api/admin/allocations/all-families", cookies=cookies)
-    freshers = requests.get(url + "api/admin/allocations/all-unallocated-freshers", cookies=cookies)
+    families = requests.get(url + "/api/admin/allocations/all-families", cookies=cookies)
+    freshers = requests.get(url + "/api/admin/allocations/all-unallocated-freshers", cookies=cookies)
 
     if debug:
         print(json.dumps(families.json(), indent=4))
@@ -275,7 +275,7 @@ def allocate(auth, dry=True, url=LOCAL_URL, debug=False, max_children=MAX_CHILDR
     if input("Would you like allocate as per the above? (y/n) ") == 'y':
         # Construct allocations request to backend
         req = allocations_request(families, url=url)
-        response = requests.post(url + "api/admin/allocations", json=req, cookies=cookies)
+        response = requests.post(url + "/api/admin/allocations", json=req, cookies=cookies)
         print(response)
     else:
         print("Allocation cancelled")

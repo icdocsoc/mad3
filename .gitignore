@@ -21,7 +21,14 @@ logs
 # Local env files
 .env
 .env.*
+*.env
 !.env.example
 
 # the database, lol
 db/
+
+# generated family csv
+families.csv
+
+# db certfile, in case you need to make local connections
+certfile.crt
