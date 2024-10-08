@@ -110,15 +110,6 @@ const auth = factory
         'mail'
       ]);
 
-      if (res.department != 'Computing') {
-        return ctx.json(
-          {
-            error: 'You are not a Computing student :('
-          },
-          403
-        );
-      }
-
       const shortcode = res.userPrincipalName.match(/.*(?=@)/g);
       if (shortcode == null) {
         return ctx.json(
@@ -126,6 +117,25 @@ const auth = factory
             error: 'User has no shortcode.'
           },
           400
+        );
+      }
+
+      const studentInDb = await db
+        .select()
+        .from(students)
+        .where(eq(students.shortcode, shortcode[0]));
+
+      // We allow them to pass even as non-Computing students if they
+      // exist in the DB. This is done for cases where there is a 
+      // non Computing member on committee who needs access to the
+      // admin portal, or a non computing member who is eligible to
+      // be a parent or student, somehow.
+      if (studentInDb.length == 0 && res.department != 'Computing') {
+        return ctx.json(
+          {
+            error: 'You are not a Computing student :('
+          },
+          403
         );
       }
 
@@ -149,10 +159,6 @@ const auth = factory
       ctx.header('Set-Cookie', generateCookieHeader(token, maxAge));
 
       let completedSurvey = false;
-      const studentInDb = await db
-        .select()
-        .from(students)
-        .where(eq(students.shortcode, shortcode[0]));
       if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
         completedSurvey = true;
       else if (studentInDb.length == 0) {
