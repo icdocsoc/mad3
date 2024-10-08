@@ -26,7 +26,12 @@ const filteredFamilies = ref<IFamily[]>(familyData.value);
 
 async function setApiState(state: State) {
   try {
-    if (!confirm('This will update the state of the website. Are you sure you want to do this?')) return;
+    if (
+      !confirm(
+        'This will update the state of the website. Are you sure you want to do this?'
+      )
+    )
+      return;
     await $fetch('/api/admin/state', {
       method: 'PUT',
       headers,
@@ -50,7 +55,10 @@ function filterFamilies() {
         family.parents.some(student =>
           student.shortcode.startsWith(search.value)
         ) ||
-        family.kids.some(student => student.shortcode.startsWith(search.value))
+        family.kids.some(student =>
+          student.shortcode.startsWith(search.value)
+        ) ||
+        family.id == search.value
     );
   }
 }
@@ -89,6 +97,12 @@ definePageMeta({
           <b>Freshers who successfully completed survey:</b>
           {{ statsData.registered_freshers }}
         </p>
+        <p>
+          <b>Minimum to reasonably expect (all parents + all kids):</b> {{ statsData.families * 2 + statsData.registered_freshers }}
+        </p>
+        <p>
+          <b>Maximum to unreasonably expect (all freshers + all parents)</b> {{ statsData.families * 2 + statsData.all_freshers }}
+        </p>
       </div>
     </div>
   </Card>
@@ -116,7 +130,7 @@ definePageMeta({
     <CardTitle>All families</CardTitle>
     <input
       class="my-2"
-      placeholder="search by shortcode"
+      placeholder="search by shortcode or family ID"
       v-model="search"
       @input="filterFamilies" />
     <div v-for="family of filteredFamilies" class="m-1 border-4 p-1">

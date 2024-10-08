@@ -1,5 +1,6 @@
 <template>
   <div>
+    <p class="text-center">ID: {{ family.id }}</p>
     <CardDetails>
       <strong>Parents:</strong>
       <Student :student="family.parents[0]!" />
@@ -24,5 +25,5 @@
 </template>
 
 <script setup lang="ts">
-const { family } = defineProps<{ family: IFamily}>();
+const { family } = defineProps<{ family: IFamily }>();
 </script>

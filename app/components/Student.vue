@@ -30,6 +30,7 @@ const mildInterests = computed(() => {
     <CardTitle>
       <h3>{{ props.student.name }}</h3>
     </CardTitle>
+    <CardText class="text-center">{{ props.student.shortcode }}</CardText>
     <CardText v-if="props.student.aboutMe" class="mt-2">
       <strong>About Me:</strong>
       {{ props.student.aboutMe }}

@@ -342,6 +342,7 @@ export const family = factory
 
       return ctx.json(
         {
+          id: familyId,
           parents: [parent1[0], parent2[0]],
           kids: kids
         },

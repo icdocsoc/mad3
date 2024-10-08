@@ -289,7 +289,6 @@ export const admin = factory
   .get(
     '/all-families',
     grantAccessTo('admin'),
-    // zValidator('json', z.object({ shortcode: z.string() })),
     async ctx => {
       // This differs from the allocations/all-families as this uses our sensible types.
       const parent1 = aliasedTable(students, 'parent1');
@@ -301,7 +300,7 @@ export const admin = factory
         .innerJoin(parent1, eq(marriages.parent1, parent1.shortcode))
         .innerJoin(parent2, eq(marriages.parent2, parent2.shortcode));
 
-      const familiesToRet = [] as { parents: Student[]; kids: Student[] }[];
+      const familiesToRet = [] as { id: number, parents: Student[]; kids: Student[] }[];
 
       for (const family of familiesAndParents) {
         const familyId = family.marriage.id;
@@ -322,6 +321,7 @@ export const admin = factory
           .innerJoin(students, eq(families.kid, students.shortcode));
 
         familiesToRet.push({
+          id: familyId,
           // @ts-ignore This is an issue with Drizzle aliasedTable.
           parents: [family.parent1, family.parent2],
           kids: kids
