@@ -69,6 +69,8 @@ There also exists an admin page at `/admin` restricted to webmasters as per the 
 
 Should you intend to use this code outside of an Imperial context, you will need to change the sign in code, callback code, and `isFresherOrParent` function. These are found in [`hono/auth/auth.ts`](/hono/auth/auth.ts) and [`hono/auth/jwt.ts`](/hono/auth/jwt.ts).
 
+Finally, if you wish to send emails to the families (with their allocations), you can use the `mailmerge` folder. Check the README there for more information.
+
 ## Contributors
 
 ### 2025 Webmasters
