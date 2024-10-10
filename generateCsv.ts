@@ -1,3 +1,4 @@
+/** After running this script, see the `mailmerge` dir for how to send out emails with allocations. */
 import type { Student } from './hono/types';
 
 var csv =
