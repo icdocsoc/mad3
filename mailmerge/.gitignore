@@ -2,3 +2,13 @@
 
 !.env.template
 .env
+
+# Outputs you should never push
+output/*
+!output/.gitempty
+
+data/*
+!data/.gitempty
+
+attachments/*
+!attachments/.gitempty
