@@ -1,6 +1,7 @@
+/** After running this script, see the `mailmerge` dir for how to send out emails with allocations. */
 import type { Student } from './hono/types';
 
-var csv =
+let csv =
   'id,parent1,parent1shortcode,parent2,parent2shortcode,child1,child1shortcode,child2,child2shortcode,child3,child3shortcode,child4,child4shortcode\n';
 
 const authCookie = prompt(

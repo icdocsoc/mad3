@@ -28,3 +28,6 @@ logs
 db/
 
 README.md
+
+# Please don't include mailmerge as the image doesn't need it
+mailmerge/
