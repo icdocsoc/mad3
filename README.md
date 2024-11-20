@@ -1,6 +1,6 @@
 # DoCSoc Mums & Dads v3
 
-Nuxt4 + Hono application for the Mums & Dads website. Mums & Dads is a _course_-long scheme where freshers are allocated with parents (2nd, 3rd and 4th year students) and parents advice their children about the course, the college, the societies and much more.
+Nuxt4 + Hono application for the Mums & Dads website. Mums & Dads is a _course_-long scheme where freshers are allocated with parents (2nd, 3rd and 4th year students) and parents advise their children about the course, the college, the societies and much more.
 
 Mad3 is a fork of [mad2](https://github.com/icdocsoc/mad2), re-written for the greater good of the society. Mad2 being 5 years ago, mad3 is written to adapt to newer web technologies and frameworks. This stack also aligns with ICHack '25 so one can see the resemblence in code style and structure.
 
