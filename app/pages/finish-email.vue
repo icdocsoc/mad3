@@ -2,25 +2,12 @@
 const route = useRoute();
 
 const {
-  code: msCode,
-  state: msState,
-  error: msError,
-  error_description: msErrorDesc
+  token
 } = route.query;
 
-const body = !msError
-  ? {
-      code: msCode,
-      state: msState
-    }
-  : {
-      error: msError,
-      error_description: msErrorDesc
-    };
-
-const { status, error } = await useFetch('/api/auth/callback-oauth', {
+const { status, error } = await useFetch('/api/auth/callback-email', {
   method: 'POST',
-  body: body,
+  body: { token },
   server: false
 });
 
