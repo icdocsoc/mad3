@@ -225,11 +225,17 @@ const auth = factory
 
       const link = `${process.env.BASE_URL}/finish-email?token=${token}`;
 
+      const user_is = isFresherOrParent(email);
+      const warmWelcome =
+        user_is === 'parent'
+          ? 'Thanks for your interest in being a parent :>'
+          : 'Welcome to DoCSoc!';
+
       await sendEmail(
         email,
         '[Mums and Dads] Sign in link',
         'Use the following link to sign in: ' + link,
-        `<p>Click <a href="${link}">here</a> to complete your sign in.</p>`
+        `<p>Hey! ${warmWelcome} <br> Click <a href="${link}">here</a> to complete your sign in.</p>`
       );
 
       return ctx.json({}, 200);

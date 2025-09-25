@@ -27,6 +27,7 @@ const loading = ref(false);
 const email = ref('');
 
 const sendLoginEmail = async () => {
+  if (loading.value) return;
   if (!shortcodeEmailRegex.test(email.value)) {
     return alert("Please use your Imperial shortcode email.");
   }
