@@ -1,9 +1,10 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/bun-sql';
+import { SQL } from 'bun';
 
 const ca = process.env.PGCA;
 
-export const pool = new Pool({
+export const pool = new SQL({
+  adapter: 'postgres',
   user: process.env.PGUSER,
   host: process.env.PGHOST,
   database: process.env.PGDB,
