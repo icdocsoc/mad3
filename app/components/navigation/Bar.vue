@@ -3,19 +3,21 @@ const { currentUser } = useAuth();
 </script>
 
 <template>
-  <nav
-    class="flex justify-between rounded-b-2xl bg-primary px-4 py-2 lg:mx-auto lg:max-w-screen-lg">
+  <nav class="flex justify-between rounded-b-2xl bg-primary px-4 py-2 lg:mx-auto lg:max-w-screen-lg">
     <NavigationLink to="/" icon="/images/docsoc-square-white.png">
       <span class="md:hidden">MaD</span>
       <span class="max-md:hidden md:text-xl">Mums & Dads</span>
     </NavigationLink>
     <ul class="flex items-center gap-3">
       <li v-if="currentUser === null">
-        <a
+        <!-- <a
           class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
           href="/api/auth/signIn">
           Log In
-        </a>
+        </a> -->
+        <EmailPrompt>
+          <p class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl">Log In</p>
+        </EmailPrompt>
       </li>
       <li v-if="currentUser !== null">
         <NavigationLink to="/portal">
@@ -23,8 +25,7 @@ const { currentUser } = useAuth();
         </NavigationLink>
       </li>
       <li v-if="currentUser !== null">
-        <a
-          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
+        <a class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
           href="/api/auth/signOut">
           Log Out
         </a>
