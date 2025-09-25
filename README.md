@@ -16,7 +16,7 @@ Although using Nuxt 3, we have opted to use Nuxt 4 in our build. [`app/`](/app/)
 
 Visit [Microsoft Entra admin center](https://entra.microsoft.com/) -> App registrations -> \[your mums and dads app]. Copy your tenant ID and client ID into `.env`, and generate a client secret from 'Certificates & secrets' to copy into `.env`.
 
-Fill out the rest of the `.env` file - note that webmasters is comma seperated and restricts admin routes. JWT_SECRET should be a randomly generated long string with no dollar signs, or else Docker gets mad.
+Fill out the rest of the `.env` file - note that webmasters is comma seperated and restricts admin routes. JWT_SECRET should be a randomly generated long string with no dollar signs, or else Docker gets mad. ABC API credentials are those used to log in to Scientia. Nodemailer credentials are those used to authenticate with Microsoft.
 
 Next, build the docker images.
 
@@ -35,6 +35,8 @@ docker compose start postgres
 # If you want to run it in the foreground to see the logs
 docker compose up postgres
 ```
+
+If you haven't, you will also need to push the database schema.
 
 Finally, run the website.
 
