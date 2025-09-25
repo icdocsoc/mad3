@@ -55,10 +55,19 @@ const msAuth = new MsAuthClient(
   stateManager
 );
 
-const abcApiToken = btoa(
-  `${process.env.ABC_API_USER}:${process.env.ABC_API_PASS}`
-);
-const abcApiAuthHeader = `Basic ${abcApiToken}`;
+const abcApi = {
+  baseUrl: process.env.ABC_API_BASE,
+  auth: `Basic ${btoa(`${process.env.ABC_API_USER}:${process.env.ABC_API_PASS}`)}`,
+  identity: async (shortcode: string, year: number) => {
+    const url = `${abcApi.baseUrl}/${year - 1}${year}/identity?login=${shortcode}`;
+    const abcReq = await fetch(url, {
+      headers: {
+        Authorization: abcApi.auth
+      }
+    });
+    return abcReq;
+  }
+};
 
 const auth = factory
   .createApp()
@@ -220,7 +229,7 @@ const auth = factory
         email,
         '[Mums and Dads] Sign in link',
         'Use the following link to sign in: ' + link,
-        `<p>Use the following link to sign in: <a href="${link}">${link}</a></p>`
+        `<p>Click <a href="${link}">here</a> to complete your sign in.</p>`
       );
 
       return ctx.json({}, 200);
@@ -243,9 +252,9 @@ const auth = factory
       const { token } = ctx.req.valid('json');
 
       const tokenInDb = await db
-        .select()
-        .from(tokens)
-        .where(and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())));
+        .delete(tokens)
+        .where(and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())))
+        .returning();
 
       if (tokenInDb.length == 0) {
         return ctx.json(
@@ -275,13 +284,8 @@ const auth = factory
         .where(eq(students.shortcode, shortcode[0]));
 
       // Else check via ABC API for last academic year - eligible parents
-      const url = `${process.env.ABC_API_BASE}/${academicYear - 1}${academicYear}/identity?login=${shortcode[0]}`;
       if (studentInDb.length == 0) {
-        const abcReq = await fetch(url, {
-          headers: {
-            Authorization: abcApiAuthHeader
-          }
-        });
+        const abcReq = await abcApi.identity(shortcode[0], academicYear);
 
         if (abcReq.status != 200) {
           return ctx.json(
@@ -306,7 +310,7 @@ const auth = factory
           400
         );
       }
-      const user_is = isFresherOrParent(email);
+      const user_is = studentInDb[0]?.role ?? isFresherOrParent(email);
 
       // Expire the JWT after 4 weeks.
       // Should be long enough for MaDs to only sign in once.
@@ -314,9 +318,9 @@ const auth = factory
       ctx.header('Set-Cookie', generateCookieHeader(jwt, maxAge));
 
       let completedSurvey = false;
-      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
+      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey) {
         completedSurvey = true;
-      else if (studentInDb.length == 0) {
+      } else if (studentInDb.length == 0) {
         await db.insert(students).values({
           shortcode: shortcode[0],
           role: user_is,
