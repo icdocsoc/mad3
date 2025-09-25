@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { shortcodeEmailRegex } from '../types';
 
 export const tokens = pgTable('tokens', {
   token: text('token').primaryKey(),
@@ -16,7 +17,7 @@ export const callbackSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email()
+  email: z.string().email().regex(shortcodeEmailRegex)
 });
 
 export const emailCallbackSchema = z.object({

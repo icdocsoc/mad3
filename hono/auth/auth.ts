@@ -16,7 +16,12 @@ import { and, eq, gt } from 'drizzle-orm';
 import { states } from '../admin/schema';
 import { sendEmail } from '../mailer';
 import { randomBytes } from 'crypto';
-import { callbackSchema, emailCallbackSchema, loginSchema, tokens } from './schema';
+import {
+  callbackSchema,
+  emailCallbackSchema,
+  loginSchema,
+  tokens
+} from './schema';
 
 const stateManager = {
   newState: async (state: string) => {
@@ -187,27 +192,18 @@ const auth = factory
       if (!zRes.success) {
         return ctx.json(
           {
-            error: 'No valid email provided.'
+            error: 'No valid Imperial email provided.'
           },
           400
         );
       }
     }),
     async ctx => {
+      // Valid Imperial shortcode email by login schema
       const { email } = ctx.req.valid('json');
-      const shortcode = email.match(/.*(?=@)/g);
-
-      if (shortcode == null) {
-        return ctx.json(
-          {
-            error: 'Invalid email. Please use your shortcode email.'
-          },
-          400
-        );
-      }
 
       // Generate sign in token
-      const token = randomBytes(32).toString('hex');
+      const token = randomBytes(16).toString('hex');
       const issuedAt = new Date();
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
@@ -247,9 +243,9 @@ const auth = factory
       const { token } = ctx.req.valid('json');
 
       const tokenInDb = await db
-        .delete(tokens)
-        .where(and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())))
-        .returning();
+        .select()
+        .from(tokens)
+        .where(and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())));
 
       if (tokenInDb.length == 0) {
         return ctx.json(
@@ -279,19 +275,13 @@ const auth = factory
         .where(eq(students.shortcode, shortcode[0]));
 
       // Else check via ABC API for last academic year - eligible parents
+      const url = `${process.env.ABC_API_BASE}/${academicYear - 1}${academicYear}/identity?login=${shortcode[0]}`;
       if (studentInDb.length == 0) {
-        const abcReq = await fetch(
-          `${process.env.ABC_API_BASE}/students/${shortcode[0]}`,
-          {
-            headers: {
-              Authorization: abcApiAuthHeader
-            },
-            body: JSON.stringify({
-              academic_year: `${academicYear - 1}${academicYear}`,
-              username: shortcode[0]
-            })
+        const abcReq = await fetch(url, {
+          headers: {
+            Authorization: abcApiAuthHeader
           }
-        );
+        });
 
         if (abcReq.status != 200) {
           return ctx.json(
