@@ -1,5 +1,7 @@
+import type { Context } from 'hono';
 import { createTransport } from 'nodemailer';
 import type Mail from 'nodemailer/lib/mailer';
+import { apiLogger } from './logger';
 
 const transporter = createTransport({
   service: 'SMTP',
@@ -12,6 +14,7 @@ const transporter = createTransport({
 });
 
 export const sendEmail = async (
+  ctx: Context,
   to: string,
   subject: string,
   text: string,
@@ -19,13 +22,14 @@ export const sendEmail = async (
   attachments: Mail.Attachment[] = []
 ) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('Email not sent (not in production):', {
-      to,
-      subject,
-      text,
-      html,
-      attachments
-    });
+    apiLogger.info(
+      ctx,
+      'Email not sent (not in production)\n',
+      `To: ${to}\n`,
+      `Subject: ${subject}\n`,
+      `Text: ${text}\n`,
+      `HTML: ${html}`
+    );
     return;
   }
 

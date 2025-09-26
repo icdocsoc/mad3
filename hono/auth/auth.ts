@@ -232,6 +232,7 @@ const auth = factory
           : 'Welcome to DoCSoc!';
 
       await sendEmail(
+        ctx,
         email,
         '[Mums and Dads] Sign in link',
         'Use the following link to sign in: ' + link,
