@@ -273,80 +273,76 @@ export const family = factory
 
     return ctx.json(userInDb[0], 200);
   })
-  .get(
-    '/myFamily',
-    grantAccessTo('authenticated'),
-    async ctx => {
-      const reqShortcode = ctx.get('shortcode')!;
-      const role = ctx.get('user_is');
+  .get('/myFamily', grantAccessTo('authenticated'), async ctx => {
+    const reqShortcode = ctx.get('shortcode')!;
+    const role = ctx.get('user_is');
 
-      let familyInDb: { id: number }[];
-      if (role == 'parent') {
-        familyInDb = await db
-          .select({
-            id: marriages.id
-          })
-          .from(marriages)
-          .where(
-            or(
-              eq(marriages.parent1, reqShortcode),
-              eq(marriages.parent2, reqShortcode)
-            )
-          );
-      } else {
-        familyInDb = await db
-          .select({
-            id: families.id
-          })
-          .from(families)
-          .where(eq(families.kid, reqShortcode));
-      }
-
-      if (familyInDb.length == 0) {
-        return ctx.text('You do not have a family.', 400);
-      }
-
-      const familyId = familyInDb[0]!.id;
-
-      const kids = await db
+    let familyInDb: { id: number }[];
+    if (role == 'parent') {
+      familyInDb = await db
         .select({
-          shortcode: students.shortcode,
-          jmc: students.jmc,
-          role: students.role,
-          completedSurvey: students.completedSurvey,
-          name: students.name,
-          gender: students.gender,
-          interests: students.interests,
-          socials: students.socials,
-          aboutMe: students.aboutMe
+          id: marriages.id
+        })
+        .from(marriages)
+        .where(
+          or(
+            eq(marriages.parent1, reqShortcode),
+            eq(marriages.parent2, reqShortcode)
+          )
+        );
+    } else {
+      familyInDb = await db
+        .select({
+          id: families.id
         })
         .from(families)
-        .where(eq(families.id, familyId))
-        .innerJoin(students, eq(families.kid, students.shortcode));
-
-      const marriageInDb = await db
-        .select()
-        .from(marriages)
-        .where(eq(marriages.id, familyId));
-
-      const [parent1, parent2] = await Promise.all([
-        db
-          .select()
-          .from(students)
-          .where(eq(students.shortcode, marriageInDb[0]!.parent1)),
-        db
-          .select()
-          .from(students)
-          .where(eq(students.shortcode, marriageInDb[0]!.parent2))
-      ]);
-
-      return ctx.json(
-        {
-          id: familyId,
-          parents: [parent1[0], parent2[0]],
-          kids: kids
-        },
-        200
-      );
+        .where(eq(families.kid, reqShortcode));
     }
-  );
+
+    if (familyInDb.length == 0) {
+      return ctx.text('You do not have a family.', 400);
+    }
+
+    const familyId = familyInDb[0]!.id;
+
+    const kids = await db
+      .select({
+        shortcode: students.shortcode,
+        jmc: students.jmc,
+        role: students.role,
+        completedSurvey: students.completedSurvey,
+        name: students.name,
+        gender: students.gender,
+        interests: students.interests,
+        socials: students.socials,
+        aboutMe: students.aboutMe
+      })
+      .from(families)
+      .where(eq(families.id, familyId))
+      .innerJoin(students, eq(families.kid, students.shortcode));
+
+    const marriageInDb = await db
+      .select()
+      .from(marriages)
+      .where(eq(marriages.id, familyId));
+
+    const [parent1, parent2] = await Promise.all([
+      db
+        .select()
+        .from(students)
+        .where(eq(students.shortcode, marriageInDb[0]!.parent1)),
+      db
+        .select()
+        .from(students)
+        .where(eq(students.shortcode, marriageInDb[0]!.parent2))
+    ]);
+
+    return ctx.json(
+      {
+        id: familyId,
+        parents: [parent1[0], parent2[0]],
+        kids: kids
+      },
+      200
+    );
+  });

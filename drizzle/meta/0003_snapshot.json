@@ -1,6 +1,6 @@
 {
-  "id": "cb485b8a-a785-4cce-97e5-9e98ea3e681e",
-  "prevId": "cfd98633-f308-445e-90bb-f29a83524e42",
+  "id": "cc1175c4-864f-4056-ac48-dd6fa9399e4e",
+  "prevId": "cb485b8a-a785-4cce-97e5-9e98ea3e681e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -26,7 +26,10 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.states": {
       "name": "states",
@@ -48,10 +51,13 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "public.tokens": {
-      "name": "tokens",
+    "public.auth_tokens": {
+      "name": "auth_tokens",
       "schema": "",
       "columns": {
         "token": {
@@ -82,7 +88,10 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.family": {
       "name": "family",
@@ -123,7 +132,10 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.marriage": {
       "name": "marriage",
@@ -181,7 +193,10 @@
           "nullsNotDistinct": false,
           "columns": ["parent2"]
         }
-      }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.proposals": {
       "name": "proposals",
@@ -227,7 +242,10 @@
           "columns": ["proposer", "proposee"]
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.student": {
       "name": "student",
@@ -293,7 +311,10 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -315,6 +336,9 @@
   },
   "schemas": {},
   "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

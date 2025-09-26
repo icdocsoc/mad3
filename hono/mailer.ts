@@ -18,7 +18,16 @@ export const sendEmail = async (
   html: string,
   attachments: Mail.Attachment[] = []
 ) => {
-  if (process.env.NODE_ENV !== 'production') return;
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Email not sent (not in production):', {
+      to,
+      subject,
+      text,
+      html,
+      attachments
+    });
+    return;
+  }
 
   await transporter.sendMail({
     from: '"DoCSoc" <docsoc@ic.ac.uk>',

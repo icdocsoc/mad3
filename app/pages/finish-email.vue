@@ -1,9 +1,7 @@
 <script setup lang="ts">
 const route = useRoute();
 
-const {
-  token
-} = route.query;
+const { token } = route.query;
 
 const { status, error } = await useFetch('/api/auth/callback-email', {
   method: 'POST',

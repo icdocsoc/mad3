@@ -73,12 +73,8 @@
           "name": "family_kid_student_shortcode_fk",
           "tableFrom": "family",
           "tableTo": "student",
-          "columnsFrom": [
-            "kid"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["kid"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -86,12 +82,8 @@
           "name": "family_id_marriage_id_fk",
           "tableFrom": "family",
           "tableTo": "marriage",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -128,12 +120,8 @@
           "name": "marriage_parent1_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": [
-            "parent1"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["parent1"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -141,12 +129,8 @@
           "name": "marriage_parent2_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": [
-            "parent2"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["parent2"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -156,16 +140,12 @@
         "marriage_parent1_unique": {
           "name": "marriage_parent1_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "parent1"
-          ]
+          "columns": ["parent1"]
         },
         "marriage_parent2_unique": {
           "name": "marriage_parent2_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "parent2"
-          ]
+          "columns": ["parent2"]
         }
       }
     },
@@ -192,12 +172,8 @@
           "name": "proposals_proposer_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": [
-            "proposer"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["proposer"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -205,12 +181,8 @@
           "name": "proposals_proposee_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": [
-            "proposee"
-          ],
-          "columnsTo": [
-            "shortcode"
-          ],
+          "columnsFrom": ["proposee"],
+          "columnsTo": ["shortcode"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -218,10 +190,7 @@
       "compositePrimaryKeys": {
         "proposals_proposer_proposee_pk": {
           "name": "proposals_proposer_proposee_pk",
-          "columns": [
-            "proposer",
-            "proposee"
-          ]
+          "columns": ["proposer", "proposee"]
         }
       },
       "uniqueConstraints": {}
@@ -297,30 +266,17 @@
     "public.app_state": {
       "name": "app_state",
       "schema": "public",
-      "values": [
-        "parents_open",
-        "parents_close",
-        "freshers_open",
-        "closed"
-      ]
+      "values": ["parents_open", "parents_close", "freshers_open", "closed"]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": [
-        "male",
-        "female",
-        "other",
-        "n/a"
-      ]
+      "values": ["male", "female", "other", "n/a"]
     },
     "public.student_role": {
       "name": "student_role",
       "schema": "public",
-      "values": [
-        "fresher",
-        "parent"
-      ]
+      "values": ["fresher", "parent"]
     }
   },
   "schemas": {},

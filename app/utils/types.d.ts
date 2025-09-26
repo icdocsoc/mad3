@@ -21,7 +21,7 @@ declare const stateOptions = [
 declare type State = (typeof stateOptions)[number];
 
 declare type IFamily = {
-  id: number,
-  parents: IStudent[],
-  kids: IStudent[]
-}
+  id: number;
+  parents: IStudent[];
+  kids: IStudent[];
+};

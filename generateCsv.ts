@@ -11,7 +11,7 @@ const req = await fetch(`${process.env.BASE_URL!}/api/admin/all-families`, {
   headers: {
     Cookie: `Authorization=${authCookie}`
   }
-})
+});
 
 const allFamilies = await req.json();
 

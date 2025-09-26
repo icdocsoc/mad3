@@ -2,6 +2,7 @@ import { parseArgs } from 'util';
 import { db } from './db';
 import { meta } from './admin/schema';
 import { students } from './family/schema';
+import { academicYear } from '~~/hono/auth/jwt';
 
 const {
   values: { push }
@@ -18,8 +19,6 @@ const {
 });
 
 const now = new Date();
-const academicYear =
-  now.getFullYear() - Math.floor(now.getFullYear() / 100) * 100;
 const baseUrl = `https://abc-api.doc.ic.ac.uk/${academicYear}${academicYear + 1}`;
 
 if (push) {

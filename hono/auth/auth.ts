@@ -17,10 +17,10 @@ import { states } from '../admin/schema';
 import { sendEmail } from '../mailer';
 import { randomBytes } from 'crypto';
 import {
-  callbackSchema,
+  oauthCallbackSchema,
   emailCallbackSchema,
   loginSchema,
-  tokens
+  authTokens
 } from './schema';
 
 const stateManager = {
@@ -98,7 +98,7 @@ const auth = factory
   .post(
     '/callback-oauth',
     grantAccessTo('unauthenticated'),
-    zValidator('json', callbackSchema, async (zRes, ctx) => {
+    zValidator('json', oauthCallbackSchema, async (zRes, ctx) => {
       if (!zRes.success || zRes.data.error_description) {
         apiLogger.warn(
           ctx,
@@ -216,7 +216,7 @@ const auth = factory
       const issuedAt = new Date();
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-      await db.insert(tokens).values({
+      await db.insert(authTokens).values({
         token,
         email,
         issuedAt,
@@ -258,8 +258,10 @@ const auth = factory
       const { token } = ctx.req.valid('json');
 
       const tokenInDb = await db
-        .delete(tokens)
-        .where(and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())))
+        .delete(authTokens)
+        .where(
+          and(eq(authTokens.token, token), gt(authTokens.expiresAt, new Date()))
+        )
         .returning();
 
       if (tokenInDb.length == 0) {

@@ -2,14 +2,14 @@ import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { shortcodeEmailRegex } from '../types';
 
-export const tokens = pgTable('tokens', {
+export const authTokens = pgTable('auth_tokens', {
   token: text('token').primaryKey(),
   email: text('email').notNull(),
   issuedAt: timestamp('issued_at').notNull(),
   expiresAt: timestamp('expires_at').notNull()
 });
 
-export const callbackSchema = z.object({
+export const oauthCallbackSchema = z.object({
   code: z.string(),
   state: z.string(),
   error: z.string().optional(),

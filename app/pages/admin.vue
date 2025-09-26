@@ -98,10 +98,12 @@ definePageMeta({
           {{ statsData.registered_freshers }}
         </p>
         <p>
-          <b>Minimum to reasonably expect (all parents + all kids):</b> {{ statsData.families * 2 + statsData.registered_freshers }}
+          <b>Minimum to reasonably expect (all parents + all kids):</b>
+          {{ statsData.families * 2 + statsData.registered_freshers }}
         </p>
         <p>
-          <b>Maximum to unreasonably expect (all freshers + all parents)</b> {{ statsData.families * 2 + statsData.all_freshers }}
+          <b>Maximum to unreasonably expect (all freshers + all parents)</b>
+          {{ statsData.families * 2 + statsData.all_freshers }}
         </p>
       </div>
     </div>
