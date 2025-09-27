@@ -11,7 +11,7 @@ import { apiLogger } from '../logger';
 const secret = process.env.JWT_SECRET!;
 const webmasters = process.env.WEBMASTERS!.split(',');
 
-const START_OF_ACADEMIC_YEAR = 10; // October
+const START_OF_ACADEMIC_YEAR = 9; // September
 
 // Determine the current academic year based on if we are past October or not.
 const now = new Date();
