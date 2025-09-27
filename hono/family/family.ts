@@ -124,7 +124,10 @@ export const family = factory
         .where(eq(students.shortcode, proposee));
 
       if (proposeeInDb.length == 0) {
-        return ctx.text('Invalid proposee.', 400);
+        return ctx.text(
+          'Invalid proposee. Have they signed in to MaDs yet?',
+          400
+        );
       }
 
       // 3 max proposals
@@ -140,10 +143,11 @@ export const family = factory
       }
 
       // No dupe proposals
-      currProposals.forEach(({ proposer: _proposer, proposee: _proposee }) => {
-        if (_proposee == proposee)
+      for (const proposal of currProposals) {
+        if (proposal.proposee == proposee) {
           return ctx.text('You have already proposed to this user.', 400);
-      });
+        }
+      }
 
       await db.insert(proposals).values({
         proposer: proposer,
