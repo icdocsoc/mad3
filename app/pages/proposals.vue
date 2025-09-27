@@ -53,7 +53,7 @@ async function handlePropose() {
 
     router.go(0);
   } catch (err) {
-    alert(err.message);
+    alert(err.data);
   }
 }
 async function handleAccept(shortcode: string) {
@@ -65,7 +65,7 @@ async function handleAccept(shortcode: string) {
 
     router.go(0);
   } catch (err) {
-    alert(err.message);
+    alert(err.data);
   }
 }
 </script>
@@ -168,6 +168,7 @@ async function handleAccept(shortcode: string) {
           </strong>
           <div class="flex gap-4">
             <input
+              @keyup.enter="handlePropose"
               type="text"
               class="flex-grow"
               placeholder="e.g. nj421"
