@@ -160,7 +160,7 @@ async function handleSubmit() {
 
       <SurveyGroup label="Gender:" :required="true">
         <SurveySelect
-          :options="['male', 'female', 'other', 'na']"
+          :options="['male', 'female', 'other', 'n/a']"
           :labels="['Male', 'Female', 'Other', 'Prefer not to say']"
           name="gender"
           v-model="formData.gender"
