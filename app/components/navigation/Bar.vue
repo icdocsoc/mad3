@@ -11,11 +11,17 @@ const { currentUser } = useAuth();
     </NavigationLink>
     <ul class="flex items-center gap-3">
       <li v-if="currentUser === null">
-        <a
+        <!-- <a
           class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
           href="/api/auth/signIn">
           Log In
-        </a>
+        </a> -->
+        <EmailPrompt>
+          <p
+            class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl">
+            Log In
+          </p>
+        </EmailPrompt>
       </li>
       <li v-if="currentUser !== null">
         <NavigationLink to="/portal">

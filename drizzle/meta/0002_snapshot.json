@@ -1,6 +1,6 @@
 {
-  "id": "cfd98633-f308-445e-90bb-f29a83524e42",
-  "prevId": "bf003a38-dd8e-426a-9785-1a08a90613eb",
+  "id": "7edaade0-5c3f-4bc6-9d46-e666473d80fc",
+  "prevId": "cfd98633-f308-445e-90bb-f29a83524e42",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -26,7 +26,10 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.states": {
       "name": "states",
@@ -48,7 +51,47 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.auth_tokens": {
+      "name": "auth_tokens",
+      "schema": "",
+      "columns": {
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.family": {
       "name": "family",
@@ -73,8 +116,12 @@
           "name": "family_kid_student_shortcode_fk",
           "tableFrom": "family",
           "tableTo": "student",
-          "columnsFrom": ["kid"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "kid"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -82,14 +129,21 @@
           "name": "family_id_marriage_id_fk",
           "tableFrom": "family",
           "tableTo": "marriage",
-          "columnsFrom": ["id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.marriage": {
       "name": "marriage",
@@ -120,8 +174,12 @@
           "name": "marriage_parent1_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": ["parent1"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "parent1"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -129,8 +187,12 @@
           "name": "marriage_parent2_student_shortcode_fk",
           "tableFrom": "marriage",
           "tableTo": "student",
-          "columnsFrom": ["parent2"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "parent2"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -140,14 +202,21 @@
         "marriage_parent1_unique": {
           "name": "marriage_parent1_unique",
           "nullsNotDistinct": false,
-          "columns": ["parent1"]
+          "columns": [
+            "parent1"
+          ]
         },
         "marriage_parent2_unique": {
           "name": "marriage_parent2_unique",
           "nullsNotDistinct": false,
-          "columns": ["parent2"]
+          "columns": [
+            "parent2"
+          ]
         }
-      }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.proposals": {
       "name": "proposals",
@@ -172,8 +241,12 @@
           "name": "proposals_proposer_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": ["proposer"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "proposer"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -181,8 +254,12 @@
           "name": "proposals_proposee_student_shortcode_fk",
           "tableFrom": "proposals",
           "tableTo": "student",
-          "columnsFrom": ["proposee"],
-          "columnsTo": ["shortcode"],
+          "columnsFrom": [
+            "proposee"
+          ],
+          "columnsTo": [
+            "shortcode"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -190,10 +267,16 @@
       "compositePrimaryKeys": {
         "proposals_proposer_proposee_pk": {
           "name": "proposals_proposer_proposee_pk",
-          "columns": ["proposer", "proposee"]
+          "columns": [
+            "proposer",
+            "proposee"
+          ]
         }
       },
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
     "public.student": {
       "name": "student",
@@ -259,28 +342,47 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
     "public.app_state": {
       "name": "app_state",
       "schema": "public",
-      "values": ["parents_open", "parents_close", "freshers_open", "closed"]
+      "values": [
+        "parents_open",
+        "parents_close",
+        "freshers_open",
+        "closed"
+      ]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": ["male", "female", "other", "n/a"]
+      "values": [
+        "male",
+        "female",
+        "other",
+        "n/a"
+      ]
     },
     "public.student_role": {
       "name": "student_role",
       "schema": "public",
-      "values": ["fresher", "parent"]
+      "values": [
+        "fresher",
+        "parent"
+      ]
     }
   },
   "schemas": {},
   "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

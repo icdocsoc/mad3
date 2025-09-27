@@ -1,15 +1,31 @@
+import { parseArgs } from 'util';
 import { db } from './db';
-import { students } from './family/schema';
 import { meta } from './admin/schema';
+import { students } from './family/schema';
+import { academicYear } from '~~/hono/auth/jwt';
+
+const {
+  values: { push }
+} = parseArgs({
+  args: Bun.argv,
+  options: {
+    push: {
+      type: 'boolean',
+      default: false
+    }
+  },
+  strict: true,
+  allowPositionals: true
+});
 
 const now = new Date();
-const academicYear =
-  now.getFullYear() - Math.floor(now.getFullYear() / 100) * 100;
 const baseUrl = `https://abc-api.doc.ic.ac.uk/${academicYear}${academicYear + 1}`;
 
-// This is purely to ensure that you have the env file set up properly,
-// otherwise we'll make unnecessary calls to the ABC api.
-await db.select().from(meta);
+if (push) {
+  // This is purely to ensure that you have the env file set up properly,
+  // otherwise we'll make unnecessary calls to the ABC api.
+  await db.select().from(meta);
+}
 
 // Add all first years, so that we don't make a resit student into a parent.
 // (any student redoing a first year module is a fresher)
@@ -45,8 +61,13 @@ const modules = modulesRes.filter(
 );
 console.log('--- Modules got! ---');
 
+const allStudents: {
+  shortcode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}[] = [];
 console.log('--- Getting all freshers... ---');
-const studentsSet = new Set() as Set<string>;
 for (const module of modules) {
   const studentsReq = await fetch(
     `${baseUrl}/modules/${module.code}/enrolled`,
@@ -57,30 +78,47 @@ for (const module of modules) {
     }
   );
   const moduleStudents = await studentsReq.json();
-  for (const student of moduleStudents) studentsSet.add(student.login);
+  for (const student of moduleStudents) {
+    if (allStudents.find(s => s.shortcode == student.login)) continue;
+    allStudents.push({
+      shortcode: student.login,
+      firstName: student.firstname,
+      lastName: student.lastname,
+      email: student.email
+    });
+  }
 }
 console.log('--- Freshers got! ---');
 
-console.log('--- Adding freshers to the db... ---');
-for (const student of studentsSet) {
-  try {
-    await db.insert(students).values({
-      shortcode: student,
-      role: 'fresher',
-      completedSurvey: false
-    });
-  } catch {
-    console.log(
-      `${student} has already signed in & thus been created an account.`
-    );
+// If push, add to database, else write to file.
+if (push) {
+  console.log('--- Adding freshers to the db... ---');
+  for (const student of allStudents) {
+    try {
+      await db.insert(students).values({
+        shortcode: student.shortcode,
+        role: 'fresher',
+        completedSurvey: false
+      });
+    } catch {
+      console.log(
+        `${student} has already signed in & thus been created an account.`
+      );
+    }
   }
-}
-console.log('--- Freshers added! ---');
+  console.log('--- Freshers added! ---');
 
-console.log('--- Adding state to the db...');
-// Add the required meta values for state
-await db.insert(meta).values({
-  id: 1,
-  state: 'parents_open'
-});
-console.log('--- State added! ---');
+  console.log('--- Adding state to the db...');
+  // Add the required meta values for state
+  await db.insert(meta).values({
+    id: 1,
+    state: 'parents_open'
+  });
+  console.log('--- State added! ---');
+} else {
+  console.log('--- Writing JSON to file... ---');
+
+  await Bun.write('students.json', JSON.stringify(allStudents, null, 2));
+
+  console.log('--- Wrote JSON to file! ---');
+}

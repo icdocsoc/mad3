@@ -11,6 +11,15 @@ import { apiLogger } from '../logger';
 const secret = process.env.JWT_SECRET!;
 const webmasters = process.env.WEBMASTERS!.split(',');
 
+const START_OF_ACADEMIC_YEAR = 10; // October
+
+// Determine the current academic year based on if we are past October or not.
+const now = new Date();
+const year = now.getFullYear();
+const month = now.getMonth() + 1;
+const academicYearStart = month >= START_OF_ACADEMIC_YEAR ? year : year - 1;
+export const academicYear = academicYearStart % 100;
+
 export const generateCookieHeader = (token: string, maxAge: number) =>
   `Authorization=${token}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax; Path=/`;
 
@@ -21,12 +30,7 @@ export function isFresherOrParent(email: string): 'fresher' | 'parent' {
     throw new Error('User email has no entry year.');
   }
 
-  const now = new Date();
-  const academicYear =
-    now.getFullYear() - Math.floor(now.getFullYear() / 100) * 100;
-  const user_is = +entryYear[0] == academicYear ? 'fresher' : 'parent';
-
-  return user_is;
+  return +entryYear[0] == academicYear ? 'fresher' : 'parent';
 }
 
 export async function newToken(
@@ -46,9 +50,7 @@ export async function newToken(
     exp: Math.floor(jwtExpiry.getTime() / 1000)
   };
 
-  const token = await sign(payload, secret);
-
-  return token;
+  return await sign(payload, secret);
 }
 
 export const decodeToken = () =>

@@ -286,48 +286,48 @@ export const admin = factory
       registered_freshers: registeredFreshers[0]?.count
     });
   })
-  .get(
-    '/all-families',
-    grantAccessTo('admin'),
-    async ctx => {
-      // This differs from the allocations/all-families as this uses our sensible types.
-      const parent1 = aliasedTable(students, 'parent1');
-      const parent2 = aliasedTable(students, 'parent2');
+  .get('/all-families', grantAccessTo('admin'), async ctx => {
+    // This differs from the allocations/all-families as this uses our sensible types.
+    const parent1 = aliasedTable(students, 'parent1');
+    const parent2 = aliasedTable(students, 'parent2');
 
-      const familiesAndParents = await db
-        .select()
-        .from(marriages)
-        .innerJoin(parent1, eq(marriages.parent1, parent1.shortcode))
-        .innerJoin(parent2, eq(marriages.parent2, parent2.shortcode));
+    const familiesAndParents = await db
+      .select()
+      .from(marriages)
+      .innerJoin(parent1, eq(marriages.parent1, parent1.shortcode))
+      .innerJoin(parent2, eq(marriages.parent2, parent2.shortcode));
 
-      const familiesToRet = [] as { id: number, parents: Student[]; kids: Student[] }[];
+    const familiesToRet = [] as {
+      id: number;
+      parents: Student[];
+      kids: Student[];
+    }[];
 
-      for (const family of familiesAndParents) {
-        const familyId = family.marriage.id;
-        const kids = await db
-          .select({
-            shortcode: students.shortcode,
-            jmc: students.jmc,
-            role: students.role,
-            completedSurvey: students.completedSurvey,
-            name: students.name,
-            gender: students.gender,
-            interests: students.interests,
-            socials: students.socials,
-            aboutMe: students.aboutMe
-          })
-          .from(families)
-          .where(eq(families.id, familyId))
-          .innerJoin(students, eq(families.kid, students.shortcode));
+    for (const family of familiesAndParents) {
+      const familyId = family.marriage.id;
+      const kids = await db
+        .select({
+          shortcode: students.shortcode,
+          jmc: students.jmc,
+          role: students.role,
+          completedSurvey: students.completedSurvey,
+          name: students.name,
+          gender: students.gender,
+          interests: students.interests,
+          socials: students.socials,
+          aboutMe: students.aboutMe
+        })
+        .from(families)
+        .where(eq(families.id, familyId))
+        .innerJoin(students, eq(families.kid, students.shortcode));
 
-        familiesToRet.push({
-          id: familyId,
-          // @ts-ignore This is an issue with Drizzle aliasedTable.
-          parents: [family.parent1, family.parent2],
-          kids: kids
-        });
-      }
-
-      return ctx.json(familiesToRet, 200);
+      familiesToRet.push({
+        id: familyId,
+        // @ts-ignore This is an issue with Drizzle aliasedTable.
+        parents: [family.parent1, family.parent2],
+        kids: kids
+      });
     }
-  );
+
+    return ctx.json(familiesToRet, 200);
+  });

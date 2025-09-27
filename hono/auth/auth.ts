@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { MicrosoftGraphClient, MsAuthClient } from './MsApiClient';
 import {
+  academicYear,
   generateCookieHeader,
   grantAccessTo,
   isFresherOrParent,
@@ -13,6 +14,14 @@ import { db } from '../db';
 import { students } from '../family/schema';
 import { and, eq, gt } from 'drizzle-orm';
 import { states } from '../admin/schema';
+import { sendEmail } from '../mailer';
+import { randomBytes } from 'crypto';
+import {
+  oauthCallbackSchema,
+  emailCallbackSchema,
+  loginSchema,
+  authTokens
+} from './schema';
 
 const stateManager = {
   newState: async (state: string) => {
@@ -46,12 +55,19 @@ const msAuth = new MsAuthClient(
   stateManager
 );
 
-const callbackSchema = z.object({
-  code: z.string(),
-  state: z.string(),
-  error: z.string().optional(),
-  error_description: z.string().optional()
-});
+const abcApi = {
+  baseUrl: process.env.ABC_API_BASE,
+  auth: `Basic ${btoa(`${process.env.ABC_API_USER}:${process.env.ABC_API_PASS}`)}`,
+  identity: async (shortcode: string, year: number) => {
+    const url = `${abcApi.baseUrl}/${year - 1}${year}/identity?login=${shortcode}`;
+    const abcReq = await fetch(url, {
+      headers: {
+        Authorization: abcApi.auth
+      }
+    });
+    return abcReq;
+  }
+};
 
 const auth = factory
   .createApp()
@@ -80,9 +96,9 @@ const auth = factory
     }
   )
   .post(
-    '/callback',
+    '/callback-oauth',
     grantAccessTo('unauthenticated'),
-    zValidator('json', callbackSchema, async (zRes, ctx) => {
+    zValidator('json', oauthCallbackSchema, async (zRes, ctx) => {
       if (!zRes.success || zRes.data.error_description) {
         apiLogger.warn(
           ctx,
@@ -126,7 +142,7 @@ const auth = factory
         .where(eq(students.shortcode, shortcode[0]));
 
       // We allow them to pass even as non-Computing students if they
-      // exist in the DB. This is done for cases where there is a 
+      // exist in the DB. This is done for cases where there is a
       // non Computing member on committee who needs access to the
       // admin portal, or a non computing member who is eligible to
       // be a parent or student, somehow.
@@ -162,6 +178,158 @@ const auth = factory
       if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
         completedSurvey = true;
       else if (studentInDb.length == 0) {
+        await db.insert(students).values({
+          shortcode: shortcode[0],
+          role: user_is,
+          completedSurvey: false
+        });
+      }
+
+      return ctx.json(
+        {
+          user_is: user_is,
+          done_survey: completedSurvey
+        },
+        200
+      );
+    }
+  )
+  .post(
+    '/login',
+    grantAccessTo('unauthenticated'),
+    zValidator('json', loginSchema, async (zRes, ctx) => {
+      if (!zRes.success) {
+        return ctx.json(
+          {
+            error: 'No valid Imperial email provided.'
+          },
+          400
+        );
+      }
+    }),
+    async ctx => {
+      // Valid Imperial shortcode email by login schema
+      const { email } = ctx.req.valid('json');
+
+      // Generate sign in token
+      const token = randomBytes(16).toString('hex');
+      const issuedAt = new Date();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.insert(authTokens).values({
+        token,
+        email,
+        issuedAt,
+        expiresAt
+      });
+
+      const link = `${process.env.BASE_URL}/finish-email?token=${token}`;
+
+      const user_is = isFresherOrParent(email);
+      const warmWelcome =
+        user_is === 'parent'
+          ? 'Thanks for your interest in being a parent :>'
+          : 'Welcome to DoCSoc!';
+
+      await sendEmail(
+        ctx,
+        email,
+        '[Mums and Dads] Sign in link',
+        'Use the following link to sign in: ' + link,
+        `<p>Hey! ${warmWelcome} <br> Click <a href="${link}">here</a> to complete your sign in.</p>`
+      );
+
+      return ctx.json({}, 200);
+    }
+  )
+  .post(
+    '/callback-email',
+    grantAccessTo('unauthenticated'),
+    zValidator('json', emailCallbackSchema, async (zRes, ctx) => {
+      if (!zRes.success) {
+        return ctx.json(
+          {
+            error: 'No valid token provided.'
+          },
+          400
+        );
+      }
+    }),
+    async ctx => {
+      const { token } = ctx.req.valid('json');
+
+      const tokenInDb = await db
+        .delete(authTokens)
+        .where(
+          and(eq(authTokens.token, token), gt(authTokens.expiresAt, new Date()))
+        )
+        .returning();
+
+      if (tokenInDb.length == 0) {
+        return ctx.json(
+          {
+            error: 'Invalid or expired token.'
+          },
+          400
+        );
+      }
+
+      const email = tokenInDb[0]!.email;
+      const shortcode = email.match(/.*(?=@)/g);
+      // Should not happen
+      if (shortcode == null) {
+        return ctx.json(
+          {
+            error: 'User has no shortcode.'
+          },
+          400
+        );
+      }
+
+      // Allow if in db - this will be freshers, plus anyone manually added
+      const studentInDb = await db
+        .select()
+        .from(students)
+        .where(eq(students.shortcode, shortcode[0]));
+
+      // Else check via ABC API for last academic year - eligible parents
+      if (studentInDb.length == 0) {
+        const abcReq = await abcApi.identity(shortcode[0], academicYear);
+
+        if (abcReq.status != 200) {
+          return ctx.json(
+            {
+              error: 'You are not a Computing student :('
+            },
+            403
+          );
+        }
+      }
+
+      // Now we know they're eligible to sign in, create and return a JWT
+      let jwt: string;
+      try {
+        jwt = await newToken(email, shortcode[0]);
+      } catch (e) {
+        // The only error we can get is that it fails to get an entry year.
+        return ctx.json(
+          {
+            error: 'User has no entry year. Are you a professor?'
+          },
+          400
+        );
+      }
+      const user_is = studentInDb[0]?.role ?? isFresherOrParent(email);
+
+      // Expire the JWT after 4 weeks.
+      // Should be long enough for MaDs to only sign in once.
+      const maxAge = 28 * 24 * 60 * 60;
+      ctx.header('Set-Cookie', generateCookieHeader(jwt, maxAge));
+
+      let completedSurvey = false;
+      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey) {
+        completedSurvey = true;
+      } else if (studentInDb.length == 0) {
         await db.insert(students).values({
           shortcode: shortcode[0],
           role: user_is,
