@@ -68,6 +68,19 @@ async function handleAccept(shortcode: string) {
     alert(err.data);
   }
 }
+
+async function handleRevoke(shortcode: string) {
+  try {
+    await $fetch('/api/family/proposal', {
+      method: 'DELETE',
+      body: { shortcode }
+    });
+
+    router.go(0);
+  } catch (err) {
+    alert(err.data);
+  }
+}
 </script>
 
 <template>
@@ -153,9 +166,20 @@ async function handleAccept(shortcode: string) {
             <div class="flex flex-col items-start">
               <strong>{{ proposal.proposee }}</strong>
             </div>
-            <div class="flex items-start gap-3">
-              <span class="cursor-pointer bg-yellow-400 p-1 text-sm text-white">
-                Pending
+            <div
+              class="flex items-start gap-3"
+              @click="handleRevoke(proposal.proposee)">
+              <span
+                class="group grid cursor-pointer bg-yellow-400 p-1 text-sm text-white duration-300 hover:bg-red-600 motion-reduce:transition-none">
+                <!-- We shove them into the same cell in a grid to essentially overlay them for the transition. duration-300 is not inherited. -->
+                <div
+                  class="col-start-1 row-start-1 duration-300 group-hover:opacity-0">
+                  Pending
+                </div>
+                <div
+                  class="col-start-1 row-start-1 opacity-0 duration-300 group-hover:opacity-100">
+                  Revoke?
+                </div>
               </span>
             </div>
           </div>
