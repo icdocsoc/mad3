@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "tokens" (
+CREATE TABLE "auth_tokens" (
 	"token" text PRIMARY KEY NOT NULL,
 	"email" text NOT NULL,
 	"issued_at" timestamp NOT NULL,

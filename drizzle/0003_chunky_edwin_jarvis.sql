@@ -1,1 +1,0 @@
-ALTER TABLE "tokens" RENAME TO "auth_tokens";

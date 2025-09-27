@@ -19,15 +19,8 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1758810034951,
-      "tag": "0002_blue_talos",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1758921704101,
-      "tag": "0003_chunky_edwin_jarvis",
+      "when": 1758934111217,
+      "tag": "0002_greedy_anthem",
       "breakpoints": true
     }
   ]
