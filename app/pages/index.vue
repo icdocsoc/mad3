@@ -17,8 +17,9 @@ const data = computed(() => {
       };
     case 'freshers_open':
       return {
-        notificationTitle: 'Freshers signup is now open!',
-        notificationDescription: 'Sign up to be adopted by a DoCSoc family'
+        notificationTitle: 'Parents & freshers signups are now open!',
+        notificationDescription:
+          'Parents, sign up to help freshers settle into university life! Freshers, sign up to be adopted by a DoCSoc family!'
       };
     case 'closed':
       return {

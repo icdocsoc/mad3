@@ -61,20 +61,22 @@ definePageMeta({
         </CardDetails>
       </div>
       <div v-else-if="currentState == 'freshers_open'">
-        <CardDetails v-if="currentUser!.role == 'fresher'">
-          <strong>Fresher's survey. [OPEN]</strong>
-          <CardText>
-            If you have not completed our survey yet, please complete the
-            <NuxtLink to="/survey">survey</NuxtLink>
-            so we can assign a family to you.
+        <CardDetails>
+          <strong>Mums and Dads Survey. [OPEN]</strong>
+          <CardText v-if="!currentUser!.completedSurvey">
+            Please complete the
+            <NuxtLink to="/survey">Mums and Dads survey</NuxtLink>
+            so we can assign you to a happy family!
           </CardText>
-        </CardDetails>
-        <CardDetails v-else>
-          <strong>Parent's survey & proposals. [CLOSED]</strong>
-          <CardText>
-            Visit your
-            <NuxtLink to="/family">family page</NuxtLink>
-            to see your family details.
+          <CardText v-else-if="currentUser!.role == 'fresher'">
+            Thank you for completing the survey! Be on the look out for an email
+            with more details once families have been assigned.
+          </CardText>
+          <CardText v-else-if="currentUser!.role == 'parent'">
+            Thank you for completing the survey! If you haven't yet, please
+            send/accept a
+            <NuxtLink to="/proposals">proposal</NuxtLink>
+            to mark the start of your happy family.
           </CardText>
         </CardDetails>
       </div>
