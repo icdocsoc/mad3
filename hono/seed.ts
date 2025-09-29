@@ -110,15 +110,17 @@ if (push) {
 
   console.log('--- Adding state to the db...');
   // Add the required meta values for state
-  await db.insert(meta).values({
-    id: 1,
-    state: 'parents_open'
-  });
+  await db
+    .insert(meta)
+    .values({
+      id: 1,
+      state: 'parents_open'
+    })
+    .onConflictDoNothing();
   console.log('--- State added! ---');
-} else {
-  console.log('--- Writing JSON to file... ---');
-
-  await Bun.write('students.json', JSON.stringify(allStudents, null, 2));
-
-  console.log('--- Wrote JSON to file! ---');
 }
+console.log('--- Writing JSON to file... ---');
+
+await Bun.write('students.json', JSON.stringify(allStudents, null, 2));
+
+console.log('--- Wrote JSON to file! ---');
