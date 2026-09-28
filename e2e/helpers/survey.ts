@@ -57,7 +57,8 @@ export async function submitSurveyByApi(page: Page, name: string) {
   expect(response.ok(), await response.text()).toBe(true);
 }
 
-const choose = (page: Page, label: string) =>
+/** Picks an option by its label, or by a pattern for one worded differently for parents. */
+const choose = (page: Page, label: string | RegExp) =>
   page.getByRole('radio', { name: label, exact: true }).check();
 
 const next = (page: Page) =>
@@ -101,17 +102,17 @@ export async function fillSurvey(
   ).toBeVisible();
   await next(page);
 
-  await choose(page, 'Half an hour commute');
+  await choose(page, 'Living around West London');
   await next(page);
 
   await choose(page, 'I am...');
   await page.getByRole('textbox', { name: 'I am...' }).fill('non-binary');
   await next(page);
 
-  await choose(page, "Yippee! I'll get the first round.");
+  await choose(page, 'Race them downing pints');
   await next(page);
 
-  await choose(page, "I'll tag along to some afterparties~");
+  await choose(page, 'Up for it every now and then');
   await next(page);
 
   await page.getByRole('button', { name: 'Football', exact: true }).click();
@@ -119,7 +120,7 @@ export async function fillSurvey(
   await shots?.('interests');
   await next(page);
 
-  await choose(page, 'A few I care about');
+  await choose(page, /^A few I care about, happy to/);
   await next(page);
 
   await choose(page, "I'm fine once I'm there");

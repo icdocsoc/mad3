@@ -1,14 +1,14 @@
 {
-  "title": "Mums and Dads",
+  "title": "Mums and Dads: parents",
   "version": 1,
-  "audience": "freshers",
+  "audience": "returning",
   "closed": {
     "title": "Not open yet",
-    "body": "Mums and Dads sign-ups have not started. We will email every first year when they do."
+    "body": "Parents' sign-ups have not started. We will email you when they do."
   },
   "notForYou": {
-    "title": "Coming soon",
-    "body": "This one is for first years. Parents' sign-ups open later, and we will email you when they do."
+    "title": "This one is for parents",
+    "body": "Parents are students in their second year or later. If you are a first year, the freshers' survey is the one for you."
   },
   "stages": [
     {
@@ -56,7 +56,7 @@
         "why": {
           "kind": "note",
           "label": "How this works",
-          "body": "Your answers go into a deterministic matchmaking algorithm, which puts you in a family with two older students as your parents and a few other freshers as siblings. That's all your answers are used for.\nOnce you're matched, your profile is shared with your parents."
+          "body": "Your answers go into a deterministic matchmaking algorithm, which gives you and your partner a few freshers as your kids. That's all your answers are used for.\nOnce you're matched, your profile is shared with your kids."
         }
       }
     },
@@ -122,11 +122,11 @@
     },
     {
       "id": "drinking",
-      "title": "Your parents want to take you to the pub. What responsible parents! I'll...",
+      "title": "You're taking your kids to the pub. Responsible parenting! I'll...",
       "fields": {
         "drinking": {
           "kind": "choice",
-          "label": "Your parents want to take you to the pub. What responsible parents! I'll...",
+          "label": "You're taking your kids to the pub. Responsible parenting! I'll...",
           "options": [
             {
               "value": "round-buyer",
@@ -138,11 +138,11 @@
             },
             {
               "value": "soft-drink",
-              "label": "Tag along, but I don't drink"
+              "label": "Come along, but I don't drink"
             },
             {
               "value": "rather-not",
-              "label": "Not interested"
+              "label": "Leave the pub to my partner"
             }
           ]
         }
@@ -411,25 +411,25 @@
     },
     {
       "id": "societies",
-      "title": "How into societies are you, and would you go along with your family?",
-      "blurb": "Go to the Freshers' Fair!",
+      "title": "How into societies are you, and would you bring your kids along?",
+      "blurb": "The Freshers' Fair is a good excuse to show them around.",
       "fields": {
         "societies": {
           "kind": "choice",
-          "label": "How into societies are you, and would you go along with your family?",
-          "hint": "Go to the Freshers' Fair!",
+          "label": "How into societies are you, and would you bring your kids along?",
+          "hint": "The Freshers' Fair is a good excuse to show them around.",
           "options": [
             {
               "value": "everything",
-              "label": "Sign me up to everything, and bring the family!"
+              "label": "In loads, and I'll bring the whole family!"
             },
             {
               "value": "few",
-              "label": "A few I care about, happy to go together"
+              "label": "A few I care about, happy to bring them"
             },
             {
               "value": "unsure",
-              "label": "No clue yet, show me around"
+              "label": "Still working out which ones"
             },
             {
               "value": "little",
@@ -475,7 +475,7 @@
         "bio": {
           "kind": "prose",
           "label": "A bit about me",
-          "hint": "A couple of lines. What you are into, where you are from, anything you want them to know.",
+          "hint": "A couple of lines. What you are into, where you are from, anything you want your kids to know.",
           "optional": true
         },
         "instagram": {

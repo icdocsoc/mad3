@@ -55,12 +55,14 @@ committing.
 
 ## The survey contract
 
-MaDs is moving onto DoCSoc's new matchmaker, so the survey and its answers match that monorepo
-exactly:
+The survey and its answers are shaped like DoCSoc's new matchmaker's, so they can move across
+later:
 
-- `hono/survey/mads.json` is a copy of `packages/domain/src/survey/schemas/mads.json` in
-  [icdocsoc/experimental](https://github.com/icdocsoc/experimental). Change wording there, then
-  copy the file here. Never edit this copy on its own.
+- `hono/survey/mads.json` (freshers) and `hono/survey/mads-parents.json` (parents) started as
+  copies of the templates in [icdocsoc/experimental](https://github.com/icdocsoc/experimental).
+  For now, change the wording here; they will be synced back before the move.
+- Both files ask exactly the same questions with the same keys and option values, and differ
+  only in wording. The server refuses to start if they don't.
 - Answers are stored in `student.answers`, keyed and shaped as there: a choice is its value (or
   the words typed for a free option), chips are a list of values, a phone is E.164.
 - Every answer goes through `readAnswers` (`hono/survey/survey.ts`) before it is stored, so

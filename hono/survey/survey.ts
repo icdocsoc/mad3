@@ -1,15 +1,17 @@
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import mads from './mads.json';
+import madsParents from './mads-parents.json';
 
 /**
- * The Mums and Dads survey, read from `mads.json`: a copy of the survey in DoCSoc's new web
- * monorepo (icdocsoc/experimental, packages/domain/src/survey/schemas/mads.json), which MaDs
- * is moving onto. Change the wording there and copy the file here, so the two never drift.
+ * The Mums and Dads survey, read from `mads.json`: it started as a copy of the survey in
+ * DoCSoc's new web monorepo (icdocsoc/experimental), which MaDs is moving onto, and will be
+ * synced back before the move.
  *
  * Answers are stored the way that monorepo stores them, so moving them across is a copy: one
  * object keyed by field, where a choice is its option's value (or, for a free option like
  * "I am...", the words typed), chips are a list of values, and a phone is E.164. Freshers and
- * parents answer the same questions.
+ * parents answer the same questions, worded for each in their own file
+ * (`mads-parents.json` for parents).
  */
 
 export type Option = { value: string; label: string; free?: true };
@@ -47,12 +49,44 @@ export type Stage = {
 
 export type Answers = Record<string, string | string[]>;
 
-export const survey = mads as unknown as {
+type Survey = {
   title: string;
   version: number;
   closed?: { title: string; body: string };
   stages: Stage[];
 };
+
+export const survey = mads as unknown as Survey;
+const parentSurvey = madsParents as unknown as Survey;
+
+/** The survey as worded for a fresher or a parent. */
+export const surveyFor = (role: 'fresher' | 'parent') =>
+  role == 'parent' ? parentSurvey : survey;
+
+/** Keys and option values, which is all that is stored: the wording may differ. */
+const shapeOf = ({ version, stages }: Survey) =>
+  JSON.stringify({
+    version,
+    stages: stages.map(stage =>
+      Object.entries(stage.fields).map(([key, field]) => [
+        key,
+        field.kind,
+        'optional' in field && field.optional,
+        'options' in field ? field.options.map(option => option.value) : [],
+        'groups' in field
+          ? field.groups.flatMap(group =>
+              group.options.map(option => option.value)
+            )
+          : []
+      ])
+    )
+  });
+
+// Answers from both are stored and checked the same way, so fail at start-up if they drift.
+if (shapeOf(parentSurvey) != shapeOf(survey))
+  throw new Error(
+    'mads-parents.json must ask exactly what mads.json asks: copy both from experimental.'
+  );
 
 /** Every question by the key its answer is stored under. */
 export const fields: Record<string, Field> = Object.fromEntries(
@@ -158,7 +192,8 @@ export function formatProblem(key: string, value: unknown): string | undefined {
  */
 export function readAnswers(
   sent: Record<string, unknown>,
-  shortcode: string
+  shortcode: string,
+  role: 'fresher' | 'parent'
 ): { ok: true; answers: Answers } | { ok: false; error: string } {
   for (const key of Object.keys(fields)) {
     const problem = formatProblem(key, sent[key]);
@@ -176,7 +211,7 @@ export function readAnswers(
       answers[key] = value;
   }
 
-  const unanswered = survey.stages.find(
+  const unanswered = surveyFor(role).stages.find(
     stage => missingOn(stage, answers).length
   );
   if (unanswered) {

@@ -264,8 +264,8 @@ test('answers are saved as you go, and survive a reload', async ({
   await page.getByLabel('Full name').fill('Joshua Gonsalves');
   await page.getByRole('radio', { name: 'Computing', exact: true }).check();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByTestId('save-state')).toHaveText(
-    '✓ Your answers are saved'
+  await expect(page.getByTestId('save-state')).toContainText(
+    'Your answers are saved'
   );
   await page.screenshot({ path: shot('after-19-autosaved') });
 
@@ -296,8 +296,8 @@ test('a draft never changes submitted answers until they are submitted again', a
 
   await page.getByRole('button', { name: 'Change my answers' }).click();
   await page.getByLabel('Full name').fill('Half-typed Name');
-  await expect(page.getByTestId('save-state')).toHaveText(
-    '✓ Your answers are saved'
+  await expect(page.getByTestId('save-state')).toContainText(
+    'Your answers are saved'
   );
   expect(stored('jg2426').name).toBe('Joshua Gonsalves');
   expect(
@@ -346,4 +346,25 @@ test('an Instagram handle must look like one, on the page and at the API', async
     (await post(page, answersFor('Joshua', { instagram: '@jo.g_26' }))).ok()
   ).toBe(true);
   expect(stored('jg2426').instagram).toBe('jo.g_26');
+});
+
+test('a parent is asked the same questions, worded for a parent', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  abc({ students: ['pa1224'] });
+  await signIn(page, 'pa1224@ic.ac.uk');
+  await page.goto('/survey');
+  await page.waitForLoadState('networkidle');
+  await page.getByLabel('Full name').fill('Pat Parent');
+  await page.getByRole('radio', { name: 'Computing', exact: true }).check();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(
+    page.getByText('gives you and your partner a few freshers as your kids')
+  ).toBeVisible();
+
+  // Stored exactly as a fresher's would be.
+  const response = await post(page, answersFor('Pat'));
+  expect(response.ok()).toBe(true);
+  expectValidAgainstSurvey(stored('pa1224'));
 });

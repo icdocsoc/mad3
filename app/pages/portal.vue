@@ -28,9 +28,19 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
       {{ currentState }}
     </CardText>
 
+    <p
+      v-if="me.role == 'parent'"
+      class="mb-4 rounded border-l-4 border-primary bg-gray-50 p-3">
+      Thank you for taking on the responsibility of nurturing some wonderful
+      children! We need some info to help you all get along. We wish you and
+      your partner a happy marriage and a nourishing future with your children!
+    </p>
+
     <ol class="flex flex-col gap-3">
       <li class="flex items-start gap-3">
-        <span aria-hidden="true">{{ me.completedSurvey ? '✅' : '1️⃣' }}</span>
+        <Brace
+          :mark="me.completedSurvey ? 'ok' : '1'"
+          :tone="me.completedSurvey ? 'done' : 'todo'" />
         <div>
           <strong>The survey</strong>
           <p v-if="me.completedSurvey">
@@ -48,7 +58,7 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
       </li>
 
       <li v-if="me.role == 'parent'" class="flex items-start gap-3">
-        <span aria-hidden="true">{{ partner ? '✅' : '2️⃣' }}</span>
+        <Brace :mark="partner ? 'ok' : '2'" :tone="partner ? 'done' : 'todo'" />
         <div>
           <strong>Your partner</strong>
           <p v-if="partner">
@@ -64,7 +74,9 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
       </li>
 
       <li class="flex items-start gap-3">
-        <span aria-hidden="true">{{ hasChildren ? '✅' : '⏳' }}</span>
+        <Brace
+          :mark="hasChildren ? 'ok' : '..'"
+          :tone="hasChildren ? 'done' : 'todo'" />
         <div>
           <strong>Your family</strong>
           <p v-if="hasChildren">

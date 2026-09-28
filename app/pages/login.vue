@@ -16,7 +16,14 @@ if (currentUser.value) {
 }
 
 const step = ref<'email' | 'code'>('email');
-const email = ref('');
+const shortcode = ref('');
+// People paste their whole address as often as they type the shortcode, so both work. Any other
+// address is sent as typed, for the server to explain what to use instead.
+const email = computed(() => {
+  const typed = shortcode.value.trim().toLowerCase();
+  if (!typed.includes('@')) return `${typed}@ic.ac.uk`;
+  return typed;
+});
 const code = ref('');
 const error = ref('');
 const busy = ref(false);
@@ -89,21 +96,27 @@ function changeEmail() {
       class="mt-4 flex flex-col gap-3"
       @submit.prevent="sendCode">
       <CardText v-if="fromOldLink" class="rounded bg-blue-50 p-3">
-        Sign-in links have been replaced by codes. Enter your email and we'll
-        send you one.
+        Sign-in links have been replaced by codes. Enter your shortcode and
+        we'll send you one.
       </CardText>
-      <label for="email" class="font-bold">Your shortcode email</label>
-      <input
-        id="email"
-        v-model="email"
-        type="email"
-        inputmode="email"
-        autocomplete="email"
-        autocapitalize="none"
-        spellcheck="false"
-        required
-        placeholder="ab1224@ic.ac.uk"
-        class="rounded" />
+      <label for="shortcode" class="font-bold">Your shortcode</label>
+      <div
+        class="flex items-center rounded border border-gray-500 focus-within:ring-2 focus-within:ring-primary">
+        <input
+          id="shortcode"
+          v-model="shortcode"
+          type="text"
+          autocomplete="username"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          required
+          placeholder="ab1224"
+          class="w-full rounded border-0 focus:ring-0" />
+        <span v-if="!shortcode.includes('@')" class="pr-3 text-gray-500">
+          @ic.ac.uk
+        </span>
+      </div>
       <p v-if="error" role="alert" class="text-red-600">{{ error }}</p>
       <button
         type="submit"

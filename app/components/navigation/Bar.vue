@@ -17,6 +17,18 @@ const { currentUser } = useAuth();
           Log In
         </NuxtLink>
       </li>
+      <li
+        v-if="currentUser"
+        class="rounded-full bg-white/15 px-3 py-1 text-sm text-white md:text-base"
+        data-testid="signed-in-as">
+        <span class="sr-only">Logged in as</span>
+        <span class="font-mono font-bold">
+          &#123;{{ currentUser.shortcode }}&#125;
+        </span>
+        <span class="max-md:hidden">
+          {{ currentUser.role == 'fresher' ? 'Fresher' : 'Parent' }}
+        </span>
+      </li>
       <li v-if="currentUser !== null">
         <NavigationLink to="/portal">
           <span class="md:text-xl">Portal</span>

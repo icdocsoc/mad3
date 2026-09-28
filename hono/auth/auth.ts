@@ -53,9 +53,9 @@ const abcApi = {
 /** What went wrong with an address, in words someone can act on. */
 function addressProblem(email: unknown) {
   if (typeof email == 'string' && /@imperial\.ac\.uk\s*$/i.test(email)) {
-    return 'Use your shortcode email (like ab1224@ic.ac.uk), not the long first.last one.';
+    return 'Use your shortcode (like ab1224), not your long first.last email.';
   }
-  return 'Enter your Imperial shortcode email, like ab1224@ic.ac.uk.';
+  return 'Enter your Imperial shortcode, like ab1224.';
 }
 
 type Eligibility =

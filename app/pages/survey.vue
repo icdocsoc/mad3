@@ -5,7 +5,7 @@ import {
   formatProblem,
   LOCKED,
   missingOn,
-  survey
+  surveyFor
 } from '~~/hono/survey/survey';
 
 definePageMeta({
@@ -47,7 +47,7 @@ onMounted(() => {
   if (kept) Object.assign(answers, kept, { [LOCKED]: me.shortcode });
 });
 
-const stages = survey.stages;
+const stages = surveyFor(me.role).stages;
 const editing = ref(!me.completedSurvey);
 const step = ref(0);
 const stage = computed(() => stages[step.value]!);
@@ -242,9 +242,18 @@ async function submit() {
       class="mb-4 text-sm"
       :class="saveState == 'offline' ? 'text-amber-700' : 'text-gray-600'"
       data-testid="save-state">
+      <Brace
+        :mark="saveState == 'saved' ? 'ok' : saveState == 'saving' ? '..' : '!'"
+        :tone="
+          saveState == 'saved'
+            ? 'done'
+            : saveState == 'saving'
+              ? 'todo'
+              : 'warn'
+        " />
       {{
         saveState == 'saved'
-          ? '✓ Your answers are saved'
+          ? 'Your answers are saved'
           : saveState == 'saving'
             ? 'Saving…'
             : "Can't reach the server: kept on this device, retrying"

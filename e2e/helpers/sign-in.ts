@@ -6,7 +6,10 @@ export async function askForCode(page: Page, email: string) {
   if (!page.url().includes('/login')) await page.goto('/login');
   await page.waitForLoadState('networkidle');
   const before = mailCount();
-  await page.getByLabel('Your shortcode email').fill(email);
+  // Typed as a student would: the shortcode alone, with @ic.ac.uk already shown beside it.
+  await page
+    .getByLabel('Your shortcode', { exact: true })
+    .fill(email.split('@')[0]!);
   await page.getByRole('button', { name: 'Email me a code' }).click();
   await expect(page.getByLabel('Code', { exact: true })).toBeVisible();
   return codeIn(await nextMail(email.trim().toLowerCase(), before))!;

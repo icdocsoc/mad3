@@ -57,12 +57,26 @@ test('a long-form address is told which address to use', async ({
   await page.goto('/login');
   await page.waitForLoadState('networkidle');
   await page
-    .getByLabel('Your shortcode email')
+    .getByLabel('Your shortcode', { exact: true })
     .fill('joshua.gonsalves26@imperial.ac.uk');
   await page.getByRole('button', { name: 'Email me a code' }).click();
   await expect(page.getByRole('alert')).toHaveText(
-    'Use your shortcode email (like ab1224@ic.ac.uk), not the long first.last one.'
+    'Use your shortcode (like ab1224), not your long first.last email.'
   );
+});
+
+test('a whole shortcode address pasted into the box works too', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  seedStudent('jg2426', 'fresher');
+  await page.goto('/login');
+  await page.waitForLoadState('networkidle');
+  await page
+    .getByLabel('Your shortcode', { exact: true })
+    .fill(' JG2426@ic.ac.uk ');
+  await page.getByRole('button', { name: 'Email me a code' }).click();
+  await expect(page.getByText('sent to jg2426@ic.ac.uk')).toBeVisible();
 });
 
 test('a wrong code says how many tries are left, and five wrong codes end it', async ({

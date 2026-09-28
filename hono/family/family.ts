@@ -57,7 +57,11 @@ export const family = factory
     }),
     async ctx => {
       const shortcode = ctx.get('shortcode')!;
-      const read = readAnswers(ctx.req.valid('json').answers, shortcode);
+      const read = readAnswers(
+        ctx.req.valid('json').answers,
+        shortcode,
+        ctx.get('user_is')!
+      );
       if (!read.ok) {
         return ctx.json({ error: read.error }, 400);
       }
@@ -121,7 +125,7 @@ export const family = factory
         return ctx.json(
           {
             error:
-              'My good fellow, how do you want to propose without having told us *anything* about yourself? Fill in the survey first.'
+              'Wow, a blind proposal?! Talk about commitment! Please fill in the survey before proposing to your beloved.'
           },
           400
         );
@@ -135,7 +139,10 @@ export const family = factory
         );
       if (marriageInDb.length > 0) {
         return ctx.json(
-          { error: 'You are already married. No cheating, nor polyamory.' },
+          {
+            error:
+              "Uh, you're already married, and I recall you both saying this is a closed marriage..."
+          },
           400
         );
       }
@@ -191,14 +198,20 @@ export const family = factory
       // No dupe proposals
       for (const proposal of currProposals) {
         if (proposal.proposee == proposee) {
-          return ctx.json({ error: 'You have already proposed to them.' }, 400);
+          return ctx.json(
+            {
+              error:
+                "You've already proposed to them. It's a life-altering question, give them time!"
+            },
+            400
+          );
         }
       }
       if (currProposals.length >= 3) {
         return ctx.json(
           {
             error:
-              'You already have 3 proposals out. Take one back to send another.'
+              "You've already sent out 3 proposals. Calm down, player! Take one back to send another."
           },
           400
         );
@@ -275,7 +288,7 @@ export const family = factory
         return ctx.json(
           {
             error:
-              'My good fellow, how do you want to get married without having told us *anything* about yourself? Fill in the survey first.'
+              "Wow, a blind marriage?! Talk about commitment! Please fill in the survey before accepting your beloved's proposal."
           },
           400
         );
