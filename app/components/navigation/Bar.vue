@@ -23,11 +23,13 @@ const { currentUser } = useAuth();
         </NavigationLink>
       </li>
       <li v-if="currentUser !== null">
-        <a
-          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
-          href="/api/auth/signOut">
-          Log Out
-        </a>
+        <form method="post" action="/api/auth/signOut">
+          <button
+            type="submit"
+            class="font-bold text-white hover:text-white md:text-xl">
+            Log Out
+          </button>
+        </form>
       </li>
     </ul>
   </nav>

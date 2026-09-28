@@ -35,7 +35,7 @@ test('a fresher signs in with a code and lands on the portal', async ({
   });
   await page.getByRole('button', { name: 'Log in' }).click();
   await expect(page).toHaveURL(/\/portal/);
-  await expect(page.getByText('Welcome to the portal, jg2426')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Hi, jg2426' })).toBeVisible();
   await page.screenshot({
     path: shot(`after-04-portal-fresher-${info.project.name}`)
   });

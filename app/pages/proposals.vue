@@ -6,209 +6,249 @@ definePageMeta({
       const { currentUser } = useAuth();
 
       if (currentUser.value!.role !== 'parent') {
-        navigateTo('/portal');
+        return navigateTo('/portal');
       }
     }
   ]
 });
 
-const { currentUser } = useAuth();
 type Proposal = {
   proposer: string;
   proposee: string;
+  proposerName: string | null;
+  proposeeName: string | null;
 };
 
-// See if they have a partner.
-const headers = useRequestHeaders();
-const {
-  data: familyData,
-  status: familyStatus,
-  error: familyError
-} = useFetch<any>('/api/family/myFamily', {
-  headers
+const { currentUser } = useAuth();
+const { currentState } = useAppState();
+const headers = useRequestHeaders(['cookie']);
+
+// Your partner, once you have one. A 404 just means "not yet".
+const { data: family, refresh: refreshFamily } = useFetch<IFamily>(
+  '/api/family/myFamily',
+  { headers }
+);
+const { data, refresh: refreshProposals } = useFetch<Proposal[]>(
+  '/api/family/proposals',
+  { headers }
+);
+
+const me = computed(() => currentUser.value!.shortcode);
+const received = computed(() =>
+  (data.value ?? []).filter(p => p.proposee === me.value)
+);
+const sent = computed(() =>
+  (data.value ?? []).filter(p => p.proposer === me.value)
+);
+const partner = computed(() =>
+  family.value?.parents.find(parent => parent.shortcode != me.value)
+);
+
+async function refresh() {
+  await Promise.all([refreshFamily(), refreshProposals()]);
+}
+
+// Proposals arrive from other people, so keep the lists current while the page is open.
+let polling: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  polling = setInterval(() => void refresh(), 15_000);
 });
+onBeforeUnmount(() => clearInterval(polling));
 
-const { data, status, error } = useFetch<Proposal[]>('/api/family/proposals');
-const receivedProposals = computed(() =>
-  data.value?.filter(p => p.proposee === currentUser.value!.shortcode)
-);
-const sentProposals = computed(() =>
-  data.value?.filter(p => p.proposer === currentUser.value!.shortcode)
-);
+const messageOf = (err: unknown) =>
+  (err as { data?: { error?: string } }).data?.error ??
+  'Something went wrong. Please try again.';
 
-const proposeInput = ref('');
-const router = useRouter();
-async function handlePropose() {
-  if (!proposeInput.value) {
-    return;
-  }
-
+const shortcode = ref('');
+const proposeError = ref('');
+const proposing = ref(false);
+async function propose() {
+  if (!shortcode.value.trim() || proposing.value) return;
+  proposing.value = true;
+  proposeError.value = '';
   try {
     await $fetch('/api/family/propose', {
       method: 'POST',
-      body: {
-        shortcode: proposeInput.value
-      }
+      body: { shortcode: shortcode.value }
     });
-
-    router.go(0);
+    shortcode.value = '';
+    await refresh();
   } catch (err) {
-    alert(err.data);
+    proposeError.value = messageOf(err);
+  } finally {
+    proposing.value = false;
   }
 }
-async function handleAccept(shortcode: string) {
+
+// Accepting is for life, so it takes a second tap.
+const confirming = ref<string | null>(null);
+const listError = ref('');
+async function accept(proposer: string) {
+  listError.value = '';
   try {
     await $fetch('/api/family/acceptProposal', {
       method: 'POST',
-      body: { shortcode }
+      body: { shortcode: proposer }
     });
-
-    router.go(0);
   } catch (err) {
-    alert(err.data);
+    listError.value = messageOf(err);
   }
+  confirming.value = null;
+  await refresh();
 }
 
-async function handleRevoke(shortcode: string) {
+async function revoke(proposee: string) {
+  listError.value = '';
   try {
     await $fetch('/api/family/proposal', {
       method: 'DELETE',
-      body: { shortcode }
+      body: { shortcode: proposee }
     });
-
-    router.go(0);
   } catch (err) {
-    alert(err.data);
+    listError.value = messageOf(err);
   }
+  await refresh();
 }
+
+const nameOf = (shortcode: string, name: string | null) =>
+  name ? `${name} (${shortcode})` : shortcode;
 </script>
 
 <template>
   <div>
-    <Card>
-      <CardTitle>Info:</CardTitle>
-
-      <CardText class="mt-2">
-        To complete your registration you must be in a family. You can do that
-        by either proposing to someone or accepting a proposal.
-        <ul class="mt-2 list-disc ps-4">
-          <li>
-            If you have any proposals they will appear on this page, and you can
-            accept one to complete registration.
-          </li>
-          <li>
-            You can also propose to your chosen partner using their shortcode.
-            <strong>
-              Make sure they accept your proposal or your registration will not
-              be valid.
-            </strong>
-          </li>
-        </ul>
+    <Card v-if="partner">
+      <CardTitle>It's a match!</CardTitle>
+      <div class="mt-4 flex flex-col gap-2 md:flex-row">
+        <Student
+          v-for="parent in family!.parents"
+          :key="parent.shortcode"
+          :student="parent" />
+      </div>
+      <CardText>
+        You and {{ partner.preferredName || partner.name }} are parents
+        together. We'll email you both once your children are allocated.
       </CardText>
     </Card>
 
-    <Card v-if="familyData">
-      <CardTitle>Congratulations! It's a match!</CardTitle>
-      <div class="mt-4 flex gap-2">
-        <Student :student="familyData.parents[0]" />
-        <Student :student="familyData.parents[1]" />
-      </div>
-      <CardDetails>
-        We will send you an email when we assign your children to you. In the
-        meantime, have fun on your honeymoon!
-      </CardDetails>
-    </Card>
-
-    <div v-else>
+    <template v-else>
       <Card>
-        <CardTitle>People who proposed to you:</CardTitle>
-
-        <div class="mt-4 flex flex-wrap gap-2 self-start">
-          <p v-if="status == 'pending'">Loading...</p>
-          <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
-          <p v-else-if="data && !receivedProposals?.length">
-            You have no proposals yet, ask your partner to propose to you or
-            propose them.
-          </p>
-          <div
-            v-else
-            v-for="proposal in receivedProposals"
-            :key="proposal.proposer"
-            class="flex gap-5 border px-2 py-1">
-            <div class="flex flex-col items-start">
-              <strong>{{ proposal.proposer }}</strong>
-            </div>
-            <div class="flex items-start gap-3">
-              <span
-                class="cursor-pointer bg-green-400 p-1 text-sm text-white"
-                @click="handleAccept(proposal.proposer)">
-                Accept
-              </span>
-            </div>
-          </div>
-        </div>
-      </Card>
-      <Card>
-        <CardTitle>People that you proposed to:</CardTitle>
-
-        <div class="mt-4 flex flex-wrap gap-2 self-start">
-          <p v-if="status == 'pending'">Loading...</p>
-          <p v-else-if="status == 'error'">Oops, {{ error!.message }}</p>
-          <p v-else-if="data && !sentProposals?.length">
-            You have not proposed to anyone yet. It's time to take that leap of
-            faith to get what you want.
-          </p>
-          <div
-            v-else
-            v-for="proposal in sentProposals"
-            :key="proposal.proposee"
-            class="flex gap-5 border px-2 py-1">
-            <div class="flex flex-col items-start">
-              <strong>{{ proposal.proposee }}</strong>
-            </div>
-            <div
-              class="flex items-start gap-3"
-              @click="handleRevoke(proposal.proposee)">
-              <span
-                class="group grid cursor-pointer bg-yellow-400 p-1 text-sm text-white duration-300 hover:bg-red-600 motion-reduce:transition-none">
-                <!-- We shove them into the same cell in a grid to essentially overlay them for the transition. duration-300 is not inherited. -->
-                <div
-                  class="col-start-1 row-start-1 duration-300 group-hover:opacity-0">
-                  Pending
-                </div>
-                <div
-                  class="col-start-1 row-start-1 opacity-0 duration-300 group-hover:opacity-100">
-                  Revoke?
-                </div>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <CardDetails>
+        <CardTitle>Find your partner</CardTitle>
+        <CardText class="mt-4">
+          Parents sign up in pairs. Propose to your partner by their shortcode,
+          or accept their proposal below.
           <strong>
-            Want to send a proposal to a potential partner? Enter their exact
-            shortcode:
+            Until one of you accepts, you aren't signed up as parents.
           </strong>
-          <div class="flex gap-4">
-            <input
-              @keyup.enter="handlePropose"
-              type="text"
-              class="flex-grow"
-              placeholder="e.g. nj421"
-              v-model="proposeInput" />
+        </CardText>
+        <CardText v-if="!currentUser!.completedSurvey">
+          You need to
+          <NuxtLink to="/survey">fill in the survey</NuxtLink>
+          before you can propose or accept.
+        </CardText>
+        <p v-if="currentState != 'open'" class="text-red-600">
+          Sign-ups are closed, so proposals can't be sent or accepted.
+        </p>
+      </Card>
+
+      <Card>
+        <CardTitle>Proposals to you</CardTitle>
+        <p v-if="listError" role="alert" class="mt-4 text-red-600">
+          {{ listError }}
+        </p>
+        <p v-if="!received.length" class="mt-4">
+          No proposals yet. Ask your partner to propose to you, or propose to
+          them below.
+        </p>
+        <ul v-else class="mt-4 flex flex-col gap-2">
+          <li
+            v-for="proposal in received"
+            :key="proposal.proposer"
+            class="flex flex-wrap items-center justify-between gap-2 rounded border px-3 py-2">
+            <strong>
+              {{ nameOf(proposal.proposer, proposal.proposerName) }}
+            </strong>
+            <div
+              v-if="confirming == proposal.proposer"
+              class="flex items-center gap-2">
+              <span>Become parents together?</span>
+              <button
+                type="button"
+                class="rounded bg-green-600 px-3 py-1 text-white"
+                @click="accept(proposal.proposer)">
+                Yes, accept
+              </button>
+              <button
+                type="button"
+                class="rounded px-3 py-1 text-primary"
+                @click="confirming = null">
+                Not yet
+              </button>
+            </div>
             <button
-              class="hover flex items-center gap-2 rounded bg-[#ff4669] px-2 text-white"
-              @click="handlePropose">
+              v-else
+              type="button"
+              class="rounded bg-green-600 px-3 py-1 text-white"
+              @click="confirming = proposal.proposer">
+              Accept
+            </button>
+          </li>
+        </ul>
+      </Card>
+
+      <Card>
+        <CardTitle>Your proposals</CardTitle>
+        <p v-if="!sent.length" class="mt-4">
+          You haven't proposed to anyone yet.
+        </p>
+        <ul v-else class="mt-4 flex flex-col gap-2">
+          <li
+            v-for="proposal in sent"
+            :key="proposal.proposee"
+            class="flex flex-wrap items-center justify-between gap-2 rounded border px-3 py-2">
+            <span>
+              <strong>
+                {{ nameOf(proposal.proposee, proposal.proposeeName) }}
+              </strong>
+              · waiting for them to accept
+            </span>
+            <button
+              type="button"
+              class="rounded px-3 py-1 text-red-600 hover:bg-red-50"
+              @click="revoke(proposal.proposee)">
+              Take back
+            </button>
+          </li>
+        </ul>
+
+        <form class="mt-4 flex flex-col gap-2" @submit.prevent="propose">
+          <label for="partner" class="font-bold">
+            Your partner's shortcode
+          </label>
+          <div class="flex gap-2">
+            <input
+              id="partner"
+              v-model="shortcode"
+              type="text"
+              autocapitalize="none"
+              spellcheck="false"
+              placeholder="e.g. nj421"
+              class="min-w-0 flex-grow rounded" />
+            <button
+              type="submit"
+              :disabled="proposing"
+              class="flex items-center gap-2 rounded bg-[#ff4669] px-3 text-white disabled:opacity-60">
               Propose
               <img
                 src="~/assets/icons/docsoc-love.webp"
-                alt="Propose"
+                alt=""
                 class="aspect-square w-5" />
             </button>
           </div>
-        </CardDetails>
+          <p v-if="proposeError" role="alert" class="text-red-600">
+            {{ proposeError }}
+          </p>
+        </form>
       </Card>
-    </div>
+    </template>
   </div>
 </template>

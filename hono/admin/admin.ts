@@ -31,8 +31,11 @@ export const requireState = (...states: [State, ...State[]]) =>
     const currState = settings[0]!.state;
 
     if (!states.includes(currState)) {
-      return ctx.text(
-        'It is not yet time to use this route, but I appreciate your enthusiasm.',
+      return ctx.json(
+        {
+          error:
+            'Sign-ups are closed right now, so this cannot be changed. I appreciate your enthusiasm, though.'
+        },
         403
       );
     }
@@ -74,7 +77,7 @@ export const admin = factory
       }),
       async (zRes, ctx) => {
         if (!zRes.success) {
-          return ctx.text('You know better, Jay and Nishant.', 400);
+          return ctx.json({ error: 'You know better, Jay and Nishant.' }, 400);
         }
       }
     ),
@@ -84,7 +87,7 @@ export const admin = factory
         state: state
       });
 
-      return ctx.text('', 200);
+      return ctx.json({ state }, 200);
     }
   )
   .get('/allocations/all-families', grantAccessTo('admin'), async ctx => {

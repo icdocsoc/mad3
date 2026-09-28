@@ -4,7 +4,7 @@ import factory from '../factory';
 import { z } from 'zod';
 import { allocatorInterests } from '../survey';
 import { asJson, db } from '../db';
-import { and, eq, or, getTableColumns } from 'drizzle-orm';
+import { aliasedTable, and, eq, getTableColumns, or } from 'drizzle-orm';
 import {
   families,
   marriages,
@@ -15,8 +15,12 @@ import {
 import { requireState } from '../admin/admin';
 
 const proposalSchema = z.object({
-  shortcode: z.string()
+  shortcode: z.string().trim().toLowerCase().min(1)
 });
+
+const invalidProposal = {
+  error: 'Enter the shortcode of the parent you mean.'
+};
 
 export const family = factory
   .createApp()
@@ -81,7 +85,7 @@ export const family = factory
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
-        return ctx.text('Invalid request.', 400);
+        return ctx.json(invalidProposal, 400);
       }
     }),
     async ctx => {
@@ -92,8 +96,11 @@ export const family = factory
         .from(students)
         .where(eq(students.shortcode, proposer));
       if (!proposerInDb[0]!.completedSurvey) {
-        return ctx.text(
-          'My good fellow, how do you want to propose without having told us *anything* about yourself?',
+        return ctx.json(
+          {
+            error:
+              'My good fellow, how do you want to propose without having told us *anything* about yourself? Fill in the survey first.'
+          },
           400
         );
       }
@@ -105,8 +112,8 @@ export const family = factory
           or(eq(marriages.parent1, proposer), eq(marriages.parent2, proposer))
         );
       if (marriageInDb.length > 0) {
-        return ctx.text(
-          'You are already married. No cheating, nor polamory.',
+        return ctx.json(
+          { error: 'You are already married. No cheating, nor polyamory.' },
           400
         );
       }
@@ -114,22 +121,44 @@ export const family = factory
       const { shortcode: proposee } = ctx.req.valid('json');
 
       if (proposee == proposer) {
-        return ctx.text(
-          "I'm glad you love yourself, but the kids need two parents.",
+        return ctx.json(
+          {
+            error: "I'm glad you love yourself, but the kids need two parents."
+          },
           400
         );
       }
 
-      const proposeeInDb = await db
-        .select({ shortcode: students.shortcode })
+      const [proposeeInDb] = await db
+        .select({ role: students.role })
         .from(students)
         .where(eq(students.shortcode, proposee));
 
-      if (proposeeInDb.length == 0) {
-        return ctx.text(
-          'Invalid proposee. Have they signed in to MaDs yet?',
+      if (!proposeeInDb) {
+        return ctx.json(
+          {
+            error: `Nobody with the shortcode ${proposee} has signed in yet. Check the spelling, or ask them to log in first.`
+          },
           400
         );
+      }
+      if (proposeeInDb.role != 'parent') {
+        return ctx.json(
+          {
+            error: `${proposee} is signed up as a fresher, so they can't be a parent.`
+          },
+          400
+        );
+      }
+
+      const theirMarriage = await db
+        .select()
+        .from(marriages)
+        .where(
+          or(eq(marriages.parent1, proposee), eq(marriages.parent2, proposee))
+        );
+      if (theirMarriage.length > 0) {
+        return ctx.json({ error: `${proposee} already has a partner.` }, 400);
       }
 
       // 3 max proposals
@@ -137,18 +166,20 @@ export const family = factory
         .select()
         .from(proposals)
         .where(eq(proposals.proposer, proposer));
-      if (currProposals.length >= 3) {
-        return ctx.text(
-          'You have already reached max number of proposals. Revoke a proposal to send another one.',
-          400
-        );
-      }
-
       // No dupe proposals
       for (const proposal of currProposals) {
         if (proposal.proposee == proposee) {
-          return ctx.text('You have already proposed to this user.', 400);
+          return ctx.json({ error: 'You have already proposed to them.' }, 400);
         }
+      }
+      if (currProposals.length >= 3) {
+        return ctx.json(
+          {
+            error:
+              'You already have 3 proposals out. Take one back to send another.'
+          },
+          400
+        );
       }
 
       await db.insert(proposals).values({
@@ -156,7 +187,7 @@ export const family = factory
         proposee: proposee
       });
 
-      return ctx.text('', 200);
+      return ctx.json({ proposed: proposee }, 200);
     }
   )
   .delete(
@@ -165,7 +196,7 @@ export const family = factory
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
-        return ctx.text('Invalid request.', 400);
+        return ctx.json(invalidProposal, 400);
       }
     }),
     async ctx => {
@@ -184,13 +215,16 @@ export const family = factory
         )
         .returning();
       if (proposalsInDb.length != 1) {
-        return ctx.text(
-          "This proposal does not exist. Why are you taking back a proposal you haven't made?",
+        return ctx.json(
+          {
+            error:
+              "This proposal does not exist. Why are you taking back a proposal you haven't made?"
+          },
           400
         );
       }
 
-      return ctx.text('', 200);
+      return ctx.json({ revoked: proposee }, 200);
     }
   )
   .post(
@@ -199,7 +233,7 @@ export const family = factory
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
-        return ctx.text('Invalid request.', 400);
+        return ctx.json(invalidProposal, 400);
       }
     }),
     async ctx => {
@@ -211,8 +245,11 @@ export const family = factory
         .from(students)
         .where(eq(students.shortcode, proposee));
       if (!studentInDb[0]!.completedSurvey) {
-        return ctx.text(
-          'My good fellow, how do you want to get married without having told us *anything* about yourself?',
+        return ctx.json(
+          {
+            error:
+              'My good fellow, how do you want to get married without having told us *anything* about yourself? Fill in the survey first.'
+          },
           400
         );
       }
@@ -228,13 +265,16 @@ export const family = factory
         );
 
       if (proposalsInDb.length != 1) {
-        return ctx.text(
-          "This proposal does not exist. You can't force a marriage where love doesn't exist.",
+        return ctx.json(
+          {
+            error:
+              'This proposal does not exist anymore: they may have taken it back, or found another partner.'
+          },
           400
         );
       }
 
-      db.transaction(async tx => {
+      await db.transaction(async tx => {
         // Delete any pending proposals including the proposee and proposer.
         // This is a lifelong commitment.
         await tx
@@ -257,7 +297,7 @@ export const family = factory
         });
       });
 
-      return ctx.text('', 200);
+      return ctx.json({ partner: proposer }, 200);
     }
   )
   .get(
@@ -267,9 +307,18 @@ export const family = factory
     async ctx => {
       const shortcode = ctx.get('shortcode')!;
 
+      const proposer = aliasedTable(students, 'proposer');
+      const proposee = aliasedTable(students, 'proposee');
       const proposalsInDb = await db
-        .select()
+        .select({
+          proposer: proposals.proposer,
+          proposee: proposals.proposee,
+          proposerName: proposer.name,
+          proposeeName: proposee.name
+        })
         .from(proposals)
+        .innerJoin(proposer, eq(proposer.shortcode, proposals.proposer))
+        .innerJoin(proposee, eq(proposee.shortcode, proposals.proposee))
         .where(
           or(
             eq(proposals.proposee, shortcode),
@@ -317,7 +366,7 @@ export const family = factory
     }
 
     if (familyInDb.length == 0) {
-      return ctx.text('You do not have a family.', 400);
+      return ctx.json({ error: 'You do not have a family yet.' }, 404);
     }
 
     const familyId = familyInDb[0]!.id;

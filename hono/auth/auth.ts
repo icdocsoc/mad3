@@ -261,7 +261,8 @@ const auth = factory
       );
     }
   )
-  .get('/signOut', grantAccessTo('all'), async ctx => {
+  // A POST, so a link preview or a prefetch can't sign anyone out.
+  .post('/signOut', grantAccessTo('all'), async ctx => {
     // Delete their JWT cookie.
     ctx.header('Set-Cookie', generateCookieHeader('', 0));
     return ctx.redirect(`${process.env.BASE_URL ?? ''}/?loggedOut=true`);
