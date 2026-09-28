@@ -115,9 +115,11 @@ function changeEmail() {
 
     <form v-else class="mt-4 flex flex-col gap-3" @submit.prevent="logIn">
       <CardText>
-        We sent a six-digit code to
+        Check your inbox for a six-digit code, sent to
         <strong>{{ email }}</strong>
-        . It works for 10 minutes. Enter it here, on this device.
+      </CardText>
+      <CardText>
+        It works for 10 minutes. Enter it here, on this device.
       </CardText>
       <label for="code" class="font-bold">Code</label>
       <input
