@@ -2,9 +2,9 @@ import { zValidator } from '@hono/zod-validator';
 import { grantAccessTo } from '../auth/jwt';
 import factory from '../factory';
 import { z } from 'zod';
-import { type Interests } from '../types';
-import { db } from '../db';
-import { and, eq, or } from 'drizzle-orm';
+import { allocatorInterests } from '../survey';
+import { asJson, db } from '../db';
+import { and, eq, or, getTableColumns } from 'drizzle-orm';
 import {
   families,
   marriages,
@@ -26,40 +26,53 @@ export const family = factory
     grantAccessTo('authenticated'),
     zValidator('json', surveySchema.strict(), async (zRes, ctx) => {
       if (!zRes.success) {
-        return ctx.text('Invalid body.', 400);
+        const issue = zRes.error.issues[0];
+        return ctx.json(
+          {
+            error:
+              issue?.message == 'Pick at least one interest.'
+                ? issue.message
+                : 'Some answers are missing. Go back through the survey and check each card.'
+          },
+          400
+        );
       }
     }),
     async ctx => {
       const shortcode = ctx.get('shortcode')!;
+      const answers = ctx.req.valid('json');
 
-      const studentInDb = await db
-        .select({
-          role: students.role,
-          completedSurvey: students.completedSurvey
-        })
-        .from(students)
-        .where(eq(students.shortcode, shortcode));
-      if (studentInDb[0]!.completedSurvey == true) {
-        return ctx.text('You have already completed the survey.', 400);
-      }
-
-      const { name, interests, aboutMe, socials, gender, jmc } =
-        ctx.req.valid('json');
-
+      // Answers can be changed until sign-ups close; each save replaces the last.
       await db
         .update(students)
         .set({
           completedSurvey: true,
-          name: name,
-          interests: interests as Interests,
-          aboutMe: aboutMe,
-          socials: socials,
-          gender: gender,
-          jmc: jmc
+          name: answers.name,
+          preferredName: answers.preferredName,
+          jmc: answers.jmc,
+          gender: answers.gender,
+          genderDescription:
+            answers.gender == 'other' ? answers.genderDescription : null,
+          commute: answers.commute,
+          drinking: answers.drinking,
+          lateNights: answers.lateNights,
+          societies: answers.societies,
+          meetingPeople: answers.meetingPeople,
+          interests: asJson(
+            allocatorInterests(
+              answers.interests,
+              answers.drinking,
+              answers.lateNights
+            )
+          ),
+          aboutMe: answers.aboutMe,
+          instagram: answers.instagram,
+          discord: answers.discord,
+          phone: answers.phone
         })
         .where(eq(students.shortcode, shortcode));
 
-      return ctx.text('', 200);
+      return ctx.json({ saved: true }, 200);
     }
   )
   .post(
@@ -310,17 +323,7 @@ export const family = factory
     const familyId = familyInDb[0]!.id;
 
     const kids = await db
-      .select({
-        shortcode: students.shortcode,
-        jmc: students.jmc,
-        role: students.role,
-        completedSurvey: students.completedSurvey,
-        name: students.name,
-        gender: students.gender,
-        interests: students.interests,
-        socials: students.socials,
-        aboutMe: students.aboutMe
-      })
+      .select(getTableColumns(students))
       .from(families)
       .where(eq(families.id, familyId))
       .innerJoin(students, eq(families.kid, students.shortcode));

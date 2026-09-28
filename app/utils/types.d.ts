@@ -8,6 +8,21 @@ declare interface IStudent {
   interests: Record<string, 0 | 1 | 2> | null;
   socials: string[] | null;
   aboutMe: string | null;
+  preferredName: string | null;
+  genderDescription: string | null;
+  commute: 'halls' | 'nearby' | 'commute' | 'far' | null;
+  drinking: 'round-buyer' | 'soft-drink' | 'couple' | 'rather-not' | null;
+  lateNights:
+    | 'out-till-late'
+    | 'one-club-night'
+    | 'home-by-midnight'
+    | 'quiet'
+    | null;
+  societies: 'everything' | 'few' | 'unsure' | 'little' | null;
+  meetingPeople: 'energising' | 'fine' | 'depends' | 'draining' | null;
+  instagram: string | null;
+  discord: string | null;
+  phone: string | null;
 }
 
 // Is it worth making a sharedTypes for this one singular type?

@@ -14,7 +14,14 @@ import {
 } from '../types';
 import { meta } from './schema';
 import { z } from 'zod';
-import { aliasedTable, and, count, eq, isNull } from 'drizzle-orm';
+import {
+  aliasedTable,
+  and,
+  count,
+  eq,
+  isNull,
+  getTableColumns
+} from 'drizzle-orm';
 import { families, marriages, students } from '../family/schema';
 import { apiLogger } from '../logger';
 
@@ -306,17 +313,7 @@ export const admin = factory
     for (const family of familiesAndParents) {
       const familyId = family.marriage.id;
       const kids = await db
-        .select({
-          shortcode: students.shortcode,
-          jmc: students.jmc,
-          role: students.role,
-          completedSurvey: students.completedSurvey,
-          name: students.name,
-          gender: students.gender,
-          interests: students.interests,
-          socials: students.socials,
-          aboutMe: students.aboutMe
-        })
+        .select(getTableColumns(students))
         .from(families)
         .where(eq(families.id, familyId))
         .innerJoin(students, eq(families.kid, students.shortcode));

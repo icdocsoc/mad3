@@ -1,0 +1,486 @@
+{
+  "id": "0bcf665c-a8a5-4dbf-b20f-8f4ad88a4523",
+  "prevId": "a464d0f6-4943-49e7-9b75-1124c9f02590",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.meta": {
+      "name": "meta",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "1 CHECK (id = 1)"
+        },
+        "state": {
+          "name": "state",
+          "type": "app_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.login_codes": {
+      "name": "login_codes",
+      "schema": "",
+      "columns": {
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code_hash": {
+          "name": "code_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.family": {
+      "name": "family",
+      "schema": "",
+      "columns": {
+        "kid": {
+          "name": "kid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "family_kid_student_shortcode_fk": {
+          "name": "family_kid_student_shortcode_fk",
+          "tableFrom": "family",
+          "columnsFrom": [
+            "kid"
+          ],
+          "tableTo": "student",
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "family_id_marriage_id_fk": {
+          "name": "family_id_marriage_id_fk",
+          "tableFrom": "family",
+          "columnsFrom": [
+            "id"
+          ],
+          "tableTo": "marriage",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.marriage": {
+      "name": "marriage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parent1": {
+          "name": "parent1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent2": {
+          "name": "parent2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "marriage_parent1_student_shortcode_fk": {
+          "name": "marriage_parent1_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "columnsFrom": [
+            "parent1"
+          ],
+          "tableTo": "student",
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "marriage_parent2_student_shortcode_fk": {
+          "name": "marriage_parent2_student_shortcode_fk",
+          "tableFrom": "marriage",
+          "columnsFrom": [
+            "parent2"
+          ],
+          "tableTo": "student",
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "marriage_parent1_unique": {
+          "name": "marriage_parent1_unique",
+          "columns": [
+            "parent1"
+          ],
+          "nullsNotDistinct": false
+        },
+        "marriage_parent2_unique": {
+          "name": "marriage_parent2_unique",
+          "columns": [
+            "parent2"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.proposals": {
+      "name": "proposals",
+      "schema": "",
+      "columns": {
+        "proposer": {
+          "name": "proposer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposee": {
+          "name": "proposee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "proposals_proposer_student_shortcode_fk": {
+          "name": "proposals_proposer_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "columnsFrom": [
+            "proposer"
+          ],
+          "tableTo": "student",
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "proposals_proposee_student_shortcode_fk": {
+          "name": "proposals_proposee_student_shortcode_fk",
+          "tableFrom": "proposals",
+          "columnsFrom": [
+            "proposee"
+          ],
+          "tableTo": "student",
+          "columnsTo": [
+            "shortcode"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "proposals_proposer_proposee_pk": {
+          "name": "proposals_proposer_proposee_pk",
+          "columns": [
+            "proposer",
+            "proposee"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.student": {
+      "name": "student",
+      "schema": "",
+      "columns": {
+        "shortcode": {
+          "name": "shortcode",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "student_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_survey": {
+          "name": "completed_survey",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jmc": {
+          "name": "jmc",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interests": {
+          "name": "interests",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "socials": {
+          "name": "socials",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "about_me": {
+          "name": "about_me",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preferred_name": {
+          "name": "preferred_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender_description": {
+          "name": "gender_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commute": {
+          "name": "commute",
+          "type": "commute",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "drinking": {
+          "name": "drinking",
+          "type": "drinking",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "late_nights": {
+          "name": "late_nights",
+          "type": "late_nights",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "societies": {
+          "name": "societies",
+          "type": "societies",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meeting_people": {
+          "name": "meeting_people",
+          "type": "meeting_people",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram": {
+          "name": "instagram",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discord": {
+          "name": "discord",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.app_state": {
+      "name": "app_state",
+      "schema": "public",
+      "values": [
+        "open",
+        "closed"
+      ]
+    },
+    "public.commute": {
+      "name": "commute",
+      "schema": "public",
+      "values": [
+        "halls",
+        "nearby",
+        "commute",
+        "far"
+      ]
+    },
+    "public.drinking": {
+      "name": "drinking",
+      "schema": "public",
+      "values": [
+        "round-buyer",
+        "soft-drink",
+        "couple",
+        "rather-not"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "male",
+        "female",
+        "other",
+        "n/a"
+      ]
+    },
+    "public.late_nights": {
+      "name": "late_nights",
+      "schema": "public",
+      "values": [
+        "out-till-late",
+        "one-club-night",
+        "home-by-midnight",
+        "quiet"
+      ]
+    },
+    "public.meeting_people": {
+      "name": "meeting_people",
+      "schema": "public",
+      "values": [
+        "energising",
+        "fine",
+        "depends",
+        "draining"
+      ]
+    },
+    "public.societies": {
+      "name": "societies",
+      "schema": "public",
+      "values": [
+        "everything",
+        "few",
+        "unsure",
+        "little"
+      ]
+    },
+    "public.student_role": {
+      "name": "student_role",
+      "schema": "public",
+      "values": [
+        "fresher",
+        "parent"
+      ]
+    }
+  },
+  "schemas": {},
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

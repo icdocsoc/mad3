@@ -33,8 +33,9 @@ const SESSION_SECONDS = 28 * 24 * 60 * 60;
 const hash = (email: string, code: string) =>
   createHash('sha256').update(`${email}:${code}`).digest('hex');
 
+const bytes = (text: string) => new TextEncoder().encode(text);
 const sameHash = (a: string, b: string) =>
-  a.length == b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  a.length == b.length && timingSafeEqual(bytes(a), bytes(b));
 
 const abcApi = {
   baseUrl: process.env.ABC_API_BASE,
