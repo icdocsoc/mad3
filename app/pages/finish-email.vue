@@ -21,7 +21,8 @@ watch(status, () => {
     </Card>
     <Card v-else-if="status == 'error'">
       <CardText>
-        <strong>Error:</strong> {{ error?.data.error }}
+        <strong>Error:</strong>
+        {{ error?.data.error }}
         <br />
         If this is a mistake, please reply to your log in link email letting us
         know.

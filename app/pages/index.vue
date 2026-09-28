@@ -3,29 +3,17 @@ const { currentState } = useAppState();
 
 const data = computed(() => {
   switch (currentState.value) {
-    case 'parents_open':
+    case 'open':
       return {
-        notificationTitle: 'Parents signup is now open!',
+        notificationTitle: 'Sign-ups are open!',
         notificationDescription:
-          'Sign up to be a parent and help freshers settle into university life!'
-      };
-    case 'parents_close':
-      return {
-        notificationTitle: 'Parents signup is now closed!',
-        notificationDescription:
-          'If you have signed up, look out for an email soon! Fresher signup will open soon.'
-      };
-    case 'freshers_open':
-      return {
-        notificationTitle: 'Parents & freshers signups are now open!',
-        notificationDescription:
-          'Parents, sign up to help freshers settle into university life! Freshers, sign up to be adopted by a DoCSoc family!'
+          'Parents, sign up with your partner to welcome freshers into DoC. Freshers, sign up to be adopted by a DoCSoc family!'
       };
     case 'closed':
       return {
-        notificationTitle: 'Mums and Dads is now closed!',
+        notificationTitle: 'Sign-ups are closed.',
         notificationDescription:
-          'Thank you for signing up! Look out for any emails for more information.'
+          "If you signed up, you can see your family from the portal once they're allocated. We'll email you too."
       };
   }
 });

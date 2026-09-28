@@ -65,22 +65,10 @@ test.beforeEach(() => {
   abc({});
 });
 
-test('a fresh database with no site state breaks every page', async ({
-  page
-}, info) => {
-  desktopOnly(info.project.name);
-  const response = await page.goto('/');
-  await page.screenshot({
-    path: shot('before-01-no-meta-row'),
-    fullPage: true
-  });
-  expect(response?.status()).toBe(500);
-});
-
 test('the login popup refuses capitals and long-form addresses', async ({
   page
 }, info) => {
-  setState('freshers_open');
+  setState('open');
   const capitals = await askForLink(page, 'JG2426@ic.ac.uk');
   await page.screenshot({
     path: shot(`before-02-login-popup-${info.project.name}`)
@@ -95,7 +83,7 @@ test('a link used by something else first is gone', async ({
   page
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
   seedStudent('jg2426', 'fresher');
   const before = mailCount();
   await askForLink(page, 'jg2426@ic.ac.uk');
@@ -121,7 +109,7 @@ test('opening the link again after signing in shows an error with no message', a
   browser
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
   seedStudent('jg2426', 'fresher');
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -143,7 +131,7 @@ test('a link opened in a different browser signs in that browser, not the one th
   browser
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
   seedStudent('jg2426', 'fresher');
   const asked = await (await browser.newContext()).newPage();
   const before = mailCount();
@@ -166,7 +154,7 @@ test('a fresher missing from the seed, or anyone while ABC is down, is told they
   page
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
 
   let before = mailCount();
   await askForLink(page, 'jg2427@ic.ac.uk');
@@ -193,7 +181,7 @@ test("a resitting fresher's sign-in says parent, so parent-only routes let them 
   browser
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
   seedStudent('rs1225', 'fresher');
   const page = await signIn(browser, 'rs1225@ic.ac.uk');
 
@@ -212,7 +200,7 @@ test('the survey on a phone, where social links must be full URLs', async ({
   browser
 }, info) => {
   test.skip(info.project.name !== 'phone', 'The survey is shown on a phone.');
-  setState('freshers_open');
+  setState('open');
   seedStudent('jg2426', 'fresher');
   const page = await signIn(browser, 'jg2426@ic.ac.uk');
   await page.setViewportSize({ width: 412, height: 915 });
@@ -231,7 +219,7 @@ test('a parent proposing to a mistyped shortcode gets a browser alert', async ({
   browser
 }, info) => {
   desktopOnly(info.project.name);
-  setState('freshers_open');
+  setState('open');
   abc({ students: ['pa1224'] });
   const page = await signIn(browser, 'pa1224@ic.ac.uk');
   const survey = await page.request.post('/api/family/survey', {

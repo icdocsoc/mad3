@@ -107,17 +107,6 @@ if (push) {
     }
   }
   console.log('--- Freshers added! ---');
-
-  console.log('--- Adding state to the db...');
-  // Add the required meta values for state
-  await db
-    .insert(meta)
-    .values({
-      id: 1,
-      state: 'parents_open'
-    })
-    .onConflictDoNothing();
-  console.log('--- State added! ---');
 }
 console.log('--- Writing JSON to file... ---');
 

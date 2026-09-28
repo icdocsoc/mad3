@@ -54,12 +54,9 @@ export type Env = {
 
 export type Student = z.infer<typeof selectStudentSchema>;
 
-export const stateOptions = [
-  'parents_open',
-  'parents_close',
-  'freshers_open',
-  'closed'
-] as const;
+// Sign-ups (survey and proposals) are either open, for parents and freshers alike, or closed,
+// which is when families are allocated and shown.
+export const stateOptions = ['open', 'closed'] as const;
 export type State = (typeof stateOptions)[number];
 
 export type AllocatorGender = 'Female' | 'Male' | 'other' | 'na';

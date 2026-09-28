@@ -13,7 +13,6 @@ import {
   surveySchema
 } from './schema';
 import { requireState } from '../admin/admin';
-// import { meta } from '../admin/schema';
 
 const proposalSchema = z.object({
   shortcode: z.string()
@@ -23,7 +22,7 @@ export const family = factory
   .createApp()
   .post(
     '/survey',
-    requireState('parents_open', 'freshers_open'),
+    requireState('open'),
     grantAccessTo('authenticated'),
     zValidator('json', surveySchema.strict(), async (zRes, ctx) => {
       if (!zRes.success) {
@@ -43,17 +42,6 @@ export const family = factory
       if (studentInDb[0]!.completedSurvey == true) {
         return ctx.text('You have already completed the survey.', 400);
       }
-
-      // Todo: consider changing states to simply survey open / closed
-      // Ensure that parents can only complete the route during parents_open,
-      // and students can only complete the route during students_open.
-      // const metaInDb = await db.select().from(meta);
-      // if (!metaInDb[0]!.state.includes(studentInDb[0]!.role)) {
-      //   return ctx.text(
-      //     `It is not yet your time o ${studentInDb[0]!.role}.`,
-      //     400
-      //   );
-      // }
 
       const { name, interests, aboutMe, socials, gender, jmc } =
         ctx.req.valid('json');
@@ -76,7 +64,7 @@ export const family = factory
   )
   .post(
     '/propose',
-    requireState('parents_open', 'freshers_open'),
+    requireState('open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -160,7 +148,7 @@ export const family = factory
   )
   .delete(
     '/proposal',
-    requireState('parents_open', 'freshers_open'),
+    requireState('open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -194,7 +182,7 @@ export const family = factory
   )
   .post(
     '/acceptProposal',
-    requireState('parents_open', 'freshers_open'),
+    requireState('open'),
     grantAccessTo('parent'),
     zValidator('json', proposalSchema, async (zRes, ctx) => {
       if (!zRes.success) {
@@ -261,7 +249,7 @@ export const family = factory
   )
   .get(
     '/proposals',
-    requireState('parents_open', 'freshers_open'),
+    requireState('open'),
     grantAccessTo('parent'),
     async ctx => {
       const shortcode = ctx.get('shortcode')!;

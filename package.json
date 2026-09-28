@@ -9,7 +9,9 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "e2e": "playwright test --config e2e/playwright.config.ts"
+    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun scripts/migrate.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.4.1",

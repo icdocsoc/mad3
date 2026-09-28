@@ -29,13 +29,17 @@ export function sql(query: string): string[] {
   return out.split('\n').filter(Boolean);
 }
 
-/** Empties every table the app writes to, leaving the schema in place. */
+/**
+ * Empties every table the app writes to, leaving the schema in place. `meta` keeps its one row,
+ * as it would in any real deployment, and goes back to closed.
+ */
 export function resetData() {
   const tables = sql(
-    "select tablename from pg_tables where schemaname = 'public' and tablename not like '\\_\\_%'"
+    "select tablename from pg_tables where schemaname = 'public' and tablename <> 'meta'"
   );
   if (tables.length)
     sql(`truncate ${tables.map(t => `"${t}"`).join(', ')} cascade;`);
+  setState('closed');
 }
 
 /** Sets the site state, creating the single `meta` row if it is missing. */

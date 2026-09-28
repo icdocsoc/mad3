@@ -8,4 +8,5 @@ COPY package.json bun.lockb ./
 RUN bun install --production
 COPY . .
 RUN bun --bun run build
-CMD [ "bun", "run", ".output/server/index.mjs" ]
+# Migrations run on every start, before the server, so a deploy is never ahead of its database.
+CMD [ "sh", "-c", "bun scripts/migrate.ts && bun run .output/server/index.mjs" ]

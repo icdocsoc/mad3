@@ -38,7 +38,13 @@ docker compose start postgres
 docker compose up postgres
 ```
 
-If you haven't, you will also need to push the database schema.
+Then bring the database up to date. This is safe to run as often as you like; the Docker image runs it on every start.
+
+```bash
+bun run db:migrate
+```
+
+Changed a `schema.ts`? Generate a migration with `bun run db:generate` and commit it alongside.
 
 Finally, run the website.
 
