@@ -5,6 +5,7 @@ import {
   text,
   boolean,
   json,
+  jsonb,
   serial,
   pgEnum
 } from 'drizzle-orm/pg-core';
@@ -16,6 +17,7 @@ import {
 } from '../types';
 import { z } from 'zod';
 import { createSelectSchema } from 'drizzle-zod';
+import type { Answers } from '../survey/survey';
 
 export const studentRole = pgEnum('student_role', studentRoles);
 export const gender = pgEnum('gender', genderOptions);
@@ -67,9 +69,18 @@ export const students = pgTable('student', {
   jmc: boolean('jmc'),
   name: text('name'),
   gender: gender('gender'),
+  // From the old survey, kept for past years' rows.
   interests: json('interests').$type<Interests>(),
   socials: text('socials').array(),
-  aboutMe: text('about_me')
+  aboutMe: text('about_me'),
+  // Every answer to the survey, keyed as in hono/survey/mads.json. Only ever a complete,
+  // checked submission: the matchmaker reads it.
+  answers: jsonb('answers').$type<Answers>(),
+  // The version of mads.json those answers were given to.
+  surveyVersion: integer('survey_version'),
+  // What has been typed since, saved as it happens so nothing is lost. Becomes `answers`
+  // only when submitted.
+  draft: jsonb('draft').$type<Answers>()
 });
 
 // Interest schema, but as a zod object.
@@ -85,20 +96,12 @@ export const interestsSchema = z.object(
 // Nullable makes it play nice with the createSchema/db select types
 export const selectStudentSchema = createSelectSchema(students).extend({
   interests: interestsSchema.nullable(),
-  socials: z.array(z.string()).nullable()
+  socials: z.array(z.string()).nullable(),
+  answers: z.record(z.union([z.string(), z.array(z.string())])).nullable(),
+  draft: z.record(z.union([z.string(), z.array(z.string())])).nullable()
 });
 
-// here we remove some things and make some things non optional.
-export const surveySchema = selectStudentSchema
-  .omit({
-    shortcode: true,
-    role: true,
-    completedSurvey: true
-  })
-  .extend({
-    name: z.string(),
-    jmc: z.boolean(),
-    gender: z.enum(genderOptions),
-    interests: interestsSchema,
-    socials: z.array(z.string().url()).optional()
-  });
+/** What the survey page sends: the answers, keyed as in hono/survey/mads.json. */
+export const surveySchema = z.object({
+  answers: z.record(z.string(), z.unknown())
+});

@@ -1,184 +1,388 @@
 <script setup lang="ts">
-import { z } from 'zod';
-const { currentUser } = useAuth();
+import {
+  type Answers,
+  type Field,
+  formatProblem,
+  LOCKED,
+  missingOn,
+  surveyFor
+} from '~~/hono/survey/survey';
 
 definePageMeta({
   middleware: ['require-auth']
 });
 
-// Page setup stuff
-const headers = useRequestHeaders(); // since it is SSR, we need to retrieve the headers in the server
-if (currentUser.value!.completedSurvey) {
-  throw new Error('You have already completed the survey');
+const { currentUser, setUser } = useAuth();
+const { currentState } = useAppState();
+const me = currentUser.value!;
+
+// A copy of the answers in this browser, so nothing typed is lost to a closed tab, a dropped
+// connection or an expired sign-in. Cleared once the survey is submitted.
+const DEVICE_KEY = `mads-survey:${me.shortcode}`;
+function fromDevice(): Answers | null {
+  try {
+    const kept = localStorage.getItem(DEVICE_KEY);
+    return kept ? (JSON.parse(kept) as Answers) : null;
+  } catch {
+    return null;
+  }
+}
+function toDevice(value: Answers | null) {
+  try {
+    if (value) localStorage.setItem(DEVICE_KEY, JSON.stringify(value));
+    else localStorage.removeItem(DEVICE_KEY);
+  } catch {
+    // Private browsing or full storage: the server's copy is still there.
+  }
 }
 
-// Survey form stuff
-const formData = reactive({
-  name: '',
-  interests: {
-    alcohol: 0,
-    anime: 0,
-    artGraphics: 0,
-    baking: 0,
-    tabletopGames: 0,
-    charity: 0,
-    clubbing: 0,
-    cooking: 0,
-    danceBallroom: 0,
-    danceContemporary: 0,
-    dramatics: 0,
-    film: 0,
-    finance: 0,
-    exerciseAndHealth: 0,
-    hiking: 0,
-    kpop: 0,
-    martialArts: 0,
-    performingMusicPopRockJazz: 0,
-    performingMusicClassical: 0,
-    photography: 0,
-    politics: 0,
-    videoGames: 0,
-    football: 0,
-    rugby: 0,
-    rowing: 0,
-    racketSports: 0,
-    otherSports: 0
-  },
-  aboutMe: '',
-  gender: 'male',
-  course: 'computing'
+// Start from the newest copy of what was typed: this browser's, the server's draft, then the
+// last submission. The shortcode is always the signed-in one.
+const answers = reactive<Answers>({
+  ...(me.draft ?? me.answers ?? {}),
+  [LOCKED]: me.shortcode
 });
-const formSocials = ref<string[]>([]);
+onMounted(() => {
+  const kept = fromDevice();
+  if (kept) Object.assign(answers, kept, { [LOCKED]: me.shortcode });
+});
 
-const validUrls = ref<boolean[]>([]);
-watch(
-  () => formSocials,
-  (_new, _old) => {
-    validUrls.value = formSocials.value.map(url => {
-      if (!url.length) return true;
-      const zResult = z.string().url().safeParse(url);
-      return zResult.success;
+const stages = surveyFor(me.role).stages;
+const editing = ref(!me.completedSurvey);
+const step = ref(0);
+const stage = computed(() => stages[step.value]!);
+const last = computed(() => step.value == stages.length - 1);
+const problem = ref('');
+const saving = ref(false);
+
+/**
+ * Where the answers on screen have got to: saved to the server, on their way, or kept only in
+ * this browser because the server can't take them right now.
+ */
+type SaveState = 'saved' | 'saving' | 'offline' | 'signed-out' | 'closed';
+const saveState = ref<SaveState>('saved');
+
+const statusOf = (err: unknown) =>
+  (err as { statusCode?: number; status?: number }).statusCode ??
+  (err as { status?: number }).status;
+
+let timer: ReturnType<typeof setTimeout> | undefined;
+let retry: ReturnType<typeof setTimeout> | undefined;
+
+async function saveDraft() {
+  clearTimeout(timer);
+  clearTimeout(retry);
+  saveState.value = 'saving';
+  try {
+    await $fetch('/api/family/draft', {
+      method: 'POST',
+      body: { answers: { ...answers } }
     });
+    saveState.value = 'saved';
+  } catch (err) {
+    const status = statusOf(err);
+    if (status == 401) saveState.value = 'signed-out';
+    else if (status == 403) saveState.value = 'closed';
+    else {
+      saveState.value = 'offline';
+      retry = setTimeout(saveDraft, 5000);
+    }
+  }
+}
+
+// Every change is kept in this browser at once, and sent to the server once typing pauses.
+watch(
+  answers,
+  () => {
+    if (!editing.value) return;
+    toDevice({ ...answers });
+    saveState.value = 'saving';
+    clearTimeout(timer);
+    timer = setTimeout(saveDraft, 800);
   },
-  {
-    deep: true
-  }
+  { deep: true }
 );
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  clearTimeout(retry);
+});
 
-async function handleSubmit() {
-  if (!validUrls.value.every(url => url)) {
-    alert(
-      'Some of the Social media URLs are invalid. Please check them again.'
-    );
-    return;
+/** A question's label, unless the card's title already says it. */
+const labelFor = (field: Field) =>
+  field.label == stage.value.title ? '' : field.label;
+/** A question's hint, unless the card's blurb already says it. */
+const hintFor = (field: Field) =>
+  'hint' in field && field.hint != stage.value.blurb ? field.hint : undefined;
+const isOptional = (field: Field) =>
+  'optional' in field && field.optional == true;
+const textOf = (key: string) => answers[key] as string | undefined;
+const setText = (key: string, value: string | undefined) => {
+  if (value === undefined || value === '') delete answers[key];
+  else answers[key] = value;
+};
+const chipsOf = (key: string) => (answers[key] as string[] | undefined) ?? [];
+
+/** Why this card can't be left yet, or nothing if it can. */
+function problemOnThisCard() {
+  for (const key of Object.keys(stage.value.fields)) {
+    const wrong = formatProblem(key, answers[key]);
+    if (wrong) return wrong;
   }
+  const [first] = missingOn(stage.value, answers);
+  if (!first) return '';
+  const field = stage.value.fields[first]!;
+  if (field.kind == 'chips') return 'Pick at least one to carry on.';
+  return `Answer "${field.label}" to carry on.`;
+}
 
-  const confirmation = confirm(
-    'Are you sure you want to submit? You cannot redo this survey.'
-  );
-  if (!confirmation) return;
+function next() {
+  problem.value = problemOnThisCard();
+  if (problem.value) return;
+  step.value += 1;
+  void saveDraft();
+}
 
+function back() {
+  problem.value = '';
+  step.value -= 1;
+}
+
+async function submit() {
+  problem.value = problemOnThisCard();
+  if (problem.value || saving.value) return;
+  saving.value = true;
   try {
     await $fetch('/api/family/survey', {
       method: 'POST',
-      headers,
-      body: {
-        name: formData.name,
-        interests: formData.interests,
-        aboutMe: formData.aboutMe,
-        socials: formSocials.value.filter(url => url.length),
-        gender: formData.gender,
-        jmc: formData.course == 'jmc'
-      }
+      body: { answers: { ...answers } }
     });
-
-    navigateTo('/portal');
+    toDevice(null);
+    clearTimeout(timer);
+    saveState.value = 'saved';
+    setUser(await $fetch<IStudent>('/api/family/me'));
+    editing.value = false;
+    step.value = 0;
   } catch (err) {
-    // @ts-ignore error type to be checked later
-    alert(err.message);
+    const status = statusOf(err);
+    if (status == 401) saveState.value = 'signed-out';
+    problem.value =
+      status == 401
+        ? ''
+        : ((err as { data?: { error?: string } }).data?.error ??
+          "We couldn't save your answers. Please try again.");
+  } finally {
+    saving.value = false;
   }
 }
 </script>
 
 <template>
-  <Card>
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
-      <SurveyGroup label="Preferred Name:" :required="true">
-        <input
-          class="inline-block w-full"
-          type="text"
-          v-model="formData.name"
-          required />
-      </SurveyGroup>
+  <Card v-if="currentState != 'open'">
+    <CardTitle>Sign-ups are closed</CardTitle>
+    <CardText class="mt-4 text-center">
+      The survey isn't taking answers right now.
+      <NuxtLink to="/portal">Back to the portal</NuxtLink>
+    </CardText>
+  </Card>
 
-      <SurveyGroup label="Interests:" :required="true">
-        <SurveyMatrix
-          :labels="interestLabels"
-          v-model="formData.interests"
-          :required="true" />
-      </SurveyGroup>
+  <Card v-else-if="!editing">
+    <CardTitle>
+      {{ currentUser!.role == 'fresher' ? "You're in!" : 'Survey done' }}
+    </CardTitle>
+    <CardText class="mt-4">
+      {{
+        currentUser!.role == 'fresher'
+          ? "We'll email you once families are allocated."
+          : 'Next, find your partner: you become parents together.'
+      }}
+      You can change your answers until sign-ups close.
+    </CardText>
+    <div class="flex flex-wrap gap-3">
+      <NuxtLink
+        v-if="currentUser!.role == 'parent'"
+        to="/proposals"
+        class="rounded bg-primary px-4 py-2 font-bold text-white hover:text-white hover:no-underline">
+        Find your partner
+      </NuxtLink>
+      <button
+        type="button"
+        class="rounded border-2 border-primary px-4 py-2 font-bold text-primary"
+        @click="editing = true">
+        Change my answers
+      </button>
+    </div>
+  </Card>
 
-      <SurveyGroup
-        label="If you'd like to write a few words to introduce yourself to the rest of your family, here's your chance. Your family will see this once the families have been assigned:"
-        :required="false">
-        <textarea class="inline-block w-full" v-model="formData.aboutMe" />
-      </SurveyGroup>
+  <Card v-else>
+    <div class="mb-4">
+      <p class="text-sm text-gray-600">{{ step + 1 }} of {{ stages.length }}</p>
+      <div class="mt-1 h-2 rounded-full bg-gray-200">
+        <div
+          class="h-2 rounded-full bg-primary transition-all"
+          :style="{ width: `${((step + 1) / stages.length) * 100}%` }" />
+      </div>
+    </div>
 
-      <SurveyGroup
-        label="Social Media links so other family members can contact you prior to the first social:"
-        :required="false">
-        <div class="flex flex-col gap-2">
+    <p
+      v-if="saveState == 'signed-out'"
+      role="alert"
+      class="mb-4 rounded bg-amber-50 p-3">
+      You've been logged out, but your answers are kept on this device.
+      <NuxtLink to="/login?next=/survey">Log in again</NuxtLink>
+      to carry on where you left off.
+    </p>
+    <p
+      v-else-if="saveState == 'closed'"
+      role="alert"
+      class="mb-4 rounded bg-amber-50 p-3">
+      Sign-ups have just closed, so these answers can't be saved.
+    </p>
+    <p
+      v-else
+      class="mb-4 text-sm"
+      :class="saveState == 'offline' ? 'text-amber-700' : 'text-gray-600'"
+      data-testid="save-state">
+      <Brace
+        :mark="saveState == 'saved' ? 'ok' : saveState == 'saving' ? '..' : '!'"
+        :tone="
+          saveState == 'saved'
+            ? 'done'
+            : saveState == 'saving'
+              ? 'todo'
+              : 'warn'
+        " />
+      {{
+        saveState == 'saved'
+          ? 'Your answers are saved'
+          : saveState == 'saving'
+            ? 'Saving…'
+            : "Can't reach the server: kept on this device, retrying"
+      }}
+    </p>
+
+    <form
+      class="flex flex-col gap-4"
+      @submit.prevent="last ? submit() : next()">
+      <h2 class="text-2xl font-medium">{{ stage.title }}</h2>
+      <p v-if="stage.blurb" class="text-gray-600">{{ stage.blurb }}</p>
+
+      <div
+        v-for="(field, key) in stage.fields"
+        :key="key"
+        class="flex flex-col gap-1">
+        <template v-if="field.kind == 'note'">
+          <p v-for="line in field.body.split('\n')" :key="line">{{ line }}</p>
+        </template>
+
+        <template v-else>
+          <label
+            v-if="labelFor(field)"
+            :for="`answer-${key}`"
+            class="font-bold">
+            {{ labelFor(field) }}
+            <span v-if="isOptional(field)" class="font-normal text-gray-600">
+              (optional)
+            </span>
+          </label>
+          <span
+            v-if="
+              hintFor(field) && field.kind != 'text' && field.kind != 'prose'
+            "
+            class="text-sm text-gray-600">
+            {{ hintFor(field) }}
+          </span>
+
+          <input
+            v-if="key == LOCKED"
+            :id="`answer-${key}`"
+            :value="answers[key]"
+            type="text"
+            readonly
+            class="rounded bg-gray-100 text-gray-700" />
+
           <div
-            class="flex gap-5"
-            v-for="(_, index) in formSocials"
-            :key="index">
-            <div class="relative flex-grow">
-              <input
-                type="text"
-                :class="`w-full ${!validUrls[index] ? 'pr-20' : ''}`"
-                v-model="formSocials[index]"
-                placeholder="https://instagram.com/docsoc" />
-              <span
-                v-if="!validUrls[index]"
-                class="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-red-600 px-1 text-white">
-                Invalid
-              </span>
-            </div>
-            <button
-              class="rounded bg-red-600 p-2 text-center text-white"
-              @click.prevent="formSocials.splice(index, 1)">
-              Remove Link
-            </button>
+            v-else-if="field.kind == 'text' && field.prefix"
+            class="flex items-center rounded border border-gray-500">
+            <span class="pl-3 text-gray-500">{{ field.prefix }}</span>
+            <input
+              :id="`answer-${key}`"
+              :value="textOf(key)"
+              type="text"
+              autocapitalize="none"
+              :placeholder="hintFor(field)"
+              class="w-full rounded border-0"
+              @input="
+                setText(key, ($event.target as HTMLInputElement).value)
+              " />
           </div>
-          <button
-            class="self-start rounded bg-green-600 p-2 text-center text-white"
-            @click.prevent="formSocials.push('')">
-            Add Link
-          </button>
-        </div>
-      </SurveyGroup>
 
-      <SurveyGroup label="Gender:" :required="true">
-        <SurveySelect
-          :options="['male', 'female', 'other', 'n/a']"
-          :labels="['Male', 'Female', 'Other', 'Prefer not to say']"
-          name="gender"
-          v-model="formData.gender"
-          :required="true" />
-      </SurveyGroup>
-      <SurveyGroup label="Course:" :required="true">
-        <SurveySelect
-          :options="['computing', 'jmc']"
-          :labels="['Computing', 'JMC']"
-          name="course"
-          v-model="formData.course"
-          :required="true" />
-      </SurveyGroup>
+          <input
+            v-else-if="field.kind == 'text'"
+            :id="`answer-${key}`"
+            :value="textOf(key)"
+            type="text"
+            :placeholder="hintFor(field)"
+            class="rounded"
+            @input="setText(key, ($event.target as HTMLInputElement).value)" />
 
-      <input
-        type="submit"
-        value="Submit"
-        class="cursor-pointer rounded border bg-primary px-3 py-1 font-semibold text-white" />
+          <textarea
+            v-else-if="field.kind == 'prose'"
+            :id="`answer-${key}`"
+            :value="textOf(key)"
+            rows="4"
+            maxlength="1000"
+            :placeholder="hintFor(field)"
+            class="rounded"
+            @input="
+              setText(key, ($event.target as HTMLTextAreaElement).value)
+            " />
+
+          <SurveyPhoneInput
+            v-else-if="field.kind == 'phone'"
+            :id="`answer-${key}`"
+            :model-value="textOf(key)"
+            @update:model-value="setText(key, $event)" />
+
+          <SurveyChoiceList
+            v-else-if="field.kind == 'choice'"
+            :name="key"
+            :options="field.options"
+            :model-value="textOf(key)"
+            @update:model-value="setText(key, $event)" />
+
+          <SurveyChips
+            v-else-if="field.kind == 'chips'"
+            :groups="field.groups"
+            :model-value="chipsOf(key)"
+            @update:model-value="answers[key] = $event" />
+        </template>
+      </div>
+
+      <p v-if="problem" role="alert" class="text-red-600">{{ problem }}</p>
+
+      <div class="flex justify-between gap-3">
+        <button
+          type="button"
+          class="rounded px-4 py-2 font-bold text-primary disabled:invisible"
+          :disabled="step == 0"
+          @click="back">
+          Back
+        </button>
+        <button
+          type="submit"
+          :disabled="saving"
+          class="rounded bg-primary px-6 py-2 font-bold text-white disabled:opacity-60">
+          {{
+            !last
+              ? 'Continue'
+              : saving
+                ? 'Saving…'
+                : currentUser!.completedSurvey
+                  ? 'Save my answers'
+                  : 'Submit'
+          }}
+        </button>
+      </div>
     </form>
   </Card>
 </template>

@@ -32,3 +32,10 @@ families.csv
 
 # db certfile, in case you need to make local connections
 certfile.crt
+# e2e run artefacts
+e2e/.run/
+test-results/
+playwright-report/
+
+# Freshers listed by hono/seed.ts: names and emails, never committed.
+students.json

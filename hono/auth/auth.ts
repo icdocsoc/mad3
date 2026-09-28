@@ -1,6 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { MicrosoftGraphClient, MsAuthClient } from './MsApiClient';
+import { createHash, randomInt, timingSafeEqual } from 'crypto';
+import { eq } from 'drizzle-orm';
+import { db } from '../db';
+import factory from '../factory';
+import { students } from '../family/schema';
+import { apiLogger } from '../logger';
+import { sendEmail } from '../mailer';
+import type { UserRole } from '../types';
 import {
   academicYear,
   generateCookieHeader,
@@ -8,344 +14,259 @@ import {
   isFresherOrParent,
   newToken
 } from './jwt';
-import factory from '../factory';
-import { apiLogger } from '../logger';
-import { db } from '../db';
-import { students } from '../family/schema';
-import { and, eq, gt } from 'drizzle-orm';
-import { states } from '../admin/schema';
-import { sendEmail } from '../mailer';
-import { randomBytes } from 'crypto';
-import {
-  oauthCallbackSchema,
-  emailCallbackSchema,
-  loginSchema,
-  authTokens
-} from './schema';
+import { loginCodes, loginSchema, verifySchema } from './schema';
 
-const stateManager = {
-  newState: async (state: string) => {
-    // State expires 10 minutes from now
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    await db.insert(states).values({
-      state: state,
-      expiresAt: expiresAt
-    });
-  },
-  stateExists: async (state: string) => {
-    const statesInDb = await db
-      .select()
-      .from(states)
-      .where(and(eq(states.state, state), gt(states.expiresAt, new Date())));
-    return statesInDb.length > 0;
-  },
-  removeState: async (state: string) => {
-    await db.delete(states).where(eq(states.state, state));
-  }
-};
+/**
+ * Sign-in is a six-digit code emailed to a shortcode address and typed back on the site.
+ * Links were used before, but anything that opened the link first (a mail scanner, a phone's
+ * mail app with its own browser) used it up or signed in the wrong browser. A code only works
+ * where it is typed.
+ */
 
-const msAuth = new MsAuthClient(
-  ['User.Read'],
-  {
-    tenantId: process.env.TENANT_ID!,
-    clientId: process.env.CLIENT_ID!,
-    clientSecret: process.env.CLIENT_SECRET!
-  },
-  `${process.env.BASE_URL}/finish-oauth`,
-  stateManager
-);
+const CODE_MINUTES = 10;
+const RESEND_SECONDS = 60;
+const MAX_ATTEMPTS = 5;
+
+// Expire the session after 4 weeks: long enough for MaDs to only sign in once.
+const SESSION_SECONDS = 28 * 24 * 60 * 60;
+
+const hash = (email: string, code: string) =>
+  createHash('sha256').update(`${email}:${code}`).digest('hex');
+
+const bytes = (text: string) => new TextEncoder().encode(text);
+const sameHash = (a: string, b: string) =>
+  a.length == b.length && timingSafeEqual(bytes(a), bytes(b));
 
 const abcApi = {
   baseUrl: process.env.ABC_API_BASE,
   auth: `Basic ${btoa(`${process.env.ABC_API_USER}:${process.env.ABC_API_PASS}`)}`,
-  identity: async (shortcode: string, year: number) => {
-    const url = `${abcApi.baseUrl}/${year - 1}${year}/identity?login=${shortcode}`;
-    const abcReq = await fetch(url, {
-      headers: {
-        Authorization: abcApi.auth
-      }
-    });
-    return abcReq;
+  // Eligible parents are on Scientia as of last academic year.
+  identity: (shortcode: string) => {
+    const year = academicYear();
+    return fetch(
+      `${abcApi.baseUrl}/${year - 1}${year}/identity?login=${shortcode}`,
+      { headers: { Authorization: abcApi.auth } }
+    );
   }
 };
 
+/** What went wrong with an address, in words someone can act on. */
+function addressProblem(email: unknown) {
+  if (typeof email == 'string' && /@imperial\.ac\.uk\s*$/i.test(email)) {
+    return 'Use your shortcode (like ab1224), not your long first.last email.';
+  }
+  return 'Enter your Imperial shortcode, like ab1224.';
+}
+
+type Eligibility =
+  | { ok: true; role: UserRole; completedSurvey: boolean; isNew: boolean }
+  | { ok: false; status: 400 | 403 | 503; error: string };
+
+/**
+ * Whether someone may use MaDs. Freshers are seeded into the database, as is anyone the
+ * committee lets in by hand; everyone else must be a DoC student on ABC as of last year.
+ */
+async function eligibility(
+  shortcode: string,
+  email: string
+): Promise<Eligibility> {
+  const [student] = await db
+    .select()
+    .from(students)
+    .where(eq(students.shortcode, shortcode));
+  if (student) {
+    return {
+      ok: true,
+      role: student.role,
+      completedSurvey: student.completedSurvey,
+      isNew: false
+    };
+  }
+
+  let identity: Response;
+  try {
+    identity = await abcApi.identity(shortcode);
+  } catch {
+    identity = new Response(null, { status: 503 });
+  }
+  if (identity.status == 404) {
+    return {
+      ok: false,
+      status: 403,
+      error:
+        "We couldn't find you as a DoC Computing or JMC student. If you are one, email docsoc@ic.ac.uk and we'll let you in."
+    };
+  }
+  if (!identity.ok) {
+    return {
+      ok: false,
+      status: 503,
+      error:
+        "We couldn't check your student record just now. Please try again in a minute."
+    };
+  }
+
+  try {
+    return {
+      ok: true,
+      role: isFresherOrParent(email),
+      completedSurvey: false,
+      isNew: true
+    };
+  } catch {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        'Your shortcode has no entry year, so we cannot tell if you are a fresher or a parent.'
+    };
+  }
+}
+
 const auth = factory
   .createApp()
-  .get('/signIn', grantAccessTo('unauthenticated'), async ctx => {
-    // Redirect the user to the Microsoft oAuth sign in.
-    return ctx.redirect(msAuth.getRedirectUrl());
-  })
-  .get(
-    '/signOut',
-    zValidator(
-      'query',
-      z.object({
-        redirect: z.string().optional()
-      })
-    ),
-    grantAccessTo('authenticated'),
-    async ctx => {
-      // Delete their JWT cookie.
-      ctx.header('Set-Cookie', generateCookieHeader('', 0));
-      const query = ctx.req.valid('query');
-
-      const path = query.redirect || '';
-      const redirectUrl = process.env.BASE_URL! + path + '?loggedOut=true';
-
-      return ctx.redirect(redirectUrl);
-    }
-  )
-  .post(
-    '/callback-oauth',
-    grantAccessTo('unauthenticated'),
-    zValidator('json', oauthCallbackSchema, async (zRes, ctx) => {
-      if (!zRes.success || zRes.data.error_description) {
-        apiLogger.warn(
-          ctx,
-          'Microsoft Entra Error:',
-          zRes.data.error_description
-        );
-        return ctx.text('Invalid request.', 400);
-      }
-    }),
-    async ctx => {
-      const { code, state } = ctx.req.valid('json');
-
-      let client: MicrosoftGraphClient;
-      try {
-        client = await msAuth.verifyAndConsumeCode(code, state);
-      } catch (e) {
-        apiLogger.error(ctx, 'Microsoft auth error:', e);
-        return ctx.text('Internal server error.', 500);
-      }
-
-      // Get their department, short, and long email.
-      const res = await client.get('/me', [
-        'department',
-        'userPrincipalName',
-        'mail'
-      ]);
-
-      const shortcode = res.userPrincipalName.match(/.*(?=@)/g);
-      if (shortcode == null) {
-        return ctx.json(
-          {
-            error: 'User has no shortcode.'
-          },
-          400
-        );
-      }
-
-      const studentInDb = await db
-        .select()
-        .from(students)
-        .where(eq(students.shortcode, shortcode[0]));
-
-      // We allow them to pass even as non-Computing students if they
-      // exist in the DB. This is done for cases where there is a
-      // non Computing member on committee who needs access to the
-      // admin portal, or a non computing member who is eligible to
-      // be a parent or student, somehow.
-      if (studentInDb.length == 0 && res.department != 'Computing') {
-        return ctx.json(
-          {
-            error: 'You are not a Computing student :('
-          },
-          403
-        );
-      }
-
-      let token: string;
-      try {
-        token = await newToken(res.mail, shortcode[0]);
-      } catch (e) {
-        // The only error we can get is that it fails to get an entry year.
-        return ctx.json(
-          {
-            error: 'User has no entry year. Are you a professor?'
-          },
-          400
-        );
-      }
-      const user_is = isFresherOrParent(res.mail);
-
-      // Expire the JWT after 4 weeks.
-      // Should be long enough for MaDs to only sign in once.
-      const maxAge = 28 * 24 * 60 * 60;
-      ctx.header('Set-Cookie', generateCookieHeader(token, maxAge));
-
-      let completedSurvey = false;
-      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey)
-        completedSurvey = true;
-      else if (studentInDb.length == 0) {
-        await db.insert(students).values({
-          shortcode: shortcode[0],
-          role: user_is,
-          completedSurvey: false
-        });
-      }
-
-      return ctx.json(
-        {
-          user_is: user_is,
-          done_survey: completedSurvey
-        },
-        200
-      );
-    }
-  )
   .post(
     '/login',
-    grantAccessTo('unauthenticated'),
+    grantAccessTo('all'),
     zValidator('json', loginSchema, async (zRes, ctx) => {
       if (!zRes.success) {
-        return ctx.json(
-          {
-            error: 'No valid Imperial email provided.'
-          },
-          400
-        );
+        const body = await ctx.req.json().catch(() => ({}));
+        return ctx.json({ error: addressProblem(body?.email) }, 400);
       }
     }),
     async ctx => {
-      // Valid Imperial shortcode email by login schema
       const { email } = ctx.req.valid('json');
 
-      // Generate sign in token
-      const token = randomBytes(16).toString('hex');
-      const issuedAt = new Date();
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      const [previous] = await db
+        .select({ sentAt: loginCodes.sentAt })
+        .from(loginCodes)
+        .where(eq(loginCodes.email, email));
+      const wait = previous
+        ? RESEND_SECONDS -
+          Math.floor((Date.now() - previous.sentAt.getTime()) / 1000)
+        : 0;
+      if (wait > 0) {
+        return ctx.json(
+          {
+            error: `We just sent you a code. You can ask for another in ${wait} seconds.`
+          },
+          429
+        );
+      }
 
-      await db.insert(authTokens).values({
-        token,
-        email,
-        issuedAt,
-        expiresAt
-      });
+      const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+      try {
+        await sendEmail(
+          ctx,
+          email,
+          `[Mums and Dads] Your sign-in code is ${code}`,
+          `Your Mums and Dads sign-in code is ${code}. It works for ${CODE_MINUTES} minutes. If you didn't ask for it, you can ignore this email.`,
+          `<p>Your Mums and Dads sign-in code is</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p><p>It works for ${CODE_MINUTES} minutes. If you didn't ask for it, you can ignore this email.</p>`
+        );
+      } catch (e) {
+        apiLogger.error(ctx, 'Could not send a sign-in code:', e);
+        return ctx.json(
+          {
+            error:
+              "We couldn't send your code just now. Please try again in a minute."
+          },
+          502
+        );
+      }
 
-      const link = `${process.env.BASE_URL}/finish-email?token=${token}`;
+      // Only once the email has gone: a code nobody received must not block a retry.
+      const now = new Date();
+      const row = {
+        codeHash: hash(email, code),
+        expiresAt: new Date(now.getTime() + CODE_MINUTES * 60 * 1000),
+        sentAt: now,
+        attempts: 0
+      };
+      await db
+        .insert(loginCodes)
+        .values({ email, ...row })
+        .onConflictDoUpdate({ target: loginCodes.email, set: row });
 
-      const user_is = isFresherOrParent(email);
-      const warmWelcome =
-        user_is === 'parent'
-          ? 'Thanks for your interest in being a parent :>'
-          : 'Welcome to DoCSoc!';
-
-      await sendEmail(
-        ctx,
-        email,
-        '[Mums and Dads] Sign in link',
-        'Use the following link to sign in: ' + link,
-        `<p>Hey! ${warmWelcome} <br> Click <a href="${link}">here</a> to complete your sign in.</p>`
-      );
-
-      return ctx.json({}, 200);
+      return ctx.json({ sent: true }, 200);
     }
   )
   .post(
-    '/callback-email',
-    grantAccessTo('unauthenticated'),
-    zValidator('json', emailCallbackSchema, async (zRes, ctx) => {
+    '/verify',
+    grantAccessTo('all'),
+    zValidator('json', verifySchema, async (zRes, ctx) => {
       if (!zRes.success) {
         return ctx.json(
-          {
-            error: 'No valid token provided.'
-          },
+          { error: 'Enter the six-digit code from your email.' },
           400
         );
       }
     }),
     async ctx => {
-      const { token } = ctx.req.valid('json');
+      const { email, code } = ctx.req.valid('json');
 
-      const tokenInDb = await db
-        .delete(authTokens)
-        .where(
-          and(eq(authTokens.token, token), gt(authTokens.expiresAt, new Date()))
-        )
-        .returning();
-
-      if (tokenInDb.length == 0) {
-        return ctx.json(
-          {
-            error: 'Invalid or expired token.'
-          },
-          400
-        );
-      }
-
-      const email = tokenInDb[0]!.email;
-      const shortcode = email.match(/.*(?=@)/g);
-      // Should not happen
-      if (shortcode == null) {
-        return ctx.json(
-          {
-            error: 'User has no shortcode.'
-          },
-          400
-        );
-      }
-
-      // Allow if in db - this will be freshers, plus anyone manually added
-      const studentInDb = await db
+      const [pending] = await db
         .select()
-        .from(students)
-        .where(eq(students.shortcode, shortcode[0]));
+        .from(loginCodes)
+        .where(eq(loginCodes.email, email));
+      if (!pending || pending.expiresAt.getTime() < Date.now()) {
+        return ctx.json(
+          { error: 'That code has expired. Ask for a new one.' },
+          400
+        );
+      }
 
-      // Else check via ABC API for last academic year - eligible parents
-      if (studentInDb.length == 0) {
-        const abcReq = await abcApi.identity(shortcode[0], academicYear);
-
-        if (abcReq.status != 200) {
+      if (!sameHash(pending.codeHash, hash(email, code))) {
+        const attempts = pending.attempts + 1;
+        if (attempts >= MAX_ATTEMPTS) {
+          await db.delete(loginCodes).where(eq(loginCodes.email, email));
           return ctx.json(
-            {
-              error: 'You are not a Computing student :('
-            },
-            403
+            { error: 'Too many wrong codes. Ask for a new one.' },
+            429
           );
         }
-      }
-
-      // Now we know they're eligible to sign in, create and return a JWT
-      let jwt: string;
-      try {
-        jwt = await newToken(email, shortcode[0]);
-      } catch (e) {
-        // The only error we can get is that it fails to get an entry year.
+        await db
+          .update(loginCodes)
+          .set({ attempts })
+          .where(eq(loginCodes.email, email));
+        const left = MAX_ATTEMPTS - attempts;
         return ctx.json(
           {
-            error: 'User has no entry year. Are you a professor?'
+            error: `That code isn't right. You have ${left} ${left == 1 ? 'try' : 'tries'} left.`
           },
           400
         );
       }
-      const user_is = studentInDb[0]?.role ?? isFresherOrParent(email);
 
-      // Expire the JWT after 4 weeks.
-      // Should be long enough for MaDs to only sign in once.
-      const maxAge = 28 * 24 * 60 * 60;
-      ctx.header('Set-Cookie', generateCookieHeader(jwt, maxAge));
+      await db.delete(loginCodes).where(eq(loginCodes.email, email));
 
-      let completedSurvey = false;
-      if (studentInDb.length == 1 && studentInDb[0]?.completedSurvey) {
-        completedSurvey = true;
-      } else if (studentInDb.length == 0) {
-        await db.insert(students).values({
-          shortcode: shortcode[0],
-          role: user_is,
-          completedSurvey: false
-        });
+      const shortcode = email.split('@')[0]!;
+      const eligible = await eligibility(shortcode, email);
+      if (!eligible.ok) {
+        return ctx.json({ error: eligible.error }, eligible.status);
       }
 
+      if (eligible.isNew) {
+        await db
+          .insert(students)
+          .values({ shortcode, role: eligible.role, completedSurvey: false })
+          .onConflictDoNothing();
+      }
+
+      const token = await newToken(shortcode, eligible.role);
+      ctx.header('Set-Cookie', generateCookieHeader(token, SESSION_SECONDS));
+
       return ctx.json(
-        {
-          user_is: user_is,
-          done_survey: completedSurvey
-        },
+        { user_is: eligible.role, done_survey: eligible.completedSurvey },
         200
       );
     }
   )
+  // A POST, so a link preview or a prefetch can't sign anyone out.
+  .post('/signOut', grantAccessTo('all'), async ctx => {
+    // Delete their JWT cookie.
+    ctx.header('Set-Cookie', generateCookieHeader('', 0));
+    return ctx.redirect(`${process.env.BASE_URL ?? ''}/?loggedOut=true`);
+  })
   .get('/details', grantAccessTo('authenticated'), async ctx => {
     // Mostly a test route but doesn't hurt to keep.
     const shortcode = ctx.get('shortcode')!;

@@ -11,17 +11,23 @@ const { currentUser } = useAuth();
     </NavigationLink>
     <ul class="flex items-center gap-3">
       <li v-if="currentUser === null">
-        <!-- <a
-          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
-          href="/api/auth/signIn">
+        <NuxtLink
+          to="/login"
+          class="font-bold text-white hover:text-white hover:no-underline md:text-xl">
           Log In
-        </a> -->
-        <EmailPrompt>
-          <p
-            class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl">
-            Log In
-          </p>
-        </EmailPrompt>
+        </NuxtLink>
+      </li>
+      <li
+        v-if="currentUser"
+        class="rounded-full bg-white/15 px-3 py-1 text-sm text-white md:text-base"
+        data-testid="signed-in-as">
+        <span class="sr-only">Logged in as</span>
+        <span class="font-mono font-bold">
+          &#123;{{ currentUser.shortcode }}&#125;
+        </span>
+        <span class="max-md:hidden">
+          {{ currentUser.role == 'fresher' ? 'Fresher' : 'Parent' }}
+        </span>
       </li>
       <li v-if="currentUser !== null">
         <NavigationLink to="/portal">
@@ -29,11 +35,13 @@ const { currentUser } = useAuth();
         </NavigationLink>
       </li>
       <li v-if="currentUser !== null">
-        <a
-          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
-          href="/api/auth/signOut">
-          Log Out
-        </a>
+        <form method="post" action="/api/auth/signOut">
+          <button
+            type="submit"
+            class="font-bold text-white hover:text-white md:text-xl">
+            Log Out
+          </button>
+        </form>
       </li>
     </ul>
   </nav>

@@ -1,39 +1,10 @@
 <script setup lang="ts">
-const route = useRoute();
-
-const { token } = route.query;
-
-const { status, error } = await useFetch('/api/auth/callback-email', {
-  method: 'POST',
-  body: { token },
-  server: false
-});
-
-watch(status, () => {
-  if (status.value == 'success') navigateTo('/portal');
+// Sign-in links in old emails land here. They no longer work; send people to a code instead.
+definePageMeta({
+  middleware: () => navigateTo('/login?from=link')
 });
 </script>
 
 <template>
-  <div>
-    <Card v-if="status == 'pending' || status == 'idle'">
-      <CardTitle>We're signing you in...</CardTitle>
-    </Card>
-    <Card v-else-if="status == 'error'">
-      <CardText>
-        <strong>Error:</strong> {{ error?.data.error }}
-        <br />
-        If this is a mistake, please reply to your log in link email letting us
-        know.
-      </CardText>
-    </Card>
-    <Card v-else-if="status == 'success'">
-      <CardTitle>You are being redirected</CardTitle>
-      <CardText>
-        Please click
-        <NuxtLink to="/portal">this link</NuxtLink>
-        if not automatically redirected.
-      </CardText>
-    </Card>
-  </div>
+  <div />
 </template>

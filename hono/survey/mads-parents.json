@@ -1,0 +1,503 @@
+{
+  "title": "Mums and Dads: parents",
+  "version": 1,
+  "audience": "returning",
+  "closed": {
+    "title": "Not open yet",
+    "body": "Parents' sign-ups have not started. We will email you when they do."
+  },
+  "notForYou": {
+    "title": "This one is for parents",
+    "body": "Parents are students in their second year or later. If you are a first year, the freshers' survey is the one for you."
+  },
+  "stages": [
+    {
+      "id": "you",
+      "title": "Hello my name is...",
+      "blurb": "We use this to introduce you to your family. Nothing here is shared with others.",
+      "fields": {
+        "name": {
+          "kind": "text",
+          "label": "Full name",
+          "hint": "Nicolas Wu"
+        },
+        "preferredName": {
+          "kind": "text",
+          "label": "Preferred name",
+          "hint": "Nick",
+          "optional": true
+        },
+        "shortcode": {
+          "kind": "text",
+          "label": "Imperial shortcode",
+          "hint": "nw1926"
+        },
+        "course": {
+          "kind": "choice",
+          "label": "Course",
+          "hint": "Computing and JMC timetables clash.",
+          "options": [
+            {
+              "value": "computing",
+              "label": "Computing"
+            },
+            {
+              "value": "jmc",
+              "label": "Joint Maths and Computing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "why",
+      "title": "How this works",
+      "fields": {
+        "why": {
+          "kind": "note",
+          "label": "How this works",
+          "body": "Your answers go into a deterministic matchmaking algorithm, which gives you and your partner a few freshers as your kids. That's all your answers are used for.\nOnce you're matched, your profile is shared with your kids."
+        }
+      }
+    },
+    {
+      "id": "commute",
+      "title": "During term I live...",
+      "blurb": "So we understand how easy it is for you to get to campus.",
+      "fields": {
+        "commute": {
+          "kind": "choice",
+          "label": "During term I live...",
+          "hint": "So we understand how easy it is for you to get to campus.",
+          "options": [
+            {
+              "value": "halls",
+              "label": "Minutes from campus"
+            },
+            {
+              "value": "nearby",
+              "label": "Living around West London"
+            },
+            {
+              "value": "commute",
+              "label": "Living in London"
+            },
+            {
+              "value": "far",
+              "label": "Commuting from further out"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gender",
+      "title": "I identify as a...",
+      "fields": {
+        "gender": {
+          "kind": "choice",
+          "label": "I identify as a...",
+          "optional": true,
+          "options": [
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "self-describe",
+              "label": "I am...",
+              "free": true
+            },
+            {
+              "value": "unsaid",
+              "label": "Rather not say"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "drinking",
+      "title": "You're taking your kids to the pub. Responsible parenting! I'll...",
+      "fields": {
+        "drinking": {
+          "kind": "choice",
+          "label": "You're taking your kids to the pub. Responsible parenting! I'll...",
+          "options": [
+            {
+              "value": "round-buyer",
+              "label": "Race them downing pints"
+            },
+            {
+              "value": "couple",
+              "label": "Have a few, chill and talk"
+            },
+            {
+              "value": "soft-drink",
+              "label": "Come along, but I don't drink"
+            },
+            {
+              "value": "rather-not",
+              "label": "Leave the pub to my partner"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "late-nights",
+      "title": "Your family's heading to a club night. I'm...",
+      "fields": {
+        "lateNights": {
+          "kind": "choice",
+          "label": "Your family's heading to a club night. I'm...",
+          "options": [
+            {
+              "value": "out-till-late",
+              "label": "First on the dance floor, last to leave"
+            },
+            {
+              "value": "one-club-night",
+              "label": "Up for it every now and then"
+            },
+            {
+              "value": "home-by-midnight",
+              "label": "Coming for a bit, then heading home"
+            },
+            {
+              "value": "quiet",
+              "label": "Not my thing, I'd rather do something else"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "interests",
+      "title": "I'm into...",
+      "blurb": "Mash them buttons; pick anything that sounds fun!",
+      "fields": {
+        "interests": {
+          "kind": "chips",
+          "label": "I'm into...",
+          "hint": "Mash them buttons; pick anything that sounds fun!",
+          "groups": [
+            {
+              "label": "Sport",
+              "options": [
+                {
+                  "value": "football",
+                  "label": "Football"
+                },
+                {
+                  "value": "rugby",
+                  "label": "Rugby"
+                },
+                {
+                  "value": "water",
+                  "label": "Rowing, Sailing"
+                },
+                {
+                  "value": "racket",
+                  "label": "Tennis, Badminton, Squash"
+                },
+                {
+                  "value": "gym",
+                  "label": "Gym and Fitness"
+                },
+                {
+                  "value": "climbing",
+                  "label": "Climbing"
+                },
+                {
+                  "value": "running",
+                  "label": "Running"
+                },
+                {
+                  "value": "martial-arts",
+                  "label": "Martial Arts"
+                },
+                {
+                  "value": "other-sport",
+                  "label": "Something Else"
+                }
+              ]
+            },
+            {
+              "label": "Screens and Games",
+              "options": [
+                {
+                  "value": "games-together",
+                  "label": "Gaming with People"
+                },
+                {
+                  "value": "games-alone",
+                  "label": "Gaming on my Own"
+                },
+                {
+                  "value": "board-games",
+                  "label": "Board Games"
+                },
+                {
+                  "value": "binge",
+                  "label": "Bingeing TV"
+                },
+                {
+                  "value": "film",
+                  "label": "Films"
+                },
+                {
+                  "value": "anime",
+                  "label": "Anime"
+                },
+                {
+                  "value": "youtube",
+                  "label": "YouTube and Podcasts"
+                },
+                {
+                  "value": "kpop",
+                  "label": "K-Pop"
+                }
+              ]
+            },
+            {
+              "label": "Making Things",
+              "options": [
+                {
+                  "value": "art",
+                  "label": "Arts and Crafts"
+                },
+                {
+                  "value": "photography",
+                  "label": "Photography"
+                },
+                {
+                  "value": "baking",
+                  "label": "Baking"
+                },
+                {
+                  "value": "cooking",
+                  "label": "Cooking"
+                },
+                {
+                  "value": "hardware",
+                  "label": "Electronics and Hardware"
+                },
+                {
+                  "value": "hackathons",
+                  "label": "Hackathons"
+                },
+                {
+                  "value": "personal-projects",
+                  "label": "Personal Projects"
+                }
+              ]
+            },
+            {
+              "label": "Out and About",
+              "options": [
+                {
+                  "value": "hiking",
+                  "label": "Hiking"
+                },
+                {
+                  "value": "travel",
+                  "label": "Travel"
+                },
+                {
+                  "value": "cycling",
+                  "label": "Cycling"
+                },
+                {
+                  "value": "museums",
+                  "label": "Museums and Galleries"
+                },
+                {
+                  "value": "london",
+                  "label": "Exploring London"
+                }
+              ]
+            },
+            {
+              "label": "Performing",
+              "options": [
+                {
+                  "value": "drama",
+                  "label": "Drama and Musical Theatre"
+                },
+                {
+                  "value": "dance-partnered",
+                  "label": "Salsa, Ballroom, Cei"
+                },
+                {
+                  "value": "dance-folk",
+                  "label": "Cèilidh / Céilí"
+                },
+                {
+                  "value": "music-band",
+                  "label": "Playing in a Band"
+                },
+                {
+                  "value": "music-classical",
+                  "label": "Orchestra and Chamber Music"
+                }
+              ]
+            },
+            {
+              "label": "People and Ideas",
+              "options": [
+                {
+                  "value": "politics",
+                  "label": "Politics"
+                },
+                {
+                  "value": "charity",
+                  "label": "Charity and Volunteering"
+                },
+                {
+                  "value": "finance",
+                  "label": "Finance"
+                },
+                {
+                  "value": "startups",
+                  "label": "Startups"
+                },
+                {
+                  "value": "debating",
+                  "label": "Debating"
+                },
+                {
+                  "value": "languages",
+                  "label": "Languages"
+                },
+                {
+                  "value": "faith",
+                  "label": "Faith"
+                }
+              ]
+            },
+            {
+              "label": "Going Out",
+              "options": [
+                {
+                  "value": "karaoke",
+                  "label": "Karaoke"
+                },
+                {
+                  "value": "eating-out",
+                  "label": "Food and Restaurants"
+                },
+                {
+                  "value": "live-music",
+                  "label": "Gigs and Festivals"
+                },
+                {
+                  "value": "pubs",
+                  "label": "Pubs and Bars"
+                },
+                {
+                  "value": "clubbing",
+                  "label": "Clubbing"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "societies",
+      "title": "How into societies are you, and would you bring your kids along?",
+      "blurb": "The Freshers' Fair is a good excuse to show them around.",
+      "fields": {
+        "societies": {
+          "kind": "choice",
+          "label": "How into societies are you, and would you bring your kids along?",
+          "hint": "The Freshers' Fair is a good excuse to show them around.",
+          "options": [
+            {
+              "value": "everything",
+              "label": "In loads, and I'll bring the whole family!"
+            },
+            {
+              "value": "few",
+              "label": "A few I care about, happy to bring them"
+            },
+            {
+              "value": "unsure",
+              "label": "Still working out which ones"
+            },
+            {
+              "value": "little",
+              "label": "Not really my thing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "meeting-people",
+      "title": "When I meet strangers…",
+      "fields": {
+        "meetingPeople": {
+          "kind": "choice",
+          "label": "When I meet strangers…",
+          "options": [
+            {
+              "value": "energising",
+              "label": "It's the best part!"
+            },
+            {
+              "value": "fine",
+              "label": "I'm fine once I'm there"
+            },
+            {
+              "value": "depends",
+              "label": "It depends"
+            },
+            {
+              "value": "draining",
+              "label": "I find it draining"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "intro",
+      "title": "Hello there...",
+      "blurb": "Shared with your family once you are matched, and nobody else.",
+      "fields": {
+        "bio": {
+          "kind": "prose",
+          "label": "A bit about me",
+          "hint": "A couple of lines. What you are into, where you are from, anything you want your kids to know.",
+          "optional": true
+        },
+        "instagram": {
+          "kind": "text",
+          "label": "Instagram",
+          "hint": "handle",
+          "prefix": "@",
+          "optional": true
+        },
+        "discord": {
+          "kind": "text",
+          "label": "Discord",
+          "hint": "username",
+          "optional": true
+        },
+        "phone": {
+          "kind": "phone",
+          "label": "Phone",
+          "hint": "A WhatsApp number is ideal, since that is where most families end up talking. Any number is fine.",
+          "optional": true
+        }
+      }
+    }
+  ]
+}

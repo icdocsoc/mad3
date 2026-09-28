@@ -13,16 +13,23 @@ const webmasters = process.env.WEBMASTERS!.split(',');
 
 const START_OF_ACADEMIC_YEAR = 9; // September
 
-// Determine the current academic year based on if we are past October or not.
-const now = new Date();
-const year = now.getFullYear();
-const month = now.getMonth() + 1;
-const academicYearStart = month >= START_OF_ACADEMIC_YEAR ? year : year - 1;
-export const academicYear = academicYearStart % 100;
+/**
+ * The two-digit year the current academic year started in, e.g. 25 for 2025-26. Worked out on
+ * every call: the server runs for months, and a value fixed at start-up goes stale in September.
+ */
+export function academicYear(now = new Date()): number {
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  return (month >= START_OF_ACADEMIC_YEAR ? year : year - 1) % 100;
+}
+
+// Secure outside local development, where the site is served over plain http.
+const secure = process.env.BASE_URL?.startsWith('https://') ? '; Secure' : '';
 
 export const generateCookieHeader = (token: string, maxAge: number) =>
-  `Authorization=${token}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax; Path=/`;
+  `Authorization=${token}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax; Path=/${secure}`;
 
+/** Guesses a role from the entry year in an email, for somebody not yet in the database. */
 export function isFresherOrParent(email: string): 'fresher' | 'parent' {
   const entryYear = email.match(/[0-9]{2}(?=@)/);
 
@@ -30,15 +37,18 @@ export function isFresherOrParent(email: string): 'fresher' | 'parent' {
     throw new Error('User email has no entry year.');
   }
 
-  return +entryYear[0] == academicYear ? 'fresher' : 'parent';
+  return +entryYear[0] == academicYear() ? 'fresher' : 'parent';
 }
 
+/**
+ * Signs a session for a student. The role is passed in rather than read off the email, so the
+ * session always agrees with the student's row: a fresher resitting first year keeps their
+ * seeded role even though their email says an earlier year.
+ */
 export async function newToken(
-  email: string,
-  shortcode: string
+  shortcode: string,
+  user_is: UserRole
 ): Promise<string> {
-  const user_is = isFresherOrParent(email);
-
   // Expire the token after 28 days, same with the cookie.
   const jwtExpiry = new Date();
   jwtExpiry.setDate(jwtExpiry.getDate() + 28);
@@ -82,7 +92,7 @@ export const decodeToken = () =>
         );
       } else if (e instanceof JwtTokenExpired) {
         // Delete their JWT token.
-        ctx.header('Set-Cookie', `Authorization= ; Max-Age=0; HttpOnly`);
+        ctx.header('Set-Cookie', generateCookieHeader('', 0));
       }
     }
 
@@ -91,7 +101,6 @@ export const decodeToken = () =>
 
 export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
   factory.createMiddleware(async (ctx, next) => {
-    const no_auth = 'You do not have access to this route.';
     const role = ctx.get('user_is');
     const shortcode = ctx.get('shortcode');
 
@@ -99,7 +108,7 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
 
     if (role == null || shortcode == null) {
       if (roles.includes('unauthenticated')) return await next();
-      else return ctx.text(no_auth, 403);
+      return ctx.json({ error: 'Please log in first.' }, 401);
     }
 
     if (roles.includes('admin') && webmasters.includes(shortcode))
@@ -107,7 +116,6 @@ export const grantAccessTo = (...roles: [AuthRoles, ...AuthRoles[]]) =>
 
     if (roles.includes(role) || roles.includes('authenticated')) {
       return await next();
-    } else {
-      return ctx.text(no_auth, 403);
     }
+    return ctx.json({ error: 'This page is not for your account.' }, 403);
   });

@@ -8,16 +8,15 @@ declare interface IStudent {
   interests: Record<string, 0 | 1 | 2> | null;
   socials: string[] | null;
   aboutMe: string | null;
+  // Every survey answer, keyed as in hono/survey/mads.json.
+  answers: Record<string, string | string[]> | null;
+  // Answers typed since, saved as they happen; becomes `answers` when submitted.
+  draft: Record<string, string | string[]> | null;
 }
 
 // Is it worth making a sharedTypes for this one singular type?
 // Unsure if IStudent would be able to go under that as it's a z.infer
-declare const stateOptions = [
-  'parents_open',
-  'parents_close',
-  'freshers_open',
-  'closed'
-] as const;
+declare const stateOptions = ['open', 'closed'] as const;
 declare type State = (typeof stateOptions)[number];
 
 declare type IFamily = {

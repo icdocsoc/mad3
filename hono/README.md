@@ -56,7 +56,7 @@ type Response = {
 
 # **/family**
 
-## `POST /survey` - authenticated, parents_open | freshers_open
+## `POST /survey` - authenticated, open
 
 ```ts
 {
@@ -73,7 +73,7 @@ type Response = {
 
 **200** - Updates these details for the user.
 
-## `POST /propose` - parent, parents_open
+## `POST /propose` - parent, open
 
 ```ts
 {
@@ -85,7 +85,7 @@ type Response = {
 
 **200** - Proposes to `shortcode`.
 
-## `DELETE /propose` - parent, parents_open
+## `DELETE /propose` - parent, open
 
 ```ts
 {
@@ -97,7 +97,7 @@ type Response = {
 
 **200** - Revokes proposal to `shortcode`.
 
-## `POST /acceptProposal` - parent, parents_open
+## `POST /acceptProposal` - parent, open
 
 ```ts
 {
@@ -109,7 +109,7 @@ type Response = {
 
 **200** - Accepts proposal from `shortcode`.
 
-## `GET /proposals` - parent, parents_open
+## `GET /proposals` - parent, open
 
 **200** - Returns array of proposals.
 
@@ -163,7 +163,7 @@ type Response = {
 
 ```ts
 {
-  state: 'parents_open' | 'parents_close' | 'freshers_open' | 'closed';
+  state: 'open' | 'closed';
 }
 ```
 
@@ -171,7 +171,7 @@ type Response = {
 
 ```ts
 {
-  state: 'parents_open' | 'parents_close' | 'freshers_open' | 'closed';
+  state: 'open' | 'closed';
 }
 ```
 
