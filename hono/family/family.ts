@@ -2,7 +2,12 @@ import { zValidator } from '@hono/zod-validator';
 import { grantAccessTo } from '../auth/jwt';
 import factory from '../factory';
 import { z } from 'zod';
-import { readAnswers, studentColumns } from '../survey/survey';
+import {
+  readAnswers,
+  readDraft,
+  studentColumns,
+  SURVEY_VERSION
+} from '../survey/survey';
 import { asJsonb, db } from '../db';
 import { aliasedTable, and, eq, getTableColumns, or } from 'drizzle-orm';
 import {
@@ -21,6 +26,20 @@ const proposalSchema = z.object({
 const invalidProposal = {
   error: 'Enter the shortcode of the parent you mean.'
 };
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Holds both parents' rows until the transaction ends, so anything that pairs or unpairs
+ * them happens one at a time. Rows are locked in key order, so two of these can't deadlock.
+ */
+const lockParents = (tx: Transaction, a: string, b: string) =>
+  tx
+    .select({ shortcode: students.shortcode })
+    .from(students)
+    .where(or(eq(students.shortcode, a), eq(students.shortcode, b)))
+    .orderBy(students.shortcode)
+    .for('update');
 
 export const family = factory
   .createApp()
@@ -49,10 +68,36 @@ export const family = factory
         .set({
           completedSurvey: true,
           answers: asJsonb(read.answers),
+          surveyVersion: SURVEY_VERSION,
+          draft: null,
           ...studentColumns(read.answers)
         })
         .where(eq(students.shortcode, shortcode));
 
+      return ctx.json({ saved: true }, 200);
+    }
+  )
+  .post(
+    '/draft',
+    requireState('open'),
+    grantAccessTo('authenticated'),
+    zValidator('json', surveySchema.strict(), async (zRes, ctx) => {
+      if (!zRes.success) {
+        return ctx.json(
+          { error: 'Your answers did not arrive properly. Please try again.' },
+          400
+        );
+      }
+    }),
+    async ctx => {
+      const shortcode = ctx.get('shortcode')!;
+      // Saved as typed, whether finished or not; `answers` only changes on submission.
+      await db
+        .update(students)
+        .set({
+          draft: asJsonb(readDraft(ctx.req.valid('json').answers, shortcode))
+        })
+        .where(eq(students.shortcode, shortcode));
       return ctx.json({ saved: true }, 200);
     }
   )
@@ -183,15 +228,19 @@ export const family = factory
 
       // You can only revoke a proposal, not deny a proposal to save the emotions of the proposer
       // as per a discussion within the DoCSoc 24/25 commitee.
-      const proposalsInDb = await db
-        .delete(proposals)
-        .where(
-          and(
-            eq(proposals.proposee, proposee),
-            eq(proposals.proposer, proposer)
+      const proposalsInDb = await db.transaction(async tx => {
+        // The same lock as accepting, so a take-back and an accept are decided one at a time.
+        await lockParents(tx, proposer, proposee);
+        return tx
+          .delete(proposals)
+          .where(
+            and(
+              eq(proposals.proposee, proposee),
+              eq(proposals.proposer, proposer)
+            )
           )
-        )
-        .returning();
+          .returning();
+      });
       if (proposalsInDb.length != 1) {
         return ctx.json(
           {
@@ -255,16 +304,7 @@ export const family = factory
       const married = await db.transaction(async tx => {
         // Lock both parents first. Two parents can accept each other's proposals at the same
         // moment; without the lock both would pass the checks and marry the pair twice.
-        await tx
-          .select({ shortcode: students.shortcode })
-          .from(students)
-          .where(
-            or(
-              eq(students.shortcode, proposee),
-              eq(students.shortcode, proposer)
-            )
-          )
-          .for('update');
+        await lockParents(tx, proposee, proposer);
 
         const taken = await tx
           .select({ id: marriages.id })

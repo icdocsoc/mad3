@@ -24,6 +24,9 @@ export const MADS = JSON.parse(
   }[];
 };
 
+/** The version of mads.json, which submitted answers record. */
+export const MADS_VERSION = (MADS as unknown as { version: number }).version;
+
 export const FIELDS = Object.fromEntries(
   MADS.stages.flatMap(stage => Object.entries(stage.fields))
 );

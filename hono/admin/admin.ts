@@ -13,6 +13,7 @@ import {
   type Student
 } from '../types';
 import { meta } from './schema';
+import { SURVEY_VERSION } from '../survey/survey';
 import { z } from 'zod';
 import {
   aliasedTable,
@@ -20,7 +21,10 @@ import {
   count,
   eq,
   isNull,
-  getTableColumns
+  getTableColumns,
+  isNotNull,
+  notExists,
+  or
 } from 'drizzle-orm';
 import { families, marriages, students } from '../family/schema';
 import { apiLogger } from '../logger';
@@ -263,6 +267,78 @@ export const admin = factory
       return ctx.text('', 200);
     }
   )
+  .get('/export', grantAccessTo('admin'), async ctx => {
+    // Everything the matchmaker needs: every student's submitted answers (in the new
+    // monorepo's shape) and every pair of parents. Drafts are left out: they are unfinished.
+    const everyone = await db
+      .select({
+        shortcode: students.shortcode,
+        role: students.role,
+        completedSurvey: students.completedSurvey,
+        surveyVersion: students.surveyVersion,
+        answers: students.answers
+      })
+      .from(students)
+      .orderBy(students.role, students.shortcode);
+    const pairs = await db
+      .select({
+        id: marriages.id,
+        parent1: marriages.parent1,
+        parent2: marriages.parent2
+      })
+      .from(marriages)
+      .orderBy(marriages.id);
+
+    ctx.header(
+      'Content-Disposition',
+      `attachment; filename="mads-export-${new Date().toISOString().slice(0, 10)}.json"`
+    );
+    return ctx.json({
+      exportedAt: new Date().toISOString(),
+      surveyVersion: SURVEY_VERSION,
+      students: everyone.map(one => ({
+        ...one,
+        answers: one.completedSurvey ? one.answers : null
+      })),
+      pairs: pairs.map(pair => ({
+        id: pair.id,
+        parents: [pair.parent1, pair.parent2]
+      }))
+    });
+  })
+  .get('/unpaired', grantAccessTo('admin'), async ctx => {
+    // Who to chase before sign-ups close: parents with no partner yet, and freshers who
+    // started the survey but never submitted it.
+    const parents = await db
+      .select({ shortcode: students.shortcode, name: students.name })
+      .from(students)
+      .where(
+        and(
+          eq(students.role, 'parent'),
+          eq(students.completedSurvey, true),
+          notExists(
+            db
+              .select({ id: marriages.id })
+              .from(marriages)
+              .where(
+                or(
+                  eq(marriages.parent1, students.shortcode),
+                  eq(marriages.parent2, students.shortcode)
+                )
+              )
+          )
+        )
+      )
+      .orderBy(students.shortcode);
+    const unfinished = await db
+      .select({ shortcode: students.shortcode, role: students.role })
+      .from(students)
+      .where(
+        and(eq(students.completedSurvey, false), isNotNull(students.draft))
+      )
+      .orderBy(students.shortcode);
+    return ctx.json({ parents, unfinished });
+  })
   .get('/stats', grantAccessTo('admin'), async ctx => {
     const familyCount = await db.select({ count: count() }).from(marriages);
 

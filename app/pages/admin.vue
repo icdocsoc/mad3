@@ -21,6 +21,11 @@ const {
   headers
 });
 
+const { data: chase } = useFetch<{
+  parents: { shortcode: string; name: string | null }[];
+  unfinished: { shortcode: string; role: 'fresher' | 'parent' }[];
+}>('/api/admin/unpaired', { headers });
+
 const search = ref('');
 // Every family until something is typed; then any whose ID or shortcodes start with it.
 const filteredFamilies = computed<IFamily[]>(() => {
@@ -146,6 +151,50 @@ definePageMeta({
         {{ stateError }}
       </p>
     </div>
+  </Card>
+
+  <Card>
+    <CardTitle>Still to chase</CardTitle>
+    <CardDetails>
+      <strong>
+        Parents without a partner ({{ chase?.parents.length ?? 0 }})
+      </strong>
+      <p v-if="!chase?.parents.length">
+        Every parent who did the survey is paired.
+      </p>
+      <ul v-else class="list-inside list-disc">
+        <li v-for="one in chase.parents" :key="one.shortcode">
+          {{ one.name }} ({{ one.shortcode }})
+        </li>
+      </ul>
+    </CardDetails>
+    <CardDetails>
+      <strong>
+        Started the survey but never submitted ({{
+          chase?.unfinished.length ?? 0
+        }})
+      </strong>
+      <p v-if="!chase?.unfinished.length">Nobody.</p>
+      <ul v-else class="list-inside list-disc">
+        <li v-for="one in chase.unfinished" :key="one.shortcode">
+          {{ one.shortcode }} ({{ one.role }})
+        </li>
+      </ul>
+    </CardDetails>
+  </Card>
+
+  <Card>
+    <CardTitle>Export for matchmaking</CardTitle>
+    <CardText class="mt-4">
+      Every student's submitted answers and every pair of parents, as JSON, for
+      the matchmaker.
+    </CardText>
+    <a
+      href="/api/admin/export"
+      download
+      class="self-start rounded bg-primary px-4 py-2 font-bold text-white hover:text-white hover:no-underline">
+      Download export
+    </a>
   </Card>
 
   <Card>

@@ -8,7 +8,13 @@ import {
   sql
 } from '../helpers/harness';
 import { signIn } from '../helpers/sign-in';
-import { FIELDS, FILLED, answersFor, fillSurvey } from '../helpers/survey';
+import {
+  FIELDS,
+  FILLED,
+  MADS_VERSION,
+  answersFor,
+  fillSurvey
+} from '../helpers/survey';
 
 /**
  * Collecting answers is the whole point of MaDs until the new matchmaker takes over, so these
@@ -245,4 +251,99 @@ test('your own answers come back to you, and nobody else can write them', async 
   });
   expect(response.status()).toBe(401);
   expect(stored('jg2426').name).toBe('Joshua');
+});
+
+test('answers are saved as you go, and survive a reload', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  seedStudent('jg2426', 'fresher');
+  await signIn(page, 'jg2426@ic.ac.uk');
+  await page.goto('/survey');
+  await page.waitForLoadState('networkidle');
+  await page.getByLabel('Full name').fill('Joshua Gonsalves');
+  await page.getByRole('radio', { name: 'Computing', exact: true }).check();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByTestId('save-state')).toHaveText(
+    '✓ Your answers are saved'
+  );
+  await page.screenshot({ path: shot('after-19-autosaved') });
+
+  // Saved as a draft on the server, not as submitted answers.
+  const [draft] = sql(
+    "select draft->>'name', answers is null from student where shortcode = 'jg2426'"
+  );
+  expect(draft).toBe('Joshua Gonsalves\tt');
+
+  await page.reload();
+  await expect(page.getByLabel('Full name')).toHaveValue('Joshua Gonsalves');
+});
+
+test('a draft never changes submitted answers until they are submitted again', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  seedStudent('jg2426', 'fresher');
+  await signIn(page, 'jg2426@ic.ac.uk');
+  await fillSurvey(page);
+  await expect(page.getByRole('heading', { name: "You're in!" })).toBeVisible();
+  const version = String(MADS_VERSION);
+  expect(
+    sql(
+      "select survey_version, draft is null from student where shortcode = 'jg2426'"
+    )
+  ).toEqual([`${version}\tt`]);
+
+  await page.getByRole('button', { name: 'Change my answers' }).click();
+  await page.getByLabel('Full name').fill('Half-typed Name');
+  await expect(page.getByTestId('save-state')).toHaveText(
+    '✓ Your answers are saved'
+  );
+  expect(stored('jg2426').name).toBe('Joshua Gonsalves');
+  expect(
+    sql("select draft->>'name' from student where shortcode = 'jg2426'")
+  ).toEqual(['Half-typed Name']);
+});
+
+test('being logged out mid-survey keeps the answers, and logging back in carries on', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  seedStudent('jg2426', 'fresher');
+  await signIn(page, 'jg2426@ic.ac.uk');
+  await page.goto('/survey');
+  await page.waitForLoadState('networkidle');
+  await page.getByLabel('Full name').fill('Joshua Gonsalves');
+
+  await page.context().clearCookies();
+  await page.getByLabel('Preferred name').fill('Josh');
+  await expect(page.getByRole('alert')).toContainText("You've been logged out");
+  await page.screenshot({ path: shot('after-20-logged-out-mid-survey') });
+
+  await page.getByRole('link', { name: 'Log in again' }).click();
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await signIn(page, 'jg2426@ic.ac.uk');
+  await expect(page).toHaveURL(/\/survey/);
+  await expect(page.getByLabel('Full name')).toHaveValue('Joshua Gonsalves');
+  await expect(page.getByLabel('Preferred name')).toHaveValue('Josh');
+});
+
+test('an Instagram handle must look like one, on the page and at the API', async ({
+  page
+}, info) => {
+  desktopOnly(info.project.name);
+  seedStudent('jg2426', 'fresher');
+  await signIn(page, 'jg2426@ic.ac.uk');
+  const response = await post(
+    page,
+    answersFor('Joshua', { instagram: 'not a/handle' })
+  );
+  expect(response.status()).toBe(400);
+  expect((await response.json()).error).toContain(
+    "That Instagram handle doesn't look right"
+  );
+  expect(
+    (await post(page, answersFor('Joshua', { instagram: '@jo.g_26' }))).ok()
+  ).toBe(true);
+  expect(stored('jg2426').instagram).toBe('jo.g_26');
 });

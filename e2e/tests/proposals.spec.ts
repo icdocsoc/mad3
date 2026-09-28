@@ -238,3 +238,31 @@ test("each pair and both parents' answers are ready for the matchmaker", async (
     expect(one.answers.interests.length).toBeGreaterThan(0);
   }
 });
+
+test('a take-back and an accept at the same moment never both succeed', async ({
+  browser
+}, info) => {
+  desktopOnly(info.project.name);
+  for (let round = 0; round < 3; round++) {
+    resetData();
+    setState('open');
+    const pat = await parent(browser, 'pa1224', 'Pat Parent');
+    const bea = await parent(browser, 'pb1224', 'Bea Parent');
+    await pat.request.post('/api/family/propose', {
+      data: { shortcode: 'pb1224' }
+    });
+    const [takeBack, accept] = await Promise.all([
+      pat.request.delete('/api/family/proposal', {
+        data: { shortcode: 'pb1224' }
+      }),
+      bea.request.post('/api/family/acceptProposal', {
+        data: { shortcode: 'pa1224' }
+      })
+    ]);
+    const married = sql('select count(*) from marriage')[0] == '1';
+    // Exactly one of them happened, and the other was told so.
+    expect(takeBack.ok() && married).toBe(false);
+    expect(takeBack.ok() || accept.ok()).toBe(true);
+    expect(married).toBe(accept.ok());
+  }
+});

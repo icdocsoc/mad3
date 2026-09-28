@@ -59,6 +59,9 @@ export const fields: Record<string, Field> = Object.fromEntries(
   survey.stages.flatMap(stage => Object.entries(stage.fields))
 );
 
+/** Which version of the survey answers were given to, stored with them on submission. */
+export const SURVEY_VERSION = survey.version;
+
 /** The shortcode is known from sign-in, so it is filled in for everyone and can't be changed. */
 export const LOCKED = 'shortcode';
 
@@ -128,6 +131,26 @@ function clean(field: Field, value: unknown): string | string[] | undefined {
   }
 }
 
+/** Answers that must look a certain way, beyond being given at all. */
+const FORMATS: Record<string, { pattern: RegExp; problem: string }> = {
+  instagram: {
+    pattern: /^[A-Za-z0-9._]{1,30}$/,
+    problem:
+      "That Instagram handle doesn't look right: it's letters, numbers, dots and underscores."
+  }
+};
+
+/** What's wrong with how an answer was typed, if anything. Checked on the page and the server. */
+export function formatProblem(key: string, value: unknown): string | undefined {
+  if (typeof value != 'string' || !value.trim()) return undefined;
+  const format = FORMATS[key];
+  if (format && !format.pattern.test(value.trim().replace(/^@/, '')))
+    return format.problem;
+  if (fields[key]?.kind == 'phone' && !toE164(value))
+    return "That phone number doesn't look right.";
+  return undefined;
+}
+
 /**
  * Answers as sent by the survey page, checked against the survey: unknown questions and
  * invalid answers are dropped, the shortcode is the signed-in one, and every required
@@ -137,6 +160,11 @@ export function readAnswers(
   sent: Record<string, unknown>,
   shortcode: string
 ): { ok: true; answers: Answers } | { ok: false; error: string } {
+  for (const key of Object.keys(fields)) {
+    const problem = formatProblem(key, sent[key]);
+    if (problem) return { ok: false, error: problem };
+  }
+
   const answers: Answers = {};
   for (const [key, field] of Object.entries(fields)) {
     const value = clean(field, key == LOCKED ? shortcode : sent[key]);
@@ -148,15 +176,6 @@ export function readAnswers(
       answers[key] = value;
   }
 
-  const phone = fields.phone;
-  if (
-    phone &&
-    typeof sent.phone == 'string' &&
-    sent.phone.trim() &&
-    !answers.phone
-  )
-    return { ok: false, error: "That phone number doesn't look right." };
-
   const unanswered = survey.stages.find(
     stage => missingOn(stage, answers).length
   );
@@ -167,6 +186,29 @@ export function readAnswers(
     };
   }
   return { ok: true, answers };
+}
+
+/**
+ * A survey part-way through, kept so nothing typed is lost. Only its shape is checked (known
+ * questions, strings and lists of strings, of sensible length); whether it is complete and
+ * valid is checked when it is submitted, which is the only way into `answers`.
+ */
+export function readDraft(
+  sent: Record<string, unknown>,
+  shortcode: string
+): Answers {
+  const draft: Answers = { [LOCKED]: shortcode };
+  for (const key of Object.keys(fields)) {
+    const value = sent[key];
+    if (key == LOCKED) continue;
+    if (typeof value == 'string') draft[key] = value.slice(0, 1000);
+    else if (Array.isArray(value))
+      draft[key] = value
+        .filter((item): item is string => typeof item == 'string')
+        .slice(0, 100)
+        .map(item => item.slice(0, 100));
+  }
+  return draft;
 }
 
 /**

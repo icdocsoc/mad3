@@ -57,6 +57,13 @@
       "when": 1790633407654,
       "tag": "0007_interests_as_json",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790634583208,
+      "tag": "0008_survey_drafts",
+      "breakpoints": true
     }
   ]
 }

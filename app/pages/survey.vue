@@ -2,6 +2,7 @@
 import {
   type Answers,
   type Field,
+  formatProblem,
   LOCKED,
   missingOn,
   survey
@@ -15,11 +16,35 @@ const { currentUser, setUser } = useAuth();
 const { currentState } = useAppState();
 const me = currentUser.value!;
 
-// Start from whatever was saved before, so coming back to edit keeps every answer. The
-// shortcode is always the signed-in one.
+// A copy of the answers in this browser, so nothing typed is lost to a closed tab, a dropped
+// connection or an expired sign-in. Cleared once the survey is submitted.
+const DEVICE_KEY = `mads-survey:${me.shortcode}`;
+function fromDevice(): Answers | null {
+  try {
+    const kept = localStorage.getItem(DEVICE_KEY);
+    return kept ? (JSON.parse(kept) as Answers) : null;
+  } catch {
+    return null;
+  }
+}
+function toDevice(value: Answers | null) {
+  try {
+    if (value) localStorage.setItem(DEVICE_KEY, JSON.stringify(value));
+    else localStorage.removeItem(DEVICE_KEY);
+  } catch {
+    // Private browsing or full storage: the server's copy is still there.
+  }
+}
+
+// Start from the newest copy of what was typed: this browser's, the server's draft, then the
+// last submission. The shortcode is always the signed-in one.
 const answers = reactive<Answers>({
-  ...(me.answers ?? {}),
+  ...(me.draft ?? me.answers ?? {}),
   [LOCKED]: me.shortcode
+});
+onMounted(() => {
+  const kept = fromDevice();
+  if (kept) Object.assign(answers, kept, { [LOCKED]: me.shortcode });
 });
 
 const stages = survey.stages;
@@ -29,6 +54,58 @@ const stage = computed(() => stages[step.value]!);
 const last = computed(() => step.value == stages.length - 1);
 const problem = ref('');
 const saving = ref(false);
+
+/**
+ * Where the answers on screen have got to: saved to the server, on their way, or kept only in
+ * this browser because the server can't take them right now.
+ */
+type SaveState = 'saved' | 'saving' | 'offline' | 'signed-out' | 'closed';
+const saveState = ref<SaveState>('saved');
+
+const statusOf = (err: unknown) =>
+  (err as { statusCode?: number; status?: number }).statusCode ??
+  (err as { status?: number }).status;
+
+let timer: ReturnType<typeof setTimeout> | undefined;
+let retry: ReturnType<typeof setTimeout> | undefined;
+
+async function saveDraft() {
+  clearTimeout(timer);
+  clearTimeout(retry);
+  saveState.value = 'saving';
+  try {
+    await $fetch('/api/family/draft', {
+      method: 'POST',
+      body: { answers: { ...answers } }
+    });
+    saveState.value = 'saved';
+  } catch (err) {
+    const status = statusOf(err);
+    if (status == 401) saveState.value = 'signed-out';
+    else if (status == 403) saveState.value = 'closed';
+    else {
+      saveState.value = 'offline';
+      retry = setTimeout(saveDraft, 5000);
+    }
+  }
+}
+
+// Every change is kept in this browser at once, and sent to the server once typing pauses.
+watch(
+  answers,
+  () => {
+    if (!editing.value) return;
+    toDevice({ ...answers });
+    saveState.value = 'saving';
+    clearTimeout(timer);
+    timer = setTimeout(saveDraft, 800);
+  },
+  { deep: true }
+);
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  clearTimeout(retry);
+});
 
 /** A question's label, unless the card's title already says it. */
 const labelFor = (field: Field) =>
@@ -47,18 +124,22 @@ const chipsOf = (key: string) => (answers[key] as string[] | undefined) ?? [];
 
 /** Why this card can't be left yet, or nothing if it can. */
 function problemOnThisCard() {
+  for (const key of Object.keys(stage.value.fields)) {
+    const wrong = formatProblem(key, answers[key]);
+    if (wrong) return wrong;
+  }
   const [first] = missingOn(stage.value, answers);
   if (!first) return '';
   const field = stage.value.fields[first]!;
-  if (field.kind == 'phone' && textOf(first))
-    return "That phone number doesn't look right.";
   if (field.kind == 'chips') return 'Pick at least one to carry on.';
   return `Answer "${field.label}" to carry on.`;
 }
 
 function next() {
   problem.value = problemOnThisCard();
-  if (!problem.value) step.value += 1;
+  if (problem.value) return;
+  step.value += 1;
+  void saveDraft();
 }
 
 function back() {
@@ -75,13 +156,20 @@ async function submit() {
       method: 'POST',
       body: { answers: { ...answers } }
     });
+    toDevice(null);
+    clearTimeout(timer);
+    saveState.value = 'saved';
     setUser(await $fetch<IStudent>('/api/family/me'));
     editing.value = false;
     step.value = 0;
   } catch (err) {
+    const status = statusOf(err);
+    if (status == 401) saveState.value = 'signed-out';
     problem.value =
-      (err as { data?: { error?: string } }).data?.error ??
-      "We couldn't save your answers. Please try again.";
+      status == 401
+        ? ''
+        : ((err as { data?: { error?: string } }).data?.error ??
+          "We couldn't save your answers. Please try again.");
   } finally {
     saving.value = false;
   }
@@ -134,6 +222,34 @@ async function submit() {
           :style="{ width: `${((step + 1) / stages.length) * 100}%` }" />
       </div>
     </div>
+
+    <p
+      v-if="saveState == 'signed-out'"
+      role="alert"
+      class="mb-4 rounded bg-amber-50 p-3">
+      You've been logged out, but your answers are kept on this device.
+      <NuxtLink to="/login?next=/survey">Log in again</NuxtLink>
+      to carry on where you left off.
+    </p>
+    <p
+      v-else-if="saveState == 'closed'"
+      role="alert"
+      class="mb-4 rounded bg-amber-50 p-3">
+      Sign-ups have just closed, so these answers can't be saved.
+    </p>
+    <p
+      v-else
+      class="mb-4 text-sm"
+      :class="saveState == 'offline' ? 'text-amber-700' : 'text-gray-600'"
+      data-testid="save-state">
+      {{
+        saveState == 'saved'
+          ? '✓ Your answers are saved'
+          : saveState == 'saving'
+            ? 'Saving…'
+            : "Can't reach the server: kept on this device, retrying"
+      }}
+    </p>
 
     <form
       class="flex flex-col gap-4"

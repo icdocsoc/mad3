@@ -10,6 +10,8 @@ declare interface IStudent {
   aboutMe: string | null;
   // Every survey answer, keyed as in hono/survey/mads.json.
   answers: Record<string, string | string[]> | null;
+  // Answers typed since, saved as they happen; becomes `answers` when submitted.
+  draft: Record<string, string | string[]> | null;
 }
 
 // Is it worth making a sharedTypes for this one singular type?

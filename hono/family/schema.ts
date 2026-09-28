@@ -73,8 +73,14 @@ export const students = pgTable('student', {
   interests: json('interests').$type<Interests>(),
   socials: text('socials').array(),
   aboutMe: text('about_me'),
-  // Every answer to the survey, keyed as in hono/survey/mads.json.
-  answers: jsonb('answers').$type<Answers>()
+  // Every answer to the survey, keyed as in hono/survey/mads.json. Only ever a complete,
+  // checked submission: the matchmaker reads it.
+  answers: jsonb('answers').$type<Answers>(),
+  // The version of mads.json those answers were given to.
+  surveyVersion: integer('survey_version'),
+  // What has been typed since, saved as it happens so nothing is lost. Becomes `answers`
+  // only when submitted.
+  draft: jsonb('draft').$type<Answers>()
 });
 
 // Interest schema, but as a zod object.
@@ -91,7 +97,8 @@ export const interestsSchema = z.object(
 export const selectStudentSchema = createSelectSchema(students).extend({
   interests: interestsSchema.nullable(),
   socials: z.array(z.string()).nullable(),
-  answers: z.record(z.union([z.string(), z.array(z.string())])).nullable()
+  answers: z.record(z.union([z.string(), z.array(z.string())])).nullable(),
+  draft: z.record(z.union([z.string(), z.array(z.string())])).nullable()
 });
 
 /** What the survey page sends: the answers, keyed as in hono/survey/mads.json. */
