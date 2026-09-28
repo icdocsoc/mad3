@@ -19,7 +19,7 @@ const {
 });
 
 const now = new Date();
-const baseUrl = `https://abc-api.doc.ic.ac.uk/${academicYear}${academicYear + 1}`;
+const baseUrl = `https://abc-api.doc.ic.ac.uk/${academicYear()}${academicYear() + 1}`;
 
 if (push) {
   // This is purely to ensure that you have the env file set up properly,

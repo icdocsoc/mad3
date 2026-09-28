@@ -11,17 +11,11 @@ const { currentUser } = useAuth();
     </NavigationLink>
     <ul class="flex items-center gap-3">
       <li v-if="currentUser === null">
-        <!-- <a
-          class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl"
-          href="/api/auth/signIn">
+        <NuxtLink
+          to="/login"
+          class="font-bold text-white hover:text-white hover:no-underline md:text-xl">
           Log In
-        </a> -->
-        <EmailPrompt>
-          <p
-            class="cursor-pointer font-bold text-white hover:text-white hover:no-underline md:text-xl">
-            Log In
-          </p>
-        </EmailPrompt>
+        </NuxtLink>
       </li>
       <li v-if="currentUser !== null">
         <NavigationLink to="/portal">

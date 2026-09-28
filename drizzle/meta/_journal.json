@@ -29,6 +29,20 @@
       "when": 1790630928572,
       "tag": "0003_states_open_closed",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790631325747,
+      "tag": "0004_drop_link_sign_in",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790631336475,
+      "tag": "0005_login_codes",
+      "breakpoints": true
     }
   ]
 }

@@ -1,1 +1,6 @@
 .vscode/
+# Generated
+drizzle/meta
+e2e/.run
+test-results
+playwright-report

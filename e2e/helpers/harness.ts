@@ -91,10 +91,6 @@ export async function nextMail(to: string, after: number): Promise<string> {
   throw new Error(`No email to ${to} arrived.`);
 }
 
-/** The sign-in link in an email, if it has one. */
-export const linkIn = (mail: string) =>
-  /https?:\/\/\S+finish-email\?token=\w+/.exec(mail)?.[0];
-
 /** The sign-in code in an email, if it has one. */
 export const codeIn = (mail: string) => /\b(\d{6})\b/.exec(mail)?.[1];
 
