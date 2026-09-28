@@ -8,7 +8,8 @@
     "format": "prettier --write .",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.4.1",
@@ -33,6 +34,7 @@
     "zod-validator": "^1.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "1",
     "@types/bun": "^1.2.22",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.31.4",

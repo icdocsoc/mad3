@@ -32,3 +32,7 @@ families.csv
 
 # db certfile, in case you need to make local connections
 certfile.crt
+# e2e run artefacts
+e2e/.run/
+test-results/
+playwright-report/
