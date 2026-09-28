@@ -12,6 +12,8 @@ Mad3 is written such that future webmasters (and anyone else) should be able to 
 
 Although using Nuxt 3, we have opted to use Nuxt 4 in our build. [`app/`](/app/) contains the frontend while the [`hono/`](/hono/) contains the server.
 
+New here? [`CODEMAP.md`](./CODEMAP.md) walks through where everything lives, and [`CONVENTIONS.md`](./CONVENTIONS.md) covers how code is written.
+
 ## Local development
 
 Visit [Microsoft Entra admin center](https://entra.microsoft.com/) -> App registrations -> \[your mums and dads app]. Copy your tenant ID and client ID into `.env`, and generate a client secret from 'Certificates & secrets' to copy into `.env`.
