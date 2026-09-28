@@ -1,6 +1,6 @@
 {
-  "id": "0bcf665c-a8a5-4dbf-b20f-8f4ad88a4523",
-  "prevId": "a464d0f6-4943-49e7-9b75-1124c9f02590",
+  "id": "fa32ee7a-8d5b-4610-b1e5-e9ff15745a14",
+  "prevId": "905102e1-7051-447d-99b4-f265a687f92c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -320,68 +320,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "preferred_name": {
-          "name": "preferred_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "gender_description": {
-          "name": "gender_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "commute": {
-          "name": "commute",
-          "type": "commute",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "drinking": {
-          "name": "drinking",
-          "type": "drinking",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "late_nights": {
-          "name": "late_nights",
-          "type": "late_nights",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "societies": {
-          "name": "societies",
-          "type": "societies",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "meeting_people": {
-          "name": "meeting_people",
-          "type": "meeting_people",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "instagram": {
-          "name": "instagram",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "discord": {
-          "name": "discord",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "text",
+        "answers": {
+          "name": "answers",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -404,26 +345,6 @@
         "closed"
       ]
     },
-    "public.commute": {
-      "name": "commute",
-      "schema": "public",
-      "values": [
-        "halls",
-        "nearby",
-        "commute",
-        "far"
-      ]
-    },
-    "public.drinking": {
-      "name": "drinking",
-      "schema": "public",
-      "values": [
-        "round-buyer",
-        "soft-drink",
-        "couple",
-        "rather-not"
-      ]
-    },
     "public.gender": {
       "name": "gender",
       "schema": "public",
@@ -432,36 +353,6 @@
         "female",
         "other",
         "n/a"
-      ]
-    },
-    "public.late_nights": {
-      "name": "late_nights",
-      "schema": "public",
-      "values": [
-        "out-till-late",
-        "one-club-night",
-        "home-by-midnight",
-        "quiet"
-      ]
-    },
-    "public.meeting_people": {
-      "name": "meeting_people",
-      "schema": "public",
-      "values": [
-        "energising",
-        "fine",
-        "depends",
-        "draining"
-      ]
-    },
-    "public.societies": {
-      "name": "societies",
-      "schema": "public",
-      "values": [
-        "everything",
-        "few",
-        "unsure",
-        "little"
       ]
     },
     "public.student_role": {

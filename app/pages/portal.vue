@@ -20,7 +20,9 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
 
 <template>
   <Card>
-    <CardTitle>Hi, {{ me.preferredName || me.name || me.shortcode }}</CardTitle>
+    <CardTitle>
+      Hi, {{ me.answers?.preferredName || me.name || me.shortcode }}
+    </CardTitle>
     <CardText class="mt-2 text-center">
       {{ me.role == 'fresher' ? 'Fresher' : 'Parent' }} · Sign-ups are
       {{ currentState }}
@@ -50,7 +52,8 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
         <div>
           <strong>Your partner</strong>
           <p v-if="partner">
-            You're parents with {{ partner.preferredName || partner.name }}.
+            You're parents with
+            {{ partner.answers?.preferredName || partner.name }}.
           </p>
           <p v-else-if="currentState == 'open'">
             Parents sign up in pairs, and you haven't paired up yet.

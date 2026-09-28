@@ -143,3 +143,98 @@ test('freshers are sent back to the portal from proposals', async ({
   await page.goto('/proposals');
   await expect(page).toHaveURL(/\/portal/);
 });
+
+test('two parents accepting each other at the same moment make one family, not two', async ({
+  browser
+}, info) => {
+  desktopOnly(info.project.name);
+  const pat = await parent(browser, 'pa1224', 'Pat Parent');
+  const bea = await parent(browser, 'pb1224', 'Bea Parent');
+  for (const [from, to] of [
+    [pat, 'pb1224'],
+    [bea, 'pa1224']
+  ] as const) {
+    const sent = await from.request.post('/api/family/propose', {
+      data: { shortcode: to }
+    });
+    expect(sent.ok()).toBe(true);
+  }
+
+  const [patAccepts, beaAccepts] = await Promise.all([
+    pat.request.post('/api/family/acceptProposal', {
+      data: { shortcode: 'pb1224' }
+    }),
+    bea.request.post('/api/family/acceptProposal', {
+      data: { shortcode: 'pa1224' }
+    })
+  ]);
+  expect([patAccepts.status(), beaAccepts.status()].sort()).toEqual([200, 409]);
+  expect(sql('select count(*) from marriage')).toEqual(['1']);
+  expect(sql('select count(*) from proposals')).toEqual(['0']);
+});
+
+test('a double-tapped proposal is sent once', async ({ browser }, info) => {
+  desktopOnly(info.project.name);
+  const pat = await parent(browser, 'pa1224', 'Pat Parent');
+  await parent(browser, 'pb1224', 'Bea Parent');
+  const taps = await Promise.all(
+    [1, 2].map(() =>
+      pat.request.post('/api/family/propose', { data: { shortcode: 'pb1224' } })
+    )
+  );
+  for (const tap of taps) expect(tap.status()).toBeLessThan(500);
+  expect(sql('select count(*) from proposals')).toEqual(['1']);
+});
+
+test('proposals stop when sign-ups close, and pairs stay as they were', async ({
+  browser
+}, info) => {
+  desktopOnly(info.project.name);
+  const pat = await parent(browser, 'pa1224', 'Pat Parent');
+  await parent(browser, 'pb1224', 'Bea Parent');
+  await pat.request.post('/api/family/propose', {
+    data: { shortcode: 'pb1224' }
+  });
+  setState('closed');
+  const late = await pat.request.post('/api/family/propose', {
+    data: { shortcode: 'pc1224' }
+  });
+  expect(late.status()).toBe(403);
+  expect(sql('select proposer, proposee from proposals')).toEqual([
+    'pa1224\tpb1224'
+  ]);
+});
+
+test("each pair and both parents' answers are ready for the matchmaker", async ({
+  browser
+}, info) => {
+  desktopOnly(info.project.name);
+  abc({ students: ['pa1224', 'pb1224', 'jg2423'] });
+  const pat = await parent(browser, 'pa1224', 'Pat Parent');
+  const bea = await parent(browser, 'pb1224', 'Bea Parent');
+  await pat.request.post('/api/family/propose', {
+    data: { shortcode: 'pb1224' }
+  });
+  await bea.request.post('/api/family/acceptProposal', {
+    data: { shortcode: 'pa1224' }
+  });
+
+  // What the committee (and later the matchmaker) reads: every pair, with both parents' answers.
+  const admin = await (await browser.newContext()).newPage();
+  await signIn(admin, 'jg2423@ic.ac.uk');
+  const families = await (
+    await admin.request.get('/api/admin/all-families')
+  ).json();
+  expect(families).toHaveLength(1);
+  const shortcodes = families[0].parents
+    .map((one: { shortcode: string }) => one.shortcode)
+    .sort();
+  expect(shortcodes).toEqual(['pa1224', 'pb1224']);
+  for (const one of families[0].parents) {
+    expect(one.answers).toMatchObject({
+      shortcode: one.shortcode,
+      course: 'computing'
+    });
+    expect(one.answers.interests.length).toBeGreaterThan(0);
+  }
+});

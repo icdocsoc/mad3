@@ -51,11 +51,12 @@ function startPostgres() {
       `-e POSTGRES_USER=admin -e POSTGRES_PASSWORD=rootpasswd -e POSTGRES_DB=postgres ${initdb} postgres:16`,
     { stdio: 'pipe' }
   );
-  // pg_isready passes during first-start scripts too, so wait for a real query.
+  // On first start the image runs a temporary server on a local socket only, then restarts.
+  // Only a query over TCP proves the real server is up.
   waitFor(
     () =>
       tryRun(
-        `docker exec ${PG_CONTAINER} psql -U admin -d postgres -c "select 1"`
+        `docker exec ${PG_CONTAINER} psql -h 127.0.0.1 -U admin -d postgres -c "select 1"`
       ),
     'Postgres',
     60

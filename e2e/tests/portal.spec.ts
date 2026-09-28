@@ -61,7 +61,7 @@ test('a fresher sees their family once it is allocated', async ({
   ]) {
     seedStudent(shortcode!, 'parent');
     sql(
-      `update student set name = '${name}', completed_survey = true, instagram = 'pat_ig', interests = '{"football":2}' where shortcode = '${shortcode}';`
+      `update student set name = '${name}', completed_survey = true, answers = '{"instagram":"pat_ig","interests":["football"]}' where shortcode = '${shortcode}';`
     );
   }
   sql(

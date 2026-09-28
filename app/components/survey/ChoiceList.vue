@@ -1,10 +1,29 @@
 <script setup lang="ts">
-type Option = { value: string; label: string; free?: boolean };
+import type { Option } from '~~/hono/survey/survey';
 
-const props = defineProps<{ name: string; options: readonly Option[] }>();
-const model = defineModel<string | null>({ required: true });
-// The words typed for an option marked `free`, such as "I am...".
-const freeText = defineModel<string>('free', { default: '' });
+const props = defineProps<{ name: string; options: Option[] }>();
+
+// The answer is the picked option's value, or for a free option (like "I am...") the words
+// typed, which is how the survey stores it.
+const model = defineModel<string | undefined>({ required: true });
+
+const freeOption = props.options.find(option => option.free);
+const isOption = (value?: string) =>
+  props.options.some(option => option.value == value && !option.free);
+
+const picked = ref(
+  isOption(model.value)
+    ? model.value
+    : model.value && freeOption
+      ? freeOption.value
+      : undefined
+);
+const typed = ref(isOption(model.value) ? '' : (model.value ?? ''));
+
+watch([picked, typed], () => {
+  model.value =
+    freeOption && picked.value == freeOption.value ? typed.value : picked.value;
+});
 </script>
 
 <template>
@@ -14,7 +33,7 @@ const freeText = defineModel<string>('free', { default: '' });
       :key="option.value"
       class="flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-blue-50">
       <input
-        v-model="model"
+        v-model="picked"
         type="radio"
         :name="props.name"
         :value="option.value"
@@ -22,14 +41,11 @@ const freeText = defineModel<string>('free', { default: '' });
       <span>{{ option.label }}</span>
     </label>
     <input
-      v-for="option in props.options.filter(
-        option => option.free && option.value == model
-      )"
-      :key="`${option.value}-free`"
-      v-model="freeText"
+      v-if="freeOption && picked == freeOption.value"
+      v-model="typed"
       type="text"
       maxlength="100"
-      :aria-label="option.label"
+      :aria-label="freeOption.label"
       placeholder="In your own words"
       class="rounded" />
   </fieldset>

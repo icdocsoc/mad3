@@ -22,9 +22,9 @@ export const pool = new SQL({
 export const db = drizzle(pool);
 
 /**
- * A value for a `json` column. With Bun's driver, Drizzle's own encoding stores objects as a
+ * A value for a `jsonb` column. With Bun's driver, Drizzle's own encoding stores objects as a
  * JSON *string* (`"{\"a\":1}"`): the app reads them back fine, but the database, and anything
  * querying it directly, sees text. Casting through text stores a real JSON object.
  */
-export const asJson = (value: unknown) =>
-  sql`${JSON.stringify(value)}::text::json`;
+export const asJsonb = (value: unknown) =>
+  sql`${JSON.stringify(value)}::text::jsonb`;

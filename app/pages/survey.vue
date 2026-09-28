@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import {
-  type ChipKey,
-  chipKeys,
-  commuteOptions,
-  courseOptions,
-  drinkingOptions,
-  genderSurveyOptions,
-  lateNightsOptions,
-  meetingPeopleOptions,
-  societiesOptions,
-  surveyCards
-} from '~~/hono/survey';
+  type Answers,
+  type Field,
+  LOCKED,
+  missingOn,
+  survey
+} from '~~/hono/survey/survey';
 
 definePageMeta({
   middleware: ['require-auth']
@@ -20,78 +15,49 @@ const { currentUser, setUser } = useAuth();
 const { currentState } = useAppState();
 const me = currentUser.value!;
 
-const CARDS = [
-  'you',
-  'why',
-  'commute',
-  'gender',
-  'drinking',
-  'lateNights',
-  'interests',
-  'societies',
-  'meetingPeople',
-  'intro'
-] as const;
-type CardId = (typeof CARDS)[number];
-
-// Start from whatever was saved before, so coming back to edit keeps every answer.
-const answers = reactive({
-  name: me.name ?? '',
-  preferredName: me.preferredName ?? '',
-  course: me.completedSurvey ? (me.jmc ? 'jmc' : 'computing') : null,
-  commute: me.commute,
-  gender: me.gender,
-  genderDescription: me.genderDescription ?? '',
-  drinking: me.drinking,
-  lateNights: me.lateNights,
-  interests: Object.fromEntries(
-    chipKeys.map(key => [key, me.interests?.[key] ?? 0])
-  ) as Record<ChipKey, 0 | 1 | 2>,
-  societies: me.societies,
-  meetingPeople: me.meetingPeople,
-  aboutMe: me.aboutMe ?? '',
-  instagram: me.instagram ?? '',
-  discord: me.discord ?? '',
-  phone: me.phone ?? ''
+// Start from whatever was saved before, so coming back to edit keeps every answer. The
+// shortcode is always the signed-in one.
+const answers = reactive<Answers>({
+  ...(me.answers ?? {}),
+  [LOCKED]: me.shortcode
 });
 
+const stages = survey.stages;
 const editing = ref(!me.completedSurvey);
 const step = ref(0);
-const card = computed<CardId>(() => CARDS[step.value]!);
-const blurb = computed(
-  () => (surveyCards[card.value] as { blurb?: string }).blurb
-);
+const stage = computed(() => stages[step.value]!);
+const last = computed(() => step.value == stages.length - 1);
 const problem = ref('');
 const saving = ref(false);
 
-/** Why a card can't be left yet, or nothing if it can. */
-function missingOn(id: CardId): string {
-  const need = 'Choose an answer to carry on.';
-  switch (id) {
-    case 'you':
-      if (!answers.name.trim()) return 'Tell us your full name.';
-      return answers.course ? '' : 'Choose your course.';
-    case 'commute':
-      return answers.commute ? '' : need;
-    case 'drinking':
-      return answers.drinking ? '' : need;
-    case 'lateNights':
-      return answers.lateNights ? '' : need;
-    case 'interests':
-      return Object.values(answers.interests).some(score => score > 0)
-        ? ''
-        : 'Pick at least one interest.';
-    case 'societies':
-      return answers.societies ? '' : need;
-    case 'meetingPeople':
-      return answers.meetingPeople ? '' : need;
-    default:
-      return '';
-  }
+/** A question's label, unless the card's title already says it. */
+const labelFor = (field: Field) =>
+  field.label == stage.value.title ? '' : field.label;
+/** A question's hint, unless the card's blurb already says it. */
+const hintFor = (field: Field) =>
+  'hint' in field && field.hint != stage.value.blurb ? field.hint : undefined;
+const isOptional = (field: Field) =>
+  'optional' in field && field.optional == true;
+const textOf = (key: string) => answers[key] as string | undefined;
+const setText = (key: string, value: string | undefined) => {
+  if (value === undefined || value === '') delete answers[key];
+  else answers[key] = value;
+};
+const chipsOf = (key: string) => (answers[key] as string[] | undefined) ?? [];
+
+/** Why this card can't be left yet, or nothing if it can. */
+function problemOnThisCard() {
+  const [first] = missingOn(stage.value, answers);
+  if (!first) return '';
+  const field = stage.value.fields[first]!;
+  if (field.kind == 'phone' && textOf(first))
+    return "That phone number doesn't look right.";
+  if (field.kind == 'chips') return 'Pick at least one to carry on.';
+  return `Answer "${field.label}" to carry on.`;
 }
 
 function next() {
-  problem.value = missingOn(card.value);
+  problem.value = problemOnThisCard();
   if (!problem.value) step.value += 1;
 }
 
@@ -101,18 +67,13 @@ function back() {
 }
 
 async function submit() {
-  problem.value = missingOn(card.value);
+  problem.value = problemOnThisCard();
   if (problem.value || saving.value) return;
   saving.value = true;
   try {
     await $fetch('/api/family/survey', {
       method: 'POST',
-      body: {
-        ...answers,
-        course: undefined,
-        jmc: answers.course == 'jmc',
-        gender: answers.gender ?? null
-      }
+      body: { answers: { ...answers } }
     });
     setUser(await $fetch<IStudent>('/api/family/me'));
     editing.value = false;
@@ -166,142 +127,111 @@ async function submit() {
 
   <Card v-else>
     <div class="mb-4">
-      <p class="text-sm text-gray-600">{{ step + 1 }} of {{ CARDS.length }}</p>
+      <p class="text-sm text-gray-600">{{ step + 1 }} of {{ stages.length }}</p>
       <div class="mt-1 h-2 rounded-full bg-gray-200">
         <div
           class="h-2 rounded-full bg-primary transition-all"
-          :style="{ width: `${((step + 1) / CARDS.length) * 100}%` }" />
+          :style="{ width: `${((step + 1) / stages.length) * 100}%` }" />
       </div>
     </div>
 
     <form
       class="flex flex-col gap-4"
-      @submit.prevent="step == CARDS.length - 1 ? submit() : next()">
-      <h2 class="text-2xl font-medium">{{ surveyCards[card].title }}</h2>
-      <p v-if="blurb" class="text-gray-600">{{ blurb }}</p>
+      @submit.prevent="last ? submit() : next()">
+      <h2 class="text-2xl font-medium">{{ stage.title }}</h2>
+      <p v-if="stage.blurb" class="text-gray-600">{{ stage.blurb }}</p>
 
-      <template v-if="card == 'you'">
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">Full name</span>
-          <input
-            v-model="answers.name"
-            type="text"
-            autocomplete="name"
-            placeholder="Nicolas Wu"
-            class="rounded" />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">Preferred name (optional)</span>
-          <input
-            v-model="answers.preferredName"
-            type="text"
-            placeholder="Nick"
-            class="rounded" />
-        </label>
-        <div class="flex flex-col gap-1">
-          <span class="font-bold">Course</span>
-          <span class="text-sm text-gray-600">
-            Computing and JMC timetables clash.
+      <div
+        v-for="(field, key) in stage.fields"
+        :key="key"
+        class="flex flex-col gap-1">
+        <template v-if="field.kind == 'note'">
+          <p v-for="line in field.body.split('\n')" :key="line">{{ line }}</p>
+        </template>
+
+        <template v-else>
+          <label
+            v-if="labelFor(field)"
+            :for="`answer-${key}`"
+            class="font-bold">
+            {{ labelFor(field) }}
+            <span v-if="isOptional(field)" class="font-normal text-gray-600">
+              (optional)
+            </span>
+          </label>
+          <span
+            v-if="
+              hintFor(field) && field.kind != 'text' && field.kind != 'prose'
+            "
+            class="text-sm text-gray-600">
+            {{ hintFor(field) }}
           </span>
-          <SurveyChoiceList
-            v-model="answers.course"
-            name="course"
-            :options="courseOptions" />
-        </div>
-      </template>
 
-      <template v-else-if="card == 'why'">
-        <p v-for="line in surveyCards.why.body" :key="line">{{ line }}</p>
-      </template>
+          <input
+            v-if="key == LOCKED"
+            :id="`answer-${key}`"
+            :value="answers[key]"
+            type="text"
+            readonly
+            class="rounded bg-gray-100 text-gray-700" />
 
-      <SurveyChoiceList
-        v-else-if="card == 'commute'"
-        v-model="answers.commute"
-        name="commute"
-        :options="commuteOptions" />
-
-      <template v-else-if="card == 'gender'">
-        <p class="text-sm text-gray-600">Optional.</p>
-        <SurveyChoiceList
-          v-model="answers.gender"
-          v-model:free="answers.genderDescription"
-          name="gender"
-          :options="genderSurveyOptions" />
-      </template>
-
-      <SurveyChoiceList
-        v-else-if="card == 'drinking'"
-        v-model="answers.drinking"
-        name="drinking"
-        :options="drinkingOptions" />
-
-      <SurveyChoiceList
-        v-else-if="card == 'lateNights'"
-        v-model="answers.lateNights"
-        name="lateNights"
-        :options="lateNightsOptions" />
-
-      <SurveyInterestChips
-        v-else-if="card == 'interests'"
-        v-model="answers.interests" />
-
-      <SurveyChoiceList
-        v-else-if="card == 'societies'"
-        v-model="answers.societies"
-        name="societies"
-        :options="societiesOptions" />
-
-      <SurveyChoiceList
-        v-else-if="card == 'meetingPeople'"
-        v-model="answers.meetingPeople"
-        name="meetingPeople"
-        :options="meetingPeopleOptions" />
-
-      <template v-else-if="card == 'intro'">
-        <p class="text-sm text-gray-600">All optional.</p>
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">A bit about me</span>
-          <textarea
-            v-model="answers.aboutMe"
-            rows="4"
-            maxlength="1000"
-            placeholder="A couple of lines. What you are into, where you are from, anything you want them to know."
-            class="rounded" />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">Instagram</span>
-          <div class="flex items-center rounded border border-gray-500">
-            <span class="pl-3 text-gray-500">@</span>
+          <div
+            v-else-if="field.kind == 'text' && field.prefix"
+            class="flex items-center rounded border border-gray-500">
+            <span class="pl-3 text-gray-500">{{ field.prefix }}</span>
             <input
-              v-model="answers.instagram"
+              :id="`answer-${key}`"
+              :value="textOf(key)"
               type="text"
               autocapitalize="none"
-              placeholder="handle"
-              class="w-full rounded border-0" />
+              :placeholder="hintFor(field)"
+              class="w-full rounded border-0"
+              @input="
+                setText(key, ($event.target as HTMLInputElement).value)
+              " />
           </div>
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">Discord</span>
+
           <input
-            v-model="answers.discord"
+            v-else-if="field.kind == 'text'"
+            :id="`answer-${key}`"
+            :value="textOf(key)"
             type="text"
-            autocapitalize="none"
-            placeholder="username"
-            class="rounded" />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="font-bold">Phone</span>
-          <span class="text-sm text-gray-600">
-            A WhatsApp number is ideal, since that is where most families end up
-            talking. Any number is fine.
-          </span>
-          <input
-            v-model="answers.phone"
-            type="tel"
-            autocomplete="tel"
-            class="rounded" />
-        </label>
-      </template>
+            :placeholder="hintFor(field)"
+            class="rounded"
+            @input="setText(key, ($event.target as HTMLInputElement).value)" />
+
+          <textarea
+            v-else-if="field.kind == 'prose'"
+            :id="`answer-${key}`"
+            :value="textOf(key)"
+            rows="4"
+            maxlength="1000"
+            :placeholder="hintFor(field)"
+            class="rounded"
+            @input="
+              setText(key, ($event.target as HTMLTextAreaElement).value)
+            " />
+
+          <SurveyPhoneInput
+            v-else-if="field.kind == 'phone'"
+            :id="`answer-${key}`"
+            :model-value="textOf(key)"
+            @update:model-value="setText(key, $event)" />
+
+          <SurveyChoiceList
+            v-else-if="field.kind == 'choice'"
+            :name="key"
+            :options="field.options"
+            :model-value="textOf(key)"
+            @update:model-value="setText(key, $event)" />
+
+          <SurveyChips
+            v-else-if="field.kind == 'chips'"
+            :groups="field.groups"
+            :model-value="chipsOf(key)"
+            @update:model-value="answers[key] = $event" />
+        </template>
+      </div>
 
       <p v-if="problem" role="alert" class="text-red-600">{{ problem }}</p>
 
@@ -318,11 +248,11 @@ async function submit() {
           :disabled="saving"
           class="rounded bg-primary px-6 py-2 font-bold text-white disabled:opacity-60">
           {{
-            step < CARDS.length - 1
+            !last
               ? 'Continue'
               : saving
                 ? 'Saving…'
-                : me.completedSurvey
+                : currentUser!.completedSurvey
                   ? 'Save my answers'
                   : 'Submit'
           }}

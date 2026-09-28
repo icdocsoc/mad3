@@ -125,7 +125,7 @@ const nameOf = (shortcode: string, name: string | null) =>
           :student="parent" />
       </div>
       <CardText>
-        You and {{ partner.preferredName || partner.name }} are parents
+        You and {{ partner.answers?.preferredName || partner.name }} are parents
         together. We'll email you both once your children are allocated.
       </CardText>
     </Card>

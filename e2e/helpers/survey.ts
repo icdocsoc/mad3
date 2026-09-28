@@ -1,71 +1,57 @@
 import { expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-/** The allocator's 27 interest keys, in the order it reads them (hono/types.ts). */
-export const INTEREST_KEYS = [
-  'alcohol',
-  'anime',
-  'artGraphics',
-  'baking',
-  'charity',
-  'clubbing',
-  'cooking',
-  'danceBallroom',
-  'danceContemporary',
-  'dramatics',
-  'exerciseAndHealth',
-  'film',
-  'finance',
-  'football',
-  'hiking',
-  'kpop',
-  'martialArts',
-  'otherSports',
-  'performingMusicClassical',
-  'performingMusicPopRockJazz',
-  'photography',
-  'politics',
-  'racketSports',
-  'rowing',
-  'rugby',
-  'tabletopGames',
-  'videoGames'
-];
+/** The survey as mad3 asks it: a copy of the monorepo's mads.json. */
+export const MADS = JSON.parse(
+  readFileSync(
+    resolve(import.meta.dirname, '../../hono/survey/mads.json'),
+    'utf8'
+  )
+) as {
+  stages: {
+    id: string;
+    title: string;
+    fields: Record<
+      string,
+      {
+        kind: string;
+        optional?: boolean;
+        options?: { value: string; free?: boolean }[];
+        groups?: { options: { value: string }[] }[];
+      }
+    >;
+  }[];
+};
 
-/** A complete set of answers, sent straight to the API, for tests that are about later steps. */
+export const FIELDS = Object.fromEntries(
+  MADS.stages.flatMap(stage => Object.entries(stage.fields))
+);
+
+/** A complete, valid set of answers, sent straight to the API, for tests about later steps. */
 export function answersFor(
   name: string,
   overrides: Record<string, unknown> = {}
 ) {
-  const chips = Object.fromEntries(
-    INTEREST_KEYS.filter(key => key != 'alcohol' && key != 'clubbing').map(
-      key => [key, 0]
-    )
-  );
   return {
     name,
-    preferredName: null,
-    jmc: false,
+    course: 'computing',
     commute: 'halls',
-    gender: 'n/a',
-    genderDescription: null,
+    gender: 'unsaid',
     drinking: 'couple',
     lateNights: 'home-by-midnight',
-    interests: { ...chips, football: 2, film: 1 },
+    interests: ['football', 'film'],
     societies: 'few',
     meetingPeople: 'fine',
-    aboutMe: null,
-    instagram: null,
-    discord: null,
-    phone: null,
     ...overrides
   };
 }
 
 export async function submitSurveyByApi(page: Page, name: string) {
   const response = await page.request.post('/api/family/survey', {
-    data: answersFor(name)
+    data: { answers: answersFor(name) }
   });
-  expect(response.ok()).toBe(true);
+  expect(response.ok(), await response.text()).toBe(true);
 }
 
 const choose = (page: Page, label: string) =>
@@ -73,6 +59,25 @@ const choose = (page: Page, label: string) =>
 
 const next = (page: Page) =>
   page.getByRole('button', { name: 'Continue' }).click();
+
+/** What fillSurvey types in, as the survey should store it for jg2426. */
+export const FILLED = {
+  name: 'Joshua Gonsalves',
+  preferredName: 'Josh',
+  shortcode: 'jg2426',
+  course: 'computing',
+  commute: 'nearby',
+  gender: 'non-binary',
+  drinking: 'round-buyer',
+  lateNights: 'one-club-night',
+  interests: ['football', 'film'],
+  societies: 'few',
+  meetingPeople: 'fine',
+  bio: 'Hi! I like football.',
+  instagram: 'jgee',
+  discord: 'jgee',
+  phone: '+447911123456'
+};
 
 /** Fills the survey in through the page, card by card, the way a student would. */
 export async function fillSurvey(
@@ -83,7 +88,7 @@ export async function fillSurvey(
   await page.waitForLoadState('networkidle');
 
   await page.getByLabel('Full name').fill('Joshua Gonsalves');
-  await page.getByLabel('Preferred name (optional)').fill('Josh');
+  await page.getByLabel('Preferred name').fill('Josh');
   await choose(page, 'Computing');
   await shots?.('you');
   await next(page);
@@ -97,7 +102,7 @@ export async function fillSurvey(
   await next(page);
 
   await choose(page, 'I am...');
-  await page.getByLabel('I am...', { exact: true }).last().fill('non-binary');
+  await page.getByRole('textbox', { name: 'I am...' }).fill('non-binary');
   await next(page);
 
   await choose(page, "Yippee! I'll get the first round.");
@@ -107,7 +112,6 @@ export async function fillSurvey(
   await next(page);
 
   await page.getByRole('button', { name: 'Football', exact: true }).click();
-  await page.getByRole('button', { name: /^Football/ }).click();
   await page.getByRole('button', { name: 'Films', exact: true }).click();
   await shots?.('interests');
   await next(page);
@@ -118,8 +122,10 @@ export async function fillSurvey(
   await choose(page, "I'm fine once I'm there");
   await next(page);
 
+  await page.getByLabel('A bit about me').fill('Hi! I like football.');
   await page.getByLabel('Instagram').fill('@jgee');
   await page.getByLabel('Discord').fill('jgee');
+  await page.getByLabel('Phone (optional)').fill('07911 123456');
   await shots?.('intro');
   await page
     .getByRole('button', { name: /^(Submit|Save my answers)$/ })

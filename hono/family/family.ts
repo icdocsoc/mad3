@@ -2,8 +2,8 @@ import { zValidator } from '@hono/zod-validator';
 import { grantAccessTo } from '../auth/jwt';
 import factory from '../factory';
 import { z } from 'zod';
-import { allocatorInterests } from '../survey';
-import { asJson, db } from '../db';
+import { readAnswers, studentColumns } from '../survey/survey';
+import { asJsonb, db } from '../db';
 import { aliasedTable, and, eq, getTableColumns, or } from 'drizzle-orm';
 import {
   families,
@@ -30,49 +30,26 @@ export const family = factory
     grantAccessTo('authenticated'),
     zValidator('json', surveySchema.strict(), async (zRes, ctx) => {
       if (!zRes.success) {
-        const issue = zRes.error.issues[0];
         return ctx.json(
-          {
-            error:
-              issue?.message == 'Pick at least one interest.'
-                ? issue.message
-                : 'Some answers are missing. Go back through the survey and check each card.'
-          },
+          { error: 'Your answers did not arrive properly. Please try again.' },
           400
         );
       }
     }),
     async ctx => {
       const shortcode = ctx.get('shortcode')!;
-      const answers = ctx.req.valid('json');
+      const read = readAnswers(ctx.req.valid('json').answers, shortcode);
+      if (!read.ok) {
+        return ctx.json({ error: read.error }, 400);
+      }
 
       // Answers can be changed until sign-ups close; each save replaces the last.
       await db
         .update(students)
         .set({
           completedSurvey: true,
-          name: answers.name,
-          preferredName: answers.preferredName,
-          jmc: answers.jmc,
-          gender: answers.gender,
-          genderDescription:
-            answers.gender == 'other' ? answers.genderDescription : null,
-          commute: answers.commute,
-          drinking: answers.drinking,
-          lateNights: answers.lateNights,
-          societies: answers.societies,
-          meetingPeople: answers.meetingPeople,
-          interests: asJson(
-            allocatorInterests(
-              answers.interests,
-              answers.drinking,
-              answers.lateNights
-            )
-          ),
-          aboutMe: answers.aboutMe,
-          instagram: answers.instagram,
-          discord: answers.discord,
-          phone: answers.phone
+          answers: asJsonb(read.answers),
+          ...studentColumns(read.answers)
         })
         .where(eq(students.shortcode, shortcode));
 
@@ -182,10 +159,11 @@ export const family = factory
         );
       }
 
-      await db.insert(proposals).values({
-        proposer: proposer,
-        proposee: proposee
-      });
+      // A double-tap sends the same proposal twice; the second changes nothing.
+      await db
+        .insert(proposals)
+        .values({ proposer: proposer, proposee: proposee })
+        .onConflictDoNothing();
 
       return ctx.json({ proposed: proposee }, 200);
     }
@@ -274,7 +252,42 @@ export const family = factory
         );
       }
 
-      await db.transaction(async tx => {
+      const married = await db.transaction(async tx => {
+        // Lock both parents first. Two parents can accept each other's proposals at the same
+        // moment; without the lock both would pass the checks and marry the pair twice.
+        await tx
+          .select({ shortcode: students.shortcode })
+          .from(students)
+          .where(
+            or(
+              eq(students.shortcode, proposee),
+              eq(students.shortcode, proposer)
+            )
+          )
+          .for('update');
+
+        const taken = await tx
+          .select({ id: marriages.id })
+          .from(marriages)
+          .where(
+            or(
+              eq(marriages.parent1, proposee),
+              eq(marriages.parent2, proposee),
+              eq(marriages.parent1, proposer),
+              eq(marriages.parent2, proposer)
+            )
+          );
+        const stillProposed = await tx
+          .select()
+          .from(proposals)
+          .where(
+            and(
+              eq(proposals.proposee, proposee),
+              eq(proposals.proposer, proposer)
+            )
+          );
+        if (taken.length || !stillProposed.length) return false;
+
         // Delete any pending proposals including the proposee and proposer.
         // This is a lifelong commitment.
         await tx
@@ -295,7 +308,18 @@ export const family = factory
           parent1: proposee,
           parent2: proposer
         });
+        return true;
       });
+
+      if (!married) {
+        return ctx.json(
+          {
+            error:
+              'One of you already has a partner, or the proposal was taken back.'
+          },
+          409
+        );
+      }
 
       return ctx.json({ partner: proposer }, 200);
     }

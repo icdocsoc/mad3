@@ -53,15 +53,22 @@ committing.
 - **Colours come from the Tailwind theme** (`primary`, `link`, `linkHover` in
   `tailwind.config.js`).
 
-## The allocator contract
+## The survey contract
 
-`allocations/` reads `interests` as a vector in key order, and it's untouched Python from mad2.
-So:
+MaDs is moving onto DoCSoc's new matchmaker, so the survey and its answers match that monorepo
+exactly:
 
-- Every student's `interests` must have exactly the keys in `interestKeys` (`hono/types.ts`), in
-  that order, each `0`, `1` or `2`.
-- `gender` and `jmc` must be set before allocation.
-- Changes to `/api/admin/allocations/*` must keep their JSON shape.
+- `hono/survey/mads.json` is a copy of `packages/domain/src/survey/schemas/mads.json` in
+  [icdocsoc/experimental](https://github.com/icdocsoc/experimental). Change wording there, then
+  copy the file here. Never edit this copy on its own.
+- Answers are stored in `student.answers`, keyed and shaped as there: a choice is its value (or
+  the words typed for a free option), chips are a list of values, a phone is E.164.
+- Every answer goes through `readAnswers` (`hono/survey/survey.ts`) before it is stored, so
+  nothing the survey couldn't have given gets in.
+- The shortcode answer is always the signed-in one.
+
+The Python allocator in `allocations/` is retired: it read the old survey's 27 interest scores,
+which new answers don't have.
 
 ## Comments
 
