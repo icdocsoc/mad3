@@ -1,8 +1,9 @@
 import { parseArgs } from 'util';
-import { db } from './db';
+import { and, eq, inArray } from 'drizzle-orm';
+import { db, pool } from './db';
 import { meta } from './admin/schema';
 import { students } from './family/schema';
-import { academicYear } from '~~/hono/auth/jwt';
+import { academicYear } from './auth/jwt';
 
 const {
   values: { push }
@@ -18,8 +19,12 @@ const {
   allowPositionals: true
 });
 
-const now = new Date();
-const baseUrl = `https://abc-api.doc.ic.ac.uk/${academicYear()}${academicYear() + 1}`;
+const year = academicYear();
+const baseUrl = `${process.env.ABC_API_BASE}/${year}${year + 1}`;
+
+// ABC only knows a year's freshers once that academic year has started, so run this from
+// September. Before then it would list last year's freshers.
+console.log(`Finding the freshers of 20${year}-${year + 1}.`);
 
 if (push) {
   // This is purely to ensure that you have the env file set up properly,
@@ -38,28 +43,34 @@ const password = prompt('Password: ');
 const authToken = btoa(`${shortcode}:${password}`);
 const authHeader = `Basic ${authToken}`;
 
+async function fromAbc<T>(path: string): Promise<T> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: { Authorization: authHeader }
+  });
+  if (!res.ok) {
+    throw new Error(
+      `ABC answered ${res.status} for ${path}. ${res.status == 401 ? 'Check your shortcode and password.' : ''}`
+    );
+  }
+  return (await res.json()) as T;
+}
+
 console.log('--- Getting & filtering modules... ---');
 // Get modules that C1 & J1 can take
-const modulesReq = await fetch(
-  `${baseUrl}/modules?term=1&cohort=c1&cohort=j1`,
-  {
-    headers: {
-      Authorization: authHeader
-    }
-  }
-);
-const modulesRes = (await modulesReq.json()) as any[];
+const modulesRes = await fromAbc<
+  { code: string; applicable_cohorts: string[] }[]
+>('/modules?term=1&cohort=c1&cohort=j1');
 
-// Filter to be the modules that ONLY first years take.
+// Only modules no one but first years takes: one shared with a later year would bring its
+// students in as freshers.
+const FIRST_YEARS = ['c1', 'j1'];
 const modules = modulesRes.filter(
   m =>
-    (m.applicable_cohorts.length == 1 &&
-      (m.applicable_cohorts[0] == 'j1' || m.applicable_cohorts[0] == 'c1')) ||
-    (m.applicable_cohorts.length == 2 &&
-      (m.applicable_cohorts.includes('j1') ||
-        m.applicable_cohorts.includes('c1')))
+    m.applicable_cohorts.length > 0 &&
+    m.applicable_cohorts.every(cohort => FIRST_YEARS.includes(cohort))
 );
-console.log('--- Modules got! ---');
+if (!modules.length) throw new Error('ABC listed no first-year modules.');
+console.log(`--- ${modules.length} modules got! ---`);
 
 const allStudents: {
   shortcode: string;
@@ -69,15 +80,9 @@ const allStudents: {
 }[] = [];
 console.log('--- Getting all freshers... ---');
 for (const module of modules) {
-  const studentsReq = await fetch(
-    `${baseUrl}/modules/${module.code}/enrolled`,
-    {
-      headers: {
-        Authorization: authHeader
-      }
-    }
-  );
-  const moduleStudents = await studentsReq.json();
+  const moduleStudents = await fromAbc<
+    { login: string; firstname: string; lastname: string; email: string }[]
+  >(`/modules/${module.code}/enrolled`);
   for (const student of moduleStudents) {
     if (allStudents.find(s => s.shortcode == student.login)) continue;
     allStudents.push({
@@ -88,28 +93,47 @@ for (const module of modules) {
     });
   }
 }
-console.log('--- Freshers got! ---');
+console.log(`--- ${allStudents.length} freshers got! ---`);
 
 // If push, add to database, else write to file.
 if (push) {
   console.log('--- Adding freshers to the db... ---');
-  for (const student of allStudents) {
-    try {
-      await db.insert(students).values({
+  const added = await db
+    .insert(students)
+    .values(
+      allStudents.map(student => ({
         shortcode: student.shortcode,
-        role: 'fresher',
+        role: 'fresher' as const,
         completedSurvey: false
-      });
-    } catch {
-      console.log(
-        `${student} has already signed in & thus been created an account.`
-      );
-    }
+      }))
+    )
+    .onConflictDoNothing()
+    .returning({ shortcode: students.shortcode });
+  console.log(`--- ${added.length} freshers added! ---`);
+
+  // Someone who signed in before this ran was given a role from their email, and keeps it.
+  // A resit student signed in that way is a parent, so the committee should check them.
+  const parents = await db
+    .select({ shortcode: students.shortcode })
+    .from(students)
+    .where(
+      and(
+        eq(students.role, 'parent'),
+        inArray(
+          students.shortcode,
+          allStudents.map(student => student.shortcode)
+        )
+      )
+    );
+  if (parents.length) {
+    console.log(
+      `These freshers already signed in as parents, so their role was not changed: ${parents.map(row => row.shortcode).join(', ')}`
+    );
   }
-  console.log('--- Freshers added! ---');
 }
 console.log('--- Writing JSON to file... ---');
 
 await Bun.write('students.json', JSON.stringify(allStudents, null, 2));
 
 console.log('--- Wrote JSON to file! ---');
+await pool.close();

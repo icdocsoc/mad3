@@ -36,3 +36,6 @@ certfile.crt
 e2e/.run/
 test-results/
 playwright-report/
+
+# Freshers listed by hono/seed.ts: names and emails, never committed.
+students.json
