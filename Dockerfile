@@ -1,7 +1,8 @@
-FROM oven/bun:1.2.22
+# Match the Bun that wrote bun.lockb: older versions can't read a newer lockfile.
+FROM oven/bun:1.3.3
 
 ARG WEBMASTERS
-ENV WEBMASTERS $WEBMASTERS
+ENV WEBMASTERS=$WEBMASTERS
 
 WORKDIR /app
 COPY package.json bun.lockb ./
