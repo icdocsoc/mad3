@@ -109,7 +109,7 @@ export async function fillSurvey(
   await page.getByRole('textbox', { name: 'I am...' }).fill('non-binary');
   await next(page);
 
-  await choose(page, /^(Yes, I'd r|R)ace them downing pints$/);
+  await choose(page, /^(Yes, I'd r|R)ace them in downing pints$/);
   await next(page);
 
   await choose(page, 'Up for it every now and then');
