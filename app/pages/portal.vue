@@ -66,7 +66,7 @@ const hasChildren = computed(() => (family.value?.kids.length ?? 0) > 0);
             {{ partner.answers?.preferredName || partner.name }}.
           </p>
           <p v-else-if="currentState == 'open'">
-            Parents sign up in pairs, and you haven't paired up yet.
+            You still need to pop the big question: everyone's waiting to hear!
             <NuxtLink to="/proposals">Propose to your partner</NuxtLink>
           </p>
           <p v-else>You didn't pair up before sign-ups closed.</p>
