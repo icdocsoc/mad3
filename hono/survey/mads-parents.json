@@ -14,7 +14,7 @@
     {
       "id": "you",
       "title": "Hello my name is...",
-      "blurb": "We use this to introduce you to your family. Nothing here is shared with others.",
+      "blurb": "This is how we'll introduce you to your family once you're matched. Nobody else sees it.",
       "fields": {
         "name": {
           "kind": "text",
