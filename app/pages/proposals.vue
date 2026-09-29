@@ -134,10 +134,10 @@ const nameOf = (shortcode: string, name: string | null) =>
       <Card>
         <CardTitle>Find your partner</CardTitle>
         <CardText class="mt-4">
-          Parents sign up in pairs. Propose to your partner by their shortcode,
-          or accept their proposal below.
+          It's time to pop the big question! Propose to your partner with their
+          shortcode, or say yes to their proposal below.
           <strong>
-            Until one of you accepts, you aren't signed up as parents.
+            Until one of you says yes, you aren't signed up as parents.
           </strong>
         </CardText>
         <CardText v-if="!currentUser!.completedSurvey">
