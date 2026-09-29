@@ -194,6 +194,10 @@
                   "label": "Football"
                 },
                 {
+                  "value": "american-football",
+                  "label": "American Football"
+                },
+                {
                   "value": "rugby",
                   "label": "Rugby"
                 },
@@ -202,12 +206,32 @@
                   "label": "Cricket"
                 },
                 {
+                  "value": "basketball",
+                  "label": "Basketball"
+                },
+                {
+                  "value": "netball",
+                  "label": "Netball"
+                },
+                {
+                  "value": "volleyball",
+                  "label": "Volleyball"
+                },
+                {
+                  "value": "hockey",
+                  "label": "Hockey"
+                },
+                {
                   "value": "water",
                   "label": "Rowing, Sailing"
                 },
                 {
+                  "value": "swimming",
+                  "label": "Swimming and Water Polo"
+                },
+                {
                   "value": "racket",
-                  "label": "Tennis, Padel, Badminton, Squash"
+                  "label": "Tennis, Padel, Badminton, Squash, Table Tennis"
                 },
                 {
                   "value": "gym",
@@ -224,6 +248,10 @@
                 {
                   "value": "martial-arts",
                   "label": "Martial Arts"
+                },
+                {
+                  "value": "snowsports",
+                  "label": "Skiing and Snowboarding"
                 },
                 {
                   "value": "formula-one",
