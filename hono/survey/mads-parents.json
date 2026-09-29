@@ -1,6 +1,6 @@
 {
   "title": "Mums and Dads: parents",
-  "version": 1,
+  "version": 2,
   "audience": "returning",
   "closed": {
     "title": "Not open yet",
@@ -142,7 +142,7 @@
             },
             {
               "value": "rather-not",
-              "label": "Not my thing"
+              "label": "Suggest a different activity, pubs aren't really my thing!"
             }
           ]
         }
@@ -194,16 +194,44 @@
                   "label": "Football"
                 },
                 {
+                  "value": "american-football",
+                  "label": "American Football"
+                },
+                {
                   "value": "rugby",
                   "label": "Rugby"
+                },
+                {
+                  "value": "cricket",
+                  "label": "Cricket"
+                },
+                {
+                  "value": "basketball",
+                  "label": "Basketball"
+                },
+                {
+                  "value": "netball",
+                  "label": "Netball"
+                },
+                {
+                  "value": "volleyball",
+                  "label": "Volleyball"
+                },
+                {
+                  "value": "hockey",
+                  "label": "Hockey"
                 },
                 {
                   "value": "water",
                   "label": "Rowing, Sailing"
                 },
                 {
+                  "value": "swimming",
+                  "label": "Swimming and Water Polo"
+                },
+                {
                   "value": "racket",
-                  "label": "Tennis, Badminton, Squash"
+                  "label": "Tennis, Padel, Badminton, Squash, Table Tennis"
                 },
                 {
                   "value": "gym",
@@ -222,6 +250,14 @@
                   "label": "Martial Arts"
                 },
                 {
+                  "value": "snowsports",
+                  "label": "Skiing and Snowboarding"
+                },
+                {
+                  "value": "formula-one",
+                  "label": "Formula One"
+                },
+                {
                   "value": "other-sport",
                   "label": "Something Else"
                 }
@@ -237,6 +273,10 @@
                 {
                   "value": "games-alone",
                   "label": "Gaming on my Own"
+                },
+                {
+                  "value": "rhythm-games",
+                  "label": "Rhythm Games"
                 },
                 {
                   "value": "board-games",
