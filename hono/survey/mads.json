@@ -1,6 +1,6 @@
 {
   "title": "Mums and Dads",
-  "version": 1,
+  "version": 2,
   "audience": "freshers",
   "closed": {
     "title": "Not open yet",
@@ -142,7 +142,7 @@
             },
             {
               "value": "rather-not",
-              "label": "Not interested"
+              "label": "Suggest a different activity, pubs aren't really my thing!"
             }
           ]
         }
@@ -198,12 +198,16 @@
                   "label": "Rugby"
                 },
                 {
+                  "value": "cricket",
+                  "label": "Cricket"
+                },
+                {
                   "value": "water",
                   "label": "Rowing, Sailing"
                 },
                 {
                   "value": "racket",
-                  "label": "Tennis, Badminton, Squash"
+                  "label": "Tennis, Padel, Badminton, Squash"
                 },
                 {
                   "value": "gym",
@@ -222,6 +226,10 @@
                   "label": "Martial Arts"
                 },
                 {
+                  "value": "formula-one",
+                  "label": "Formula One"
+                },
+                {
                   "value": "other-sport",
                   "label": "Something Else"
                 }
@@ -237,6 +245,10 @@
                 {
                   "value": "games-alone",
                   "label": "Gaming on my Own"
+                },
+                {
+                  "value": "rhythm-games",
+                  "label": "Rhythm Games"
                 },
                 {
                   "value": "board-games",
