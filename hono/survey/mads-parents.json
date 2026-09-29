@@ -122,15 +122,15 @@
     },
     {
       "id": "drinking",
-      "title": "You're taking your kids to the pub. Responsible parenting! I'll...",
+      "title": "Would you take your kids to the pub? (Sounds very responsible, I know!)",
       "fields": {
         "drinking": {
           "kind": "choice",
-          "label": "You're taking your kids to the pub. Responsible parenting! I'll...",
+          "label": "Would you take your kids to the pub? (Sounds very responsible, I know!)",
           "options": [
             {
               "value": "round-buyer",
-              "label": "Race them downing pints"
+              "label": "Yes, I'd race them downing pints"
             },
             {
               "value": "couple",
@@ -138,11 +138,11 @@
             },
             {
               "value": "soft-drink",
-              "label": "Come along, but I don't drink"
+              "label": "Not drink, but chill and talk"
             },
             {
               "value": "rather-not",
-              "label": "Leave the pub to my partner"
+              "label": "Not my thing"
             }
           ]
         }
@@ -412,12 +412,10 @@
     {
       "id": "societies",
       "title": "How into societies are you, and would you bring your kids along?",
-      "blurb": "The Freshers' Fair is a good excuse to show them around.",
       "fields": {
         "societies": {
           "kind": "choice",
           "label": "How into societies are you, and would you bring your kids along?",
-          "hint": "The Freshers' Fair is a good excuse to show them around.",
           "options": [
             {
               "value": "everything",

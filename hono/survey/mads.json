@@ -412,12 +412,10 @@
     {
       "id": "societies",
       "title": "How into societies are you, and would you go along with your family?",
-      "blurb": "Go to the Freshers' Fair!",
       "fields": {
         "societies": {
           "kind": "choice",
           "label": "How into societies are you, and would you go along with your family?",
-          "hint": "Go to the Freshers' Fair!",
           "options": [
             {
               "value": "everything",
