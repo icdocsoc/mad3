@@ -13,6 +13,11 @@ const transporter = createTransport({
   }
 });
 
+// Mail must come from the account it is sent through. Claiming another domain's address fails
+// that domain's SPF, and Imperial's Microsoft 365 then quietly quarantines the email as spoofed:
+// it is "sent", but never arrives.
+const from = process.env.MAIL_FROM || process.env.NODEMAILER_USER!;
+
 export const sendEmail = async (
   ctx: Context,
   to: string,
@@ -34,7 +39,7 @@ export const sendEmail = async (
   }
 
   await transporter.sendMail({
-    from: '"DoCSoc" <docsoc@ic.ac.uk>',
+    from: { name: 'DoCSoc Mums and Dads', address: from },
     to: to,
     subject: subject,
     text: text,
