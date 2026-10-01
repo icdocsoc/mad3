@@ -156,12 +156,14 @@ const auth = factory
 
       const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
       try {
+        // Safe to put in the HTML: the address was checked to be a shortcode email.
+        const shortcode = email.split('@')[0];
         await sendEmail(
           ctx,
           email,
-          `[Mums and Dads] Your sign-in code is ${code}`,
-          `Your Mums and Dads sign-in code is ${code}. It works for ${CODE_MINUTES} minutes. If you didn't ask for it, you can ignore this email.`,
-          `<p>Your Mums and Dads sign-in code is</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p><p>It works for ${CODE_MINUTES} minutes. If you didn't ask for it, you can ignore this email.</p>`
+          'Your Mums and Dads one-time passcode',
+          `Hello ${shortcode}, here is your one-time passcode to log in to the Mums and Dads Scheme for DoCSoc!\n\n${code}`,
+          `<p>Hello ${shortcode}, here is your one-time passcode to log in to the Mums and Dads Scheme for DoCSoc!</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p>`
         );
       } catch (e) {
         apiLogger.error(ctx, 'Could not send a sign-in code:', e);
