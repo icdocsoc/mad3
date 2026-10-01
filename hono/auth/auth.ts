@@ -161,7 +161,6 @@ const auth = factory
         await sendEmail(
           ctx,
           email,
-          // No code in the subject: "your code is 123456" subjects look like phishing to filters.
           'Your Mums and Dads one-time passcode',
           `Hello ${shortcode}, here is your one-time passcode to log in to the Mums and Dads Scheme for DoCSoc!\n\n${code}`,
           `<p>Hello ${shortcode}, here is your one-time passcode to log in to the Mums and Dads Scheme for DoCSoc!</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p>`
