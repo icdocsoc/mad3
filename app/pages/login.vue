@@ -169,6 +169,11 @@ function changeEmail() {
           Use a different email
         </button>
       </div>
+      <p class="text-sm text-gray-600" data-testid="code-help">
+        Code hasn't arrived? Check your Junk folder, or email
+        <a href="mailto:tech@docsoc.co.uk">tech@docsoc.co.uk</a>
+        with your shortcode and we'll help.
+      </p>
     </form>
   </Card>
 </template>
