@@ -29,6 +29,9 @@ test('a fresher signs in with a code and lands on the portal', async ({
     path: shot(`after-02-login-email-${info.project.name}`)
   });
   const code = await askForCode(page, 'jg2426@ic.ac.uk');
+  await expect(
+    page.getByRole('link', { name: 'tech@docsoc.co.uk' })
+  ).toHaveAttribute('href', 'mailto:tech@docsoc.co.uk');
   await page.getByLabel('Code', { exact: true }).fill(code);
   await page.screenshot({
     path: shot(`after-03-login-code-${info.project.name}`)
